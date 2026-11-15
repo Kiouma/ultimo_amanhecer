@@ -1,4 +1,6 @@
 [
+  { "id": "craft_arrow", "result": "arrow", "amount": 1, "station": "hands", "ingredients": { "feather": 1, "stick": 1 } },
+  { "id": "craft_bow_wood", "result": "bow_wood", "amount": 1, "station": "hands", "ingredients": { "wood": 2, "cloth": 2 } },
   { "id": "craft_torch", "result": "torch", "amount": 1, "station": "hands", "ingredients": { "wood": 1, "cloth": 1 } },
   { "id": "craft_bandage", "result": "bandage", "amount": 2, "station": "hands", "ingredients": { "cloth": 2 } },
   { "id": "craft_spear_wood", "result": "spear_wood", "amount": 1, "station": "hands", "ingredients": { "wood": 4 } },

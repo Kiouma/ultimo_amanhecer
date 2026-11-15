@@ -2,6 +2,8 @@
   { "id": "wood", "name": "Madeira", "type": "resource", "weight": 0.5, "stack": 100 },
   { "id": "stone", "name": "Pedra", "type": "resource", "weight": 1.0, "stack": 100 },
   { "id": "scrap_metal", "name": "Sucata de metal", "type": "resource", "weight": 1.0, "stack": 100 },
+  { "id": "stick", "name": "Graveto", "type": "resource", "weight": 0.1, "stack": 100 },
+  { "id": "feather", "name": "Pena", "type": "resource", "weight": 0.01, "stack": 100 },
   { "id": "cloth", "name": "Tecido", "type": "resource", "weight": 0.1, "stack": 100 },
   { "id": "herbs", "name": "Ervas", "type": "resource", "weight": 0.1, "stack": 50 },
   { "id": "arcane_crystal", "name": "Cristal arcano", "type": "resource", "weight": 0.2, "stack": 20, "rarity": "rare" }

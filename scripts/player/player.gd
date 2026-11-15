@@ -13,7 +13,8 @@ signal interaction_prompt_changed(text: String)
 ## Kit inicial provisório (até existir criação de personagem, GDD 4.4).
 ## Cada entrada: [id, quantidade, slot da hotbar ou -1].
 const STARTER_KIT := [
-	["pistol_9mm", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3], ["ammo_9mm", 24, -1],
+	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3],
+	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
 ]
 
 @export_group("Movimento")
@@ -192,9 +193,6 @@ func _give_starter_kit() -> void:
 			inventory.slots[slot_index] = {"id": entry[0], "count": entry[1]}
 		else:
 			inventory.add_item(entry[0], entry[1])
-	# A pistola inicial vem carregada.
-	if inventory.get_slot(0).get("id", "") == "pistol_9mm":
-		inventory.slots[0]["mag"] = int(GameData.get_item("pistol_9mm").get("magazine", 12))
 	inventory.changed.emit()
 
 
@@ -238,6 +236,13 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 	match kind:
 		&"tracer":
 			Weapon.spawn_tracer(self, from, to)
+		&"arrow":
+			var arrow: Node3D = Bow.ARROW.new()
+			arrow.visual_only = true
+			arrow.caster = self
+			arrow.velocity = to - from
+			get_tree().current_scene.add_child(arrow)
+			arrow.global_position = from
 		&"bolt":
 			var bolt: Area3D = SpellCaster.PROJECTILE.new()
 			bolt.visual_only = true

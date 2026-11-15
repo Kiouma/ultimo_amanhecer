@@ -57,12 +57,13 @@ O jogo não tem atributos. O personagem evolui pelo uso: cada proficiência sobe
 
 O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada habilidade exige um nível mínimo da proficiência ligada a ela (por exemplo, golpe giratório pede Melee nível 5). Especializar-se dá bônus fortes; misturar dá flexibilidade.
 
-**Trilha do Atirador (armas de fogo)**
+**Trilha do Atirador (arcos e armas de fogo)**
 
-- Pistolas, rifles, escopetas e armas de precisão.
-- Habilidades: recarga rápida, tiro na cabeça com bônus de dano, munição reaproveitada (chance de não gastar bala), silenciador, tiro penetrante.
+- **Arcos** são a arma de longe do dia a dia: baratos, silenciosos, flechas fabricadas com pena + graveto e às vezes recuperáveis.
+- **Armas de fogo** (pistolas, rifles, escopetas, armas de precisão) são equipamento de **alto custo**, para momentos de extrema necessidade: hordas e chefes.
+- Habilidades: puxada mais rápida, tiro na cabeça com bônus de dano, recuperar flechas, flechas especiais, recarga rápida, munição reaproveitada (chance de não gastar bala), silenciador, tiro penetrante.
 - Ponto forte: dano à distância e controle de zumbis perigosos.
-- Ponto fraco: munição escassa e barulho que atrai hordas.
+- Ponto fraco: flechas têm queda e pedem prática; balas são caras e o tiro atrai hordas.
 
 **Trilha do Guerreiro (melee)**
 
@@ -96,18 +97,28 @@ O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada hab
 
 ### 4.4 Criação de personagem
 
-O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus iniciais) e começa com todas as proficiências no nível 1. Exemplos de passado: Ex-militar (Armas de fogo mais alta, começa com pistola), Lenhador (Melee mais alta, começa com machado), Estudante de ocultismo (Magia mais alta, começa com um grimório simples), Enfermeiro (Resistência mais alta, kit médico).
+O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus iniciais) e começa com todas as proficiências no nível 1. Exemplos de passado: Ex-militar (Armas de fogo mais alta, começa com arco e flechas extras; arma de fogo só achando ou fabricando), Lenhador (Melee mais alta, começa com machado), Estudante de ocultismo (Magia mais alta, começa com um grimório simples), Enfermeiro (Resistência mais alta, kit médico).
 
 ## 5. Sistema de combate
 
 ### 5.1 Princípios
 
 - Combate em tempo real, com impacto físico (feedback de golpes, tremor de câmera leve, sons marcantes).
-- Cada estilo usa um recurso diferente: **munição** (fogo), **stamina** (melee), **mana** (magia).
-- Os zumbis reagem a barulho: tiros e magias explosivas chamam mais inimigos, melee e magias silenciosas chamam menos.
+- Cada estilo usa um recurso diferente: **flechas ou munição** (à distância), **stamina** (melee), **mana** (magia).
+- Os zumbis reagem a barulho: tiros e magias explosivas chamam mais inimigos; arco, melee e magias silenciosas chamam menos.
 
-### 5.2 Armas de fogo
+### 5.2 Armas à distância
 
+**Arco e flecha (arma inicial):**
+
+- Segurar o ataque puxa a corda; quanto mais puxada, mais dano e alcance. Soltar dispara.
+- A flecha é um projétil com queda (gravidade). Quase não faz barulho: ideal para furtividade.
+- **Flecha = pena + graveto**, fabricada nas mãos. Flechas que erram ficam cravadas e podem ser recuperadas (chance).
+- Tipos futuros: flechas de pedra/metal, incendiárias, encantadas.
+
+**Armas de fogo (alto custo, emergência):**
+
+- Para hordas e chefes. Raras no saque; munição cara (metal, pólvora, bancada de armas).
 - Tipos: pistola, revólver, submetralhadora, escopeta, rifle de ação, rifle de precisão.
 - Mecânicas: recarga, recuo, dispersão, mira com zoom, durabilidade da arma, modificações (mira, cano, silenciador, carregador estendido).
 - Munição é fabricada ou saqueada. Existem tipos especiais (perfurante, incendiária).
@@ -129,7 +140,8 @@ O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus in
 
 | Estilo | Dano | Alcance | Custo recorrente | Barulho | Risco |
 | --- | --- | --- | --- | --- | --- |
-| Fogo | Alto | Longo | Munição | Alto | Acabar sem balas |
+| Arco | Médio | Médio/longo (com queda) | Flechas (baratas) | Muito baixo | Errar e ficar sem flechas |
+| Fogo | Alto | Longo | Munição (cara) | Alto | Atrair a horda, gastar recurso raro |
 | Melee | Médio | Curto | Stamina e durabilidade | Baixo | Ser cercado |
 | Magia | Médio/alto em área | Médio | Mana | Variável | Ficar sem mana |
 
@@ -185,13 +197,13 @@ Porcentagem de XP e duração do debuff são provisórias e ajustáveis nas opç
 
 ### 8.1 Recursos básicos
 
-Madeira, pedra, sucata de metal, tecido, couro, ervas, comida, combustível, componentes eletrônicos e **cristais arcanos** (raros, usados em magia).
+Madeira, graveto, pena, pedra, sucata de metal, tecido, couro, ervas, comida, combustível, componentes eletrônicos e **cristais arcanos** (raros, usados em magia).
 
 ### 8.2 Estações de crafting
 
 | Estação | O que produz |
 | --- | --- |
-| **Mãos (sem estação)** | Itens primitivos: tocha, bandagem simples, lança de madeira |
+| **Mãos (sem estação)** | Itens primitivos: tocha, bandagem simples, lança de madeira, **flecha (pena + graveto)** |
 | **Fogueira / fogão** | Comida, água fervida |
 | **Bancada** | Ferramentas, armas melee, flechas, reparos |
 | **Forja** | Metais, lâminas, peças de armas |
@@ -416,6 +428,7 @@ Respostas do dono do projeto às perguntas da versão 0.1. Elas guiam o resto do
 4. Magia: séria e rara, mas com especialização possível (por exemplo, um curandeiro que dá buffs ao grupo).
 5. Cooperativo: prioridade. O jogo deve suportar pelo menos 4 a 5 amigos jogando juntos.
 6. Morte: os itens do inventário caem em uma bag no chão, exceto os equipados e as 9 hotkeys principais. O personagem perde XP e recebe um debuff temporário que escala em mortes consecutivas.
+7. Armas à distância: o **arco** é a arma inicial e do dia a dia; flecha = pena + graveto. **Armas de fogo** são equipamento de alto custo, para momentos de extrema necessidade (hordas, chefes).
 
 ## 22. Próximos passos
 

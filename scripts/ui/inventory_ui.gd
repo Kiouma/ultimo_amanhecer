@@ -1,6 +1,6 @@
 class_name InventoryUI
 extends Control
-## Tela de inventário (Tab): mochila, hotbar e peso (GDD 13.2).
+## Tela de inventário (Tab): mochila, hotbar, peso e fabricação nas mãos (GDD 8 e 13.2).
 ## Arrastar entre slots move/junta; botão direito divide a pilha;
 ## soltar fora da janela joga o item no chão, na frente do jogador.
 
@@ -12,6 +12,7 @@ var _weight_label: Label
 var _weight_bar: ProgressBar
 var _weight_fill: StyleBoxFlat
 var _built := false
+var _craft_list: VBoxContainer
 
 
 func _ready() -> void:
@@ -71,6 +72,41 @@ func _refresh() -> void:
 	_weight_bar.max_value = inv.max_weight
 	_weight_bar.value = minf(weight, inv.max_weight)
 	_weight_fill.bg_color = Color(0.85, 0.35, 0.3) if inv.is_overloaded() else Color(0.55, 0.75, 0.45)
+	_refresh_crafting()
+
+
+## Lista de receitas "nas mãos": cada uma com Fabricar (1x) e Tudo (quantas der).
+func _refresh_crafting() -> void:
+	for child in _craft_list.get_children():
+		child.queue_free()
+	var inv := player.inventory
+	for recipe in Crafting.recipes_for("hands"):
+		var result := GameData.get_item(str(recipe.result))
+		var possible := Crafting.max_times(inv, recipe)
+		var row := HBoxContainer.new()
+		var info := VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var title := Label.new()
+		title.text = "%s ×%d" % [result.get("name", recipe.result), int(recipe.get("amount", 1))]
+		title.add_theme_color_override("font_color", Color(0.92, 0.92, 0.88) if possible > 0 else Color(0.55, 0.55, 0.52))
+		info.add_child(title)
+		var needs := Label.new()
+		needs.text = Crafting.describe_ingredients(recipe)
+		needs.add_theme_font_size_override("font_size", 12)
+		needs.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
+		info.add_child(needs)
+		row.add_child(info)
+		var one := Button.new()
+		one.text = "Fabricar"
+		one.disabled = possible < 1
+		one.pressed.connect(func() -> void: Crafting.craft(player.inventory, recipe, 1))
+		row.add_child(one)
+		var all := Button.new()
+		all.text = "Tudo (%d)" % possible
+		all.disabled = possible < 2
+		all.pressed.connect(func() -> void: Crafting.craft(player.inventory, recipe, Crafting.max_times(player.inventory, recipe)))
+		row.add_child(all)
+		_craft_list.add_child(row)
 
 
 func _build() -> void:
@@ -94,9 +130,25 @@ func _build() -> void:
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 24)
+	panel.add_child(columns)
+
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
+	columns.add_child(vbox)
+
+	var craft := VBoxContainer.new()
+	craft.custom_minimum_size = Vector2(300, 0)
+	craft.add_theme_constant_override("separation", 8)
+	columns.add_child(craft)
+	var craft_title := Label.new()
+	craft_title.text = "Fabricar (mãos)"
+	craft_title.add_theme_font_size_override("font_size", 22)
+	craft.add_child(craft_title)
+	_craft_list = VBoxContainer.new()
+	_craft_list.add_theme_constant_override("separation", 8)
+	craft.add_child(_craft_list)
 
 	var title := Label.new()
 	title.text = "Inventário"

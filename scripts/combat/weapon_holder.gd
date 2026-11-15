@@ -11,6 +11,7 @@ signal changed
 
 ## Posição de cada tipo de arma na tela (1ª pessoa).
 const VIEW_OFFSETS := {
+	"bow": Vector3(0.02, -0.1, -0.5),
 	"firearm": Vector3(0.2, -0.2, -0.55),
 	"melee": Vector3(0.42, -0.52, -0.62),
 	"spell": Vector3(0.26, -0.24, -0.6),
@@ -154,6 +155,7 @@ func _weapon_for(id: String) -> Weapon:
 	var weapon: Weapon = null
 	var kind := str(data.get("type", ""))
 	match kind:
+		"bow": weapon = Bow.new()
 		"firearm": weapon = Firearm.new()
 		"melee": weapon = MeleeWeapon.new()
 		"spell": weapon = SpellCaster.new()

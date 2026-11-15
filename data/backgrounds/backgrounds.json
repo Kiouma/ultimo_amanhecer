@@ -1,5 +1,5 @@
 [
-  { "id": "ex_military", "name": "Ex-militar", "bonus": { "firearms": 3 }, "starting_items": ["pistol_9mm", "ammo_9mm"] },
+  { "id": "ex_military", "name": "Ex-militar", "bonus": { "firearms": 3 }, "starting_items": ["bow_wood", "arrow"] },
   { "id": "lumberjack", "name": "Lenhador", "bonus": { "melee": 3 }, "starting_items": ["axe_iron"] },
   { "id": "occult_student", "name": "Estudante de ocultismo", "bonus": { "magic": 3 }, "starting_items": ["grimoire_basic"] },
   { "id": "nurse", "name": "Enfermeiro", "bonus": { "toughness": 3 }, "starting_items": ["medkit_basic"] }
