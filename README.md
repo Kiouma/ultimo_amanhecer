@@ -1,0 +1,47 @@
+# Último Amanhecer
+
+Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por armas de fogo, melee ou magia. O design completo está em [docs/GDD.md](docs/GDD.md).
+
+**Engine:** Godot 4.6 (Forward+, física Jolt) · **Linguagem:** GDScript
+
+## Como abrir
+
+1. Abra o Godot 4.6.
+2. Clique em **Importar**, escolha a pasta deste projeto (`project.godot`) e abra.
+3. Aperte **F5**. A arena de teste carrega com um jogador controlável.
+
+Controles: WASD move, Shift corre, Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo). O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+
+## Estrutura
+
+```
+assets/        Arte e som (veja assets/README.md e assets/LICENSES.md)
+data/          Conteúdo do jogo em JSON: itens, receitas, zumbis, feitiços,
+               proficiências, passados. Carregado pelo autoload GameData.
+scenes/        Cenas .tscn, separadas por módulo
+  levels/      Mapas (test_arena.tscn é a cena principal por enquanto)
+  player/ enemies/ weapons/ building/ ui/
+scripts/       Código GDScript, um diretório por módulo do GDD (16.2)
+  autoload/    EventBus (sinais globais) e GameData (dados JSON)
+  player/ combat/ enemies/ inventory/ crafting/ building/
+  world/ progression/ ui/ save/ audio/ network/
+addons/        Plugins do Godot
+docs/          GDD e outros documentos
+tests/         Testes (ex.: GUT ou gdUnit4, quando for adicionado)
+```
+
+## Convenções
+
+- Pastas e arquivos em `snake_case`; classes em `PascalCase` (`class_name Player`).
+- Código e identificadores em inglês, comentários e textos do jogo em português.
+- Números de balanceamento ficam em `data/*.json`, nunca fixos no código.
+- Módulos conversam pelo `EventBus` em vez de referências diretas entre si.
+- Camadas de física já nomeadas: 1 world, 2 player, 3 zombies, 4 buildings, 5 projectiles, 6 interactables.
+
+## Ao exportar
+
+Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Projeto > Exportar*, na aba **Recursos**, adicione `data/*` em "Filtros para exportar arquivos que não são recursos".
+
+## Roadmap
+
+Fase atual: **0. Preparação** (concluída com este esqueleto). Próxima: **Fase 1. Núcleo** (zumbi que persegue, uma arma de cada estilo e rede com 2+ jogadores). Detalhes no GDD, seção 17.

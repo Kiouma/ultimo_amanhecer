@@ -1,0 +1,10 @@
+[
+  { "id": "crafting", "name": "Crafting e construção", "raised_by": "Construir peças e fabricar itens", "max_level": 100 },
+  { "id": "athletics", "name": "Atletismo", "raised_by": "Correr e pular", "max_level": 100 },
+  { "id": "toughness", "name": "Resistência", "raised_by": "Receber dano real", "max_level": 100 },
+  { "id": "firearms", "name": "Armas de fogo", "raised_by": "Disparar e acertar", "max_level": 100 },
+  { "id": "melee", "name": "Melee", "raised_by": "Golpear inimigos", "max_level": 100 },
+  { "id": "magic", "name": "Magia", "raised_by": "Conjurar feitiços", "max_level": 100 },
+  { "id": "stealth", "name": "Furtividade", "raised_by": "Agachar e mover sem ser ouvido", "max_level": 100 },
+  { "id": "survival", "name": "Sobrevivência", "raised_by": "Coletar, cozinhar e curar", "max_level": 100 }
+]

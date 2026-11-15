@@ -1,0 +1,14 @@
+# Godot
+.godot/
+/android/
+*.tmp
+
+# Builds exportadas
+/build/
+
+# Arquivos brutos de assets (.blend, .psd etc.) - versionar só se quiser
+assets/_incoming/
+
+# Sistema
+Thumbs.db
+.DS_Store
