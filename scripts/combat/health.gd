@@ -14,6 +14,8 @@ signal revived
 
 ## Teto de dano por pedido de cliente (proteção simples contra valores absurdos).
 const MAX_DAMAGE_PER_HIT := 500.0
+## Teto de cura por pedido de cliente.
+const MAX_HEAL_PER_USE := 100.0
 
 @export var max_health := 100.0
 
@@ -34,10 +36,14 @@ func take_damage(amount: float, source: Node = null) -> void:
 		_request_damage.rpc_id(1, amount, source.get_path() if source else NodePath())
 
 
+## Cura. Num cliente, pede ao servidor (só o dono do personagem pode pedir).
 func heal(amount: float) -> void:
-	if is_dead or amount <= 0.0 or not multiplayer.is_server():
+	if is_dead or amount <= 0.0:
 		return
-	_apply(minf(current + amount, max_health), 0.0, null)
+	if multiplayer.is_server():
+		_apply(minf(current + amount, max_health), 0.0, null)
+	elif Network.is_online():
+		_request_heal.rpc_id(1, amount)
 
 
 ## Volta à vida cheia. Num cliente, pede ao servidor (ex.: ao renascer).
@@ -100,6 +106,12 @@ func _request_damage(amount: float, source_path: NodePath) -> void:
 	if source == null or source.get_multiplayer_authority() != multiplayer.get_remote_sender_id():
 		return
 	_apply(maxf(current - clampf(amount, 0.0, MAX_DAMAGE_PER_HIT), 0.0), amount, source)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_heal(amount: float) -> void:
+	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
+		heal(clampf(amount, 0.0, MAX_HEAL_PER_USE))
 
 
 @rpc("any_peer", "call_remote", "reliable")

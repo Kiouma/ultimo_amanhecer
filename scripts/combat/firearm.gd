@@ -1,15 +1,20 @@
 class_name Firearm
 extends Weapon
 ## Arma de fogo com tiro instantâneo (hitscan). Semiautomática: um tiro por clique.
-## Munição em pente + reserva (o inventário de verdade entra na Fase 2).
+## Munição: o pente fica na arma; a reserva é a munição do tipo certo no inventário
+## (campo "ammo" do equipment.json). Recarregar consome do inventário.
 ## Botão direito mira: menos dispersão e zoom (GDD 5.2).
 
-@export var reserve_ammo := 60
 @export var aim_fov := 55.0
 ## Dano extra ao acertar a cabeça (a trilha do Atirador aumenta isso depois, GDD 4.2).
 @export var headshot_multiplier := 2.0
 
-var magazine := 0
+## Balas no pente: guardadas no slot do inventário (sobrevive a trocar de arma).
+var magazine: int:
+	get:
+		return int(slot.get("mag", 0))
+	set(value):
+		slot["mag"] = value
 var reloading := false
 
 var _default_fov := 80.0
@@ -19,7 +24,6 @@ var _flash: OmniLight3D
 
 func setup(entry: Dictionary, owner_player: Player, cam: Camera3D, head_node: Node3D) -> void:
 	super(entry, owner_player, cam, head_node)
-	magazine = int(stat("magazine", 12))
 	_default_fov = cam.fov
 
 
@@ -67,13 +71,13 @@ func _fire() -> void:
 	kick(Vector3(0, 0.01, 0.06), Vector3(deg_to_rad(8), 0, 0))
 	play_body_anim(&"Pistol_Shoot")
 	hud_changed.emit()
-	if magazine == 0 and reserve_ammo > 0:
+	if magazine == 0 and reserve() > 0:
 		get_tree().create_timer(0.3).timeout.connect(reload)
 
 
 func reload() -> void:
 	var capacity := int(stat("magazine", 12))
-	if reloading or magazine >= capacity or reserve_ammo <= 0:
+	if reloading or magazine >= capacity or reserve() <= 0:
 		return
 	reloading = true
 	hud_changed.emit()
@@ -85,12 +89,20 @@ func reload() -> void:
 	await tw.finished
 	if not reloading:  # trocou de arma no meio
 		return
-	var needed := capacity - magazine
-	var taken := mini(needed, reserve_ammo)
-	magazine += taken
-	reserve_ammo -= taken
+	var taken := mini(capacity - magazine, reserve())
+	if taken > 0 and user.inventory.remove_item(_ammo_id(), taken):
+		magazine += taken
 	reloading = false
 	hud_changed.emit()
+
+
+## Munição desse calibre no inventário.
+func reserve() -> int:
+	return user.inventory.count_of(_ammo_id()) if user and user.inventory else 0
+
+
+func _ammo_id() -> String:
+	return str(data.get("ammo", ""))
 
 
 func on_unequip() -> void:
@@ -101,7 +113,7 @@ func on_unequip() -> void:
 func hud_text() -> String:
 	if reloading:
 		return "recarregando..."
-	return "%d / %d" % [magazine, reserve_ammo]
+	return "%d / %d" % [magazine, reserve()]
 
 
 func _build_viewmodel() -> void:

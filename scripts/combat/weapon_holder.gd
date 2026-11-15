@@ -1,14 +1,13 @@
 class_name WeaponHolder
 extends Node3D
-## Fica na câmera do jogador. Cria as armas do loadout a partir dos dados e cuida
-## de trocar (1-9, rodinha), atacar (botão esquerdo), recarregar (R) e do feitiço
-## rápido (Q), que conjura o primeiro feitiço do loadout sem trocar de arma.
+## Fica na câmera do jogador e segue a hotbar do inventário (teclas 1-9, rodinha).
+## O item do slot selecionado define o que o botão esquerdo faz:
+## - arma de fogo / melee / feitiço: cria (uma vez) e mostra a arma;
+## - consumível (bandagem, kit médico): usa e gasta um;
+## - outro item ou vazio: mãos livres.
+## R recarrega; Q conjura o primeiro feitiço da hotbar sem trocar de slot.
 
 signal changed
-
-## Ids de equipment.json (armas) ou spells.json (feitiços), na ordem das teclas 1, 2, 3...
-## Provisório até existir inventário/hotbar (Fase 2).
-@export var loadout: Array[String] = ["pistol_9mm", "axe_iron", "firebolt"]
 
 ## Posição de cada tipo de arma na tela (1ª pessoa).
 const VIEW_OFFSETS := {
@@ -17,106 +16,152 @@ const VIEW_OFFSETS := {
 	"spell": Vector3(0.26, -0.24, -0.6),
 }
 
-var weapons: Array[Weapon] = []
-var current_index := -1
+var selected := 0
 var user: Player
+var inventory: Inventory
+
+var _camera: Camera3D
+var _head: Node3D
+## Armas já criadas, por id do item (reaproveitadas ao voltar para o slot).
+var _cache: Dictionary = {}
+var _current: Weapon
+var _use_cooldown := 0.0
 
 
-func setup(player: Player, camera: Camera3D, head: Node3D) -> void:
+func setup(player: Player, camera: Camera3D, head: Node3D, inv: Inventory) -> void:
 	user = player
-	for id in loadout:
-		var weapon := _create_weapon(id)
-		if weapon == null:
-			continue
-		weapon.position = VIEW_OFFSETS.get(_kind_of(weapon), Vector3(0.25, -0.25, -0.45))
-		add_child(weapon)
-		weapon.setup(_entry_for(id), player, camera, head)
-		weapon.visible = false
-		weapon.hud_changed.connect(changed.emit)
-		weapons.append(weapon)
-	if not weapons.is_empty():
-		equip(0)
+	_camera = camera
+	_head = head
+	inventory = inv
+	inventory.changed.connect(_refresh)
+	_refresh()
 
 
 func current() -> Weapon:
-	if current_index < 0 or current_index >= weapons.size():
-		return null
-	return weapons[current_index]
+	return _current
 
 
-func equip(index: int) -> void:
-	if index < 0 or index >= weapons.size() or index == current_index:
-		return
-	var old := current()
-	if old:
-		old.on_unequip()
-		old.visible = false
-	current_index = index
-	var weapon := current()
-	weapon.visible = true
-	weapon.on_equip()
+## Item no slot selecionado ({} se vazio).
+func selected_item() -> Dictionary:
+	return inventory.get_slot(selected) if inventory else {}
+
+
+func select(index: int) -> void:
+	selected = wrapi(index, 0, Inventory.HOTBAR_SIZE)
+	_refresh()
+
+
+func display_name() -> String:
+	var s := selected_item()
+	if s.is_empty():
+		return "Mãos livres"
+	return str(GameData.get_item(s.id).get("name", s.id))
+
+
+func hud_text() -> String:
+	var s := selected_item()
+	if _current:
+		return _current.hud_text()
+	if not s.is_empty() and int(s.count) > 1:
+		return "×%d" % int(s.count)
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "consumable":
+		return "clique para usar"
+	return ""
+
+
+func _refresh() -> void:
+	var s := selected_item()
+	var weapon: Weapon = null
+	if not s.is_empty():
+		weapon = _weapon_for(s.id)
+	if weapon != _current:
+		if _current:
+			_current.on_unequip()
+			_current.visible = false
+		_current = weapon
+		if _current:
+			_current.visible = true
+			_current.on_equip()
+	if _current:
+		_current.slot = s
 	changed.emit()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_use_cooldown = maxf(_use_cooldown - delta, 0.0)
 	if user == null or not _accepts_input():
 		return
-	var weapon := current()
-	if weapon:
-		weapon.handle_attack(Input.is_action_pressed("attack"), Input.is_action_just_pressed("attack"))
+	if _current:
+		_current.handle_attack(Input.is_action_pressed("attack"), Input.is_action_just_pressed("attack"))
+	elif Input.is_action_just_pressed("attack"):
+		use_selected()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if user == null or not _accepts_input():
 		return
-	for i in mini(weapons.size(), 9):
+	for i in Inventory.HOTBAR_SIZE:
 		if event.is_action_pressed("hotbar_%d" % (i + 1)):
-			equip(i)
+			select(i)
 			return
 	if event.is_action_pressed("weapon_next"):
-		equip(wrapi(current_index + 1, 0, weapons.size()))
+		select(selected + 1)
 	elif event.is_action_pressed("weapon_prev"):
-		equip(wrapi(current_index - 1, 0, weapons.size()))
-	elif event.is_action_pressed("reload") and current():
-		current().reload()
+		select(selected - 1)
+	elif event.is_action_pressed("reload") and _current:
+		_current.reload()
 	elif event.is_action_pressed("spell_1"):
 		_quick_cast()
 
 
+## Usa o item selecionado (consumíveis). Cura passa pelo servidor (Health.heal).
+func use_selected() -> void:
+	var s := selected_item()
+	if s.is_empty() or _use_cooldown > 0.0:
+		return
+	var data := GameData.get_item(s.id)
+	if data.get("type", "") != "consumable":
+		return
+	var heals := float(data.get("heals", 0.0))
+	if heals > 0.0:
+		if user.health.current >= user.health.max_health:
+			return  # vida cheia: não desperdiça
+		user.health.heal(heals)
+	inventory.take_from_slot(selected, 1)
+	_use_cooldown = 1.0
+	user.play_action_synced(&"Consume")
+
+
 func _quick_cast() -> void:
-	for weapon in weapons:
-		if weapon is SpellCaster:
-			(weapon as SpellCaster).cast()
-			return
+	var index := inventory.find_in_hotbar("spell")
+	if index < 0:
+		return
+	var caster := _weapon_for(inventory.get_slot(index).id) as SpellCaster
+	if caster:
+		caster.cast()
 
 
 func _accepts_input() -> bool:
 	if not user.is_multiplayer_authority() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return false
-	var health := Health.find_in(user)
-	return health == null or not health.is_dead
+	return not user.health.is_dead
 
 
-func _create_weapon(id: String) -> Weapon:
-	var item := GameData.get_entry("items", id)
-	if not item.is_empty():
-		match str(item.get("type", "")):
-			"firearm": return Firearm.new()
-			"melee": return MeleeWeapon.new()
-	if not GameData.get_entry("spells", id).is_empty():
-		return SpellCaster.new()
-	push_warning("Loadout: '%s' não é arma nem feitiço conhecido." % id)
-	return null
-
-
-func _entry_for(id: String) -> Dictionary:
-	var item := GameData.get_entry("items", id)
-	return item if not item.is_empty() else GameData.get_entry("spells", id)
-
-
-func _kind_of(weapon: Weapon) -> String:
-	if weapon is Firearm:
-		return "firearm"
-	if weapon is MeleeWeapon:
-		return "melee"
-	return "spell"
+func _weapon_for(id: String) -> Weapon:
+	if _cache.has(id):
+		return _cache[id]
+	var data := GameData.get_item(id)
+	var weapon: Weapon = null
+	var kind := str(data.get("type", ""))
+	match kind:
+		"firearm": weapon = Firearm.new()
+		"melee": weapon = MeleeWeapon.new()
+		"spell": weapon = SpellCaster.new()
+		_: return null
+	weapon.position = VIEW_OFFSETS.get(kind, Vector3(0.25, -0.25, -0.45))
+	add_child(weapon)
+	weapon.setup(data, user, _camera, _head)
+	weapon.visible = false
+	weapon.hud_changed.connect(changed.emit)
+	_cache[id] = weapon
+	return weapon

@@ -32,6 +32,27 @@ func get_all(category: String) -> Dictionary:
 	return _db.get(category, {})
 
 
+## Qualquer coisa que pode ocupar um slot de inventário: itens de items/*.json ou
+## feitiços de spells/*.json (feitiço vira um "item" sem peso, do tipo "spell").
+## Retorna {} se o id não existir.
+func get_item(id: String) -> Dictionary:
+	var item := get_entry("items", id)
+	if not item.is_empty():
+		return item
+	var spell := get_entry("spells", id)
+	if not spell.is_empty():
+		var as_item := spell.duplicate()
+		as_item["type"] = "spell"
+		as_item["weight"] = 0.0
+		return as_item
+	return {}
+
+
+## Quantos cabem num slot (campo "stack"; armas e ferramentas = 1).
+func max_stack(id: String) -> int:
+	return maxi(int(get_item(id).get("stack", 1)), 1)
+
+
 func _load_category(category: String) -> Dictionary:
 	var entries := {}
 	var dir_path := DATA_ROOT.path_join(category)

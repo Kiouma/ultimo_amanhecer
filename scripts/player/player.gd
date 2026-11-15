@@ -7,6 +7,15 @@ extends CharacterBody3D
 ## dele. Na máquina dono, lê teclado/mouse e move; nas outras, só mostra a posição
 ## e a animação que chegam pelo MultiplayerSynchronizer (net_* abaixo).
 
+## Avisa o HUD sobre o que está na mira para interagir ("" = nada).
+signal interaction_prompt_changed(text: String)
+
+## Kit inicial provisório (até existir criação de personagem, GDD 4.4).
+## Cada entrada: [id, quantidade, slot da hotbar ou -1].
+const STARTER_KIT := [
+	["pistol_9mm", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3], ["ammo_9mm", 24, -1],
+]
+
 @export_group("Movimento")
 @export var walk_speed := 5.0
 @export var sprint_speed := 8.0
@@ -15,6 +24,10 @@ extends CharacterBody3D
 @export var acceleration := 12.0
 ## Stamina gasta por segundo correndo (GDD 7).
 @export var sprint_stamina_per_second := 8.0
+## Velocidade com o inventário acima do peso máximo (fração da normal).
+@export var overloaded_speed_factor := 0.55
+## Alcance para interagir (pegar itens, portas...).
+@export var interact_range := 2.8
 
 @export_group("Barulho")
 ## Raio (em metros) em que zumbis ouvem os passos (GDD 5.1). Multiplicado pela audição do zumbi.
@@ -55,6 +68,9 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var mana: StatPool = $Mana
 @onready var camera: Camera3D = $Head/SpringArm3D/Camera3D
 @onready var weapons: WeaponHolder = $Head/SpringArm3D/Camera3D/WeaponHolder
+@onready var inventory: Inventory = $Inventory
+
+var _focused: Node = null
 
 
 func _enter_tree() -> void:
@@ -68,9 +84,10 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
 	health.revived.connect(_on_revived)
-	weapons.setup(self, camera, head)
+	weapons.setup(self, camera, head, inventory)
 	if is_local():
 		camera.current = true
+		_give_starter_kit()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_apply_camera_mode()
 	else:
@@ -96,6 +113,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_apply_camera_mode()
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif event.is_action_pressed("interact") and _focused and not health.is_dead:
+		_focused.interact(self)
 	elif event.is_action_pressed("attack") and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -146,6 +165,37 @@ func _physics_process(delta: float) -> void:
 	net_on_floor = is_on_floor()
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
 	_emit_footstep_noise(delta, crouching, sprinting)
+	_update_focus()
+
+
+## O que está na mira e pode ser usado com E (itens no chão etc.).
+func _update_focus() -> void:
+	var reach := interact_range + spring_arm.get_hit_length()
+	var from := camera.global_position
+	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * reach, 1 | 8 | 32)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var target: Node = hit.get("collider")
+	if target and not target.has_method(&"interact"):
+		target = null
+	if target and target.global_position.distance_to(global_position) > interact_range + 1.0:
+		target = null
+	if target != _focused:
+		_focused = target
+		interaction_prompt_changed.emit(_focused.get_prompt() if _focused else "")
+
+
+func _give_starter_kit() -> void:
+	for entry in STARTER_KIT:
+		var slot_index: int = entry[2]
+		if slot_index >= 0 and inventory.get_slot(slot_index).is_empty():
+			inventory.slots[slot_index] = {"id": entry[0], "count": entry[1]}
+		else:
+			inventory.add_item(entry[0], entry[1])
+	# A pistola inicial vem carregada.
+	if inventory.get_slot(0).get("id", "") == "pistol_9mm":
+		inventory.slots[0]["mag"] = int(GameData.get_item("pistol_9mm").get("magazine", 12))
+	inventory.changed.emit()
 
 
 func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> void:
@@ -223,15 +273,17 @@ func _on_revived() -> void:
 
 
 func _wants_sprint(crouching: bool) -> bool:
-	return Input.is_action_pressed("sprint") and not crouching and stamina.current > 0.0
+	return Input.is_action_pressed("sprint") and not crouching and stamina.current > 0.0 \
+		and not inventory.is_overloaded()
 
 
 func _current_speed(crouching: bool) -> float:
+	var factor := overloaded_speed_factor if inventory.is_overloaded() else 1.0
 	if crouching:
-		return crouch_speed
+		return crouch_speed * factor
 	if _wants_sprint(crouching) and is_on_floor():
 		return sprint_speed
-	return walk_speed
+	return walk_speed * factor
 
 
 func _apply_camera_mode() -> void:

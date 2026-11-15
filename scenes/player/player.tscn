@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://scripts/combat/health.gd" id="3_health"]
 [ext_resource type="Script" path="res://scripts/combat/stat_pool.gd" id="4_pool"]
 [ext_resource type="Script" path="res://scripts/combat/weapon_holder.gd" id="5_weapons"]
+[ext_resource type="Script" path="res://scripts/inventory/inventory.gd" id="6_inventory"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -56,6 +57,9 @@ regen_delay = 1.0
 script = ExtResource("4_pool")
 regen_per_second = 2.0
 regen_delay = 2.0
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("6_inventory")
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)

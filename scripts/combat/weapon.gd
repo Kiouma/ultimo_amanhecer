@@ -17,6 +17,8 @@ var user: Player
 var camera: Camera3D
 var head: Node3D
 var cooldown := 0.0
+## Slot do inventário de onde a arma foi equipada (guarda estado como balas no pente).
+var slot: Dictionary = {}
 
 var _rest_position := Vector3.ZERO
 var _rest_rotation := Vector3.ZERO
