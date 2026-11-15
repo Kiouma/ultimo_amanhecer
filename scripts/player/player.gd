@@ -23,8 +23,8 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var head: Node3D = $Head
 @onready var spring_arm: SpringArm3D = $Head/SpringArm3D
-## Visual do personagem. Pode ser a cápsula provisória ou um modelo .glb importado.
-@onready var model: Node3D = $Model
+## Visual do personagem (corpo, cabelo e animações). Ver character_model.gd.
+@onready var model: CharacterModel = $Model
 
 
 func _ready() -> void:
@@ -67,6 +67,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	var sprinting := Input.is_action_pressed("sprint") and not crouching
+	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
+
 
 func _current_speed(crouching: bool) -> float:
 	if crouching:
@@ -79,4 +82,8 @@ func _current_speed(crouching: bool) -> float:
 func _apply_camera_mode() -> void:
 	spring_arm.spring_length = 0.0 if first_person else third_person_distance
 	spring_arm.position = Vector3.ZERO if first_person else third_person_offset
-	model.visible = not first_person
+	# Na 1ª pessoa o corpo some da câmera, mas continua projetando sombra.
+	var shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if first_person \
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	for mesh: GeometryInstance3D in model.find_children("*", "GeometryInstance3D", true, false):
+		mesh.cast_shadow = shadow_mode
