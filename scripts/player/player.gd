@@ -10,6 +10,8 @@ extends CharacterBody3D
 @export var crouch_speed := 2.5
 @export var jump_velocity := 4.5
 @export var acceleration := 12.0
+## Stamina gasta por segundo correndo (GDD 7).
+@export var sprint_stamina_per_second := 8.0
 
 @export_group("Barulho")
 ## Raio (em metros) em que zumbis ouvem os passos (GDD 5.1). Multiplicado pela audição do zumbi.
@@ -39,6 +41,10 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 ## Visual do personagem (corpo, cabelo e animações). Ver character_model.gd.
 @onready var model: CharacterModel = $Model
 @onready var health: Health = $Health
+@onready var stamina: StatPool = $Stamina
+@onready var mana: StatPool = $Mana
+@onready var camera: Camera3D = $Head/SpringArm3D/Camera3D
+@onready var weapons: WeaponHolder = $Head/SpringArm3D/Camera3D/WeaponHolder
 
 
 func _ready() -> void:
@@ -46,6 +52,7 @@ func _ready() -> void:
 	_spawn_point = global_position
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
+	weapons.setup(self, camera, head)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_apply_camera_mode()
 	EventBus.player_spawned.emit(self)
@@ -92,7 +99,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	var sprinting := Input.is_action_pressed("sprint") and not crouching
+	var sprinting := _wants_sprint(crouching) and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 0.5
+	if sprinting:
+		stamina.drain(sprint_stamina_per_second * delta)
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
 	_emit_footstep_noise(delta, crouching, sprinting)
 
@@ -117,14 +126,20 @@ func _on_died(_source: Node) -> void:
 	global_position = _spawn_point
 	velocity = Vector3.ZERO
 	health.reset()
+	stamina.refill()
+	mana.refill()
 	model.cancel_action()
 	model.play(&"Idle")
+
+
+func _wants_sprint(crouching: bool) -> bool:
+	return Input.is_action_pressed("sprint") and not crouching and stamina.current > 0.0
 
 
 func _current_speed(crouching: bool) -> float:
 	if crouching:
 		return crouch_speed
-	if Input.is_action_pressed("sprint") and is_on_floor():
+	if _wants_sprint(crouching) and is_on_floor():
 		return sprint_speed
 	return walk_speed
 
@@ -133,6 +148,8 @@ func _apply_camera_mode() -> void:
 	spring_arm.spring_length = 0.0 if first_person else third_person_distance
 	spring_arm.position = Vector3.ZERO if first_person else third_person_offset
 	# Na 1ª pessoa o corpo some da câmera, mas continua projetando sombra.
+	# As armas de 1ª pessoa (viewmodel) só aparecem nesse modo.
+	weapons.visible = first_person
 	var shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if first_person \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	for mesh: GeometryInstance3D in model.find_children("*", "GeometryInstance3D", true, false):

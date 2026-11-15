@@ -1,5 +1,5 @@
 [
-  { "id": "firebolt", "name": "Dardo de fogo", "school": "fire", "mana": 15, "cast_time": 0.4, "cooldown": 1.0, "damage": 30, "noise": 0.6 },
+  { "id": "firebolt", "name": "Dardo de fogo", "school": "fire", "mana": 15, "cast_time": 0.4, "cooldown": 1.0, "damage": 30, "noise": 0.6, "speed": 22, "range": 80 },
   { "id": "frost_nova", "name": "Nova de gelo", "school": "ice", "mana": 30, "cast_time": 0.8, "cooldown": 8.0, "damage": 10, "slow": 0.5, "radius": 5, "noise": 0.3 },
   { "id": "chain_lightning", "name": "Raio em cadeia", "school": "lightning", "mana": 35, "cast_time": 0.6, "cooldown": 6.0, "damage": 25, "chains": 3, "noise": 0.7 },
   { "id": "mend", "name": "Remendar", "school": "life", "mana": 25, "cast_time": 1.2, "cooldown": 4.0, "heal": 30, "noise": 0.1 },

@@ -1,7 +1,7 @@
 [
-  { "id": "pistol_9mm", "name": "Pistola 9mm", "type": "firearm", "weight": 1.2, "damage": 25, "fire_rate": 4.0, "magazine": 12, "ammo": "ammo_9mm", "noise": 0.8, "durability": 300 },
+  { "id": "pistol_9mm", "name": "Pistola 9mm", "type": "firearm", "weight": 1.2, "damage": 25, "fire_rate": 4.0, "magazine": 12, "ammo": "ammo_9mm", "noise": 0.8, "durability": 300, "range": 60, "reload_time": 1.6, "spread_hip": 1.5, "spread_aim": 0.3 },
   { "id": "ammo_9mm", "name": "Munição 9mm", "type": "ammo", "weight": 0.01, "stack": 200 },
-  { "id": "axe_iron", "name": "Machado de ferro", "type": "melee", "category": "medium", "weight": 2.5, "damage": 35, "stamina_cost": 12, "noise": 0.2, "durability": 250 },
+  { "id": "axe_iron", "name": "Machado de ferro", "type": "melee", "category": "medium", "weight": 2.5, "damage": 35, "stamina_cost": 12, "noise": 0.2, "durability": 250, "range": 2.2, "attack_time": 0.65, "hit_delay": 0.25 },
   { "id": "spear_wood", "name": "Lança de madeira", "type": "melee", "category": "reach", "weight": 1.5, "damage": 18, "stamina_cost": 8, "noise": 0.1, "durability": 80 },
   { "id": "torch", "name": "Tocha", "type": "tool", "weight": 0.5, "durability": 120 },
   { "id": "bandage", "name": "Bandagem simples", "type": "consumable", "weight": 0.05, "stack": 20, "heals": 10, "cures": ["bleeding"] },

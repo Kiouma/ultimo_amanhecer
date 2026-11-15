@@ -279,7 +279,9 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Usar / interagir | E |
 | Inventário | Tab |
 | Trocar arma | 1 a 9, roda do mouse |
-| Feitiço rápido | Q / R (configurável) |
+| Recarregar | R |
+| Feitiço rápido | Q / F (configurável) |
+| Câmera 1ª / 3ª pessoa | V |
 | Modo construção | B |
 
 Suporte a controle (gamepad) planejado para depois.
