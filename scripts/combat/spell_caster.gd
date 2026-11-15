@@ -57,6 +57,7 @@ func _launch() -> void:
 	get_tree().current_scene.add_child(bolt)
 	bolt.global_position = from
 	bolt.direction = (aim_point - from).normalized()
+	user.broadcast_fx(&"bolt", from, aim_point, bolt.color)
 	make_noise(stat("noise", 0.6))
 	kick(Vector3(0, 0, 0.08), Vector3(0.3, 0, 0), 0.2)
 

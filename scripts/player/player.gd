@@ -1,8 +1,11 @@
 class_name Player
 extends CharacterBody3D
-## Controlador básico do jogador (Fase 0/1 do roadmap).
-## Movimento, pulo, corrida, agachar e câmera em 1ª/3ª pessoa (tecla V).
+## Jogador: movimento, pulo, corrida, agachar e câmera em 1ª/3ª pessoa (tecla V).
 ## Valores provisórios: ajustar com testes (GDD 5.5 e 16).
+##
+## Rede: o nó se chama com o id do jogador (peer id) e esse jogador é a autoridade
+## dele. Na máquina dono, lê teclado/mouse e move; nas outras, só mostra a posição
+## e a animação que chegam pelo MultiplayerSynchronizer (net_* abaixo).
 
 @export_group("Movimento")
 @export var walk_speed := 5.0
@@ -32,8 +35,15 @@ extends CharacterBody3D
 @export var third_person_offset := Vector3(0.5, 0.2, 0.0)
 
 var first_person := true
+
+# Estado de animação replicado para os outros jogadores.
+var net_crouching := false
+var net_sprinting := false
+var net_on_floor := true
+
 var _noise_timer := 0.0
 var _spawn_point := Vector3.ZERO
+var _spawn_point_set := false
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var head: Node3D = $Head
@@ -47,15 +57,33 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var weapons: WeaponHolder = $Head/SpringArm3D/Camera3D/WeaponHolder
 
 
+func _enter_tree() -> void:
+	# O nome do nó é o id do jogador dono (o servidor cria assim, ver arena.gd).
+	if name.is_valid_int():
+		set_multiplayer_authority(name.to_int())
+
+
 func _ready() -> void:
 	spring_arm.add_excluded_object(get_rid())
-	_spawn_point = global_position
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
+	health.revived.connect(_on_revived)
 	weapons.setup(self, camera, head)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	_apply_camera_mode()
+	if is_local():
+		camera.current = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		_apply_camera_mode()
+	else:
+		# Personagem de outro jogador: sem câmera, sem armas de 1ª pessoa, corpo visível.
+		camera.current = false
+		weapons.visible = false
+		set_process_unhandled_input(false)
 	EventBus.player_spawned.emit(self)
+
+
+## Verdadeiro se este é o personagem controlado nesta máquina.
+func is_local() -> bool:
+	return is_multiplayer_authority()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -73,6 +101,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not is_local():
+		# Posição e rotação chegam pela rede; aqui só anima.
+		if not health.is_dead:
+			model.update_locomotion(velocity * transform.basis, net_on_floor, net_crouching, net_sprinting)
+		return
+
+	if not _spawn_point_set:
+		# Num cliente a posição inicial chega pela rede depois do _ready; por isso aqui.
+		_spawn_point = global_position
+		_spawn_point_set = true
+
 	if health.is_dead:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -102,6 +141,9 @@ func _physics_process(delta: float) -> void:
 	var sprinting := _wants_sprint(crouching) and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 0.5
 	if sprinting:
 		stamina.drain(sprint_stamina_per_second * delta)
+	net_crouching = crouching
+	net_sprinting = sprinting
+	net_on_floor = is_on_floor()
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
 	_emit_footstep_noise(delta, crouching, sprinting)
 
@@ -112,8 +154,51 @@ func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> voi
 		return
 	_noise_timer = noise_interval
 	var loudness := crouch_noise if crouching else (sprint_noise if sprinting else walk_noise)
-	EventBus.noise_emitted.emit(global_position, loudness, self)
+	Network.emit_noise(global_position, loudness, self)
 
+
+# --- Ações visíveis para todos -----------------------------------------------------
+
+## Animação de ação (tiro, golpe, feitiço) aqui e nas telas dos outros jogadores.
+## Só toca parado, para não travar as pernas (mistura tronco/pernas fica para depois).
+func play_action_synced(anim_name: StringName) -> void:
+	_play_action_if_still(anim_name)
+	if Network.is_online():
+		_remote_action.rpc(anim_name)
+
+
+@rpc("authority", "call_remote", "unreliable")
+func _remote_action(anim_name: StringName) -> void:
+	_play_action_if_still(anim_name)
+
+
+func _play_action_if_still(anim_name: StringName) -> void:
+	if Vector2(velocity.x, velocity.z).length() < 0.5:
+		model.play_action(anim_name)
+
+
+## Efeitos de arma (rastro de tiro, dardo) mostrados nas telas dos outros jogadores.
+func broadcast_fx(kind: StringName, from: Vector3, to: Vector3, color := Color.WHITE) -> void:
+	if Network.is_online():
+		_remote_fx.rpc(kind, from, to, color)
+
+
+@rpc("authority", "call_remote", "unreliable")
+func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> void:
+	match kind:
+		&"tracer":
+			Weapon.spawn_tracer(self, from, to)
+		&"bolt":
+			var bolt: Area3D = SpellCaster.PROJECTILE.new()
+			bolt.visual_only = true
+			bolt.color = color
+			bolt.caster = self
+			get_tree().current_scene.add_child(bolt)
+			bolt.global_position = from
+			bolt.direction = (to - from).normalized()
+
+
+# --- Vida, morte e renascimento -----------------------------------------------------
 
 func _on_damaged(_amount: float, _source: Node) -> void:
 	model.play_action(&"Hit_Chest")
@@ -122,12 +207,17 @@ func _on_damaged(_amount: float, _source: Node) -> void:
 func _on_died(_source: Node) -> void:
 	model.play_action(&"Death01")
 	EventBus.player_died.emit(self)
+	if not is_local():
+		return
 	await get_tree().create_timer(respawn_delay, false).timeout
 	global_position = _spawn_point
 	velocity = Vector3.ZERO
-	health.reset()
 	stamina.refill()
 	mana.refill()
+	health.reset()  # pede ao servidor; quando voltar, dispara revived
+
+
+func _on_revived() -> void:
 	model.cancel_action()
 	model.play(&"Idle")
 

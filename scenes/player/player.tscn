@@ -10,6 +10,29 @@
 radius = 0.4
 height = 1.8
 
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_player"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath("Head:rotation")
+properties/2/spawn = false
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:velocity")
+properties/3/spawn = false
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:net_crouching")
+properties/4/spawn = false
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:net_sprinting")
+properties/5/spawn = false
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:net_on_floor")
+properties/6/spawn = false
+properties/6/replication_mode = 2
+
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2
 collision_mask = 13
@@ -47,3 +70,6 @@ fov = 80.0
 
 [node name="WeaponHolder" type="Node3D" parent="Head/SpringArm3D/Camera3D"]
 script = ExtResource("5_weapons")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_player")

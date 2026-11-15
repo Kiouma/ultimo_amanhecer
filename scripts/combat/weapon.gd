@@ -13,7 +13,7 @@ const NOISE_TO_METERS := 50.0
 const HIT_MASK := 1 | 4 | 8
 
 var data: Dictionary = {}
-var user: CharacterBody3D
+var user: Player
 var camera: Camera3D
 var head: Node3D
 var cooldown := 0.0
@@ -22,7 +22,7 @@ var _rest_position := Vector3.ZERO
 var _rest_rotation := Vector3.ZERO
 
 
-func setup(entry: Dictionary, owner_player: CharacterBody3D, cam: Camera3D, head_node: Node3D) -> void:
+func setup(entry: Dictionary, owner_player: Player, cam: Camera3D, head_node: Node3D) -> void:
 	data = entry
 	user = owner_player
 	camera = cam
@@ -70,7 +70,7 @@ func stat(key: String, default: float) -> float:
 # --- Utilitários para as armas ---------------------------------------------------
 
 func make_noise(factor: float) -> void:
-	EventBus.noise_emitted.emit(user.global_position, factor * NOISE_TO_METERS, user)
+	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS, user)
 
 
 ## Raio a partir do centro da tela (mira). Ignora o próprio jogador.
@@ -90,6 +90,7 @@ func aim_ray(max_range: float, spread_deg := 0.0) -> Dictionary:
 
 
 ## Aplica dano em quem tiver o componente Health. Retorna true se acertou algo vivo.
+## Num cliente, o dano vira um pedido ao servidor (ver Health).
 func deal_damage(target: Object, amount: float) -> bool:
 	if not target is Node:
 		return false
@@ -100,12 +101,10 @@ func deal_damage(target: Object, amount: float) -> bool:
 	return true
 
 
-## Animação de corpo inteiro na 3ª pessoa. Só toca parado, para não travar as
-## pernas enquanto anda (mistura de tronco/pernas fica para depois).
+## Animação de ação do personagem (vista na 3ª pessoa e pelos outros jogadores).
 func play_body_anim(anim_name: StringName) -> void:
-	var model: CharacterModel = user.get(&"model")
-	if model and Vector2(user.velocity.x, user.velocity.z).length() < 0.5:
-		model.play_action(anim_name)
+	if user.has_method(&"play_action_synced"):
+		user.play_action_synced(anim_name)
 
 
 ## Pequeno "coice" visual do viewmodel.
@@ -115,6 +114,20 @@ func kick(offset: Vector3, rot: Vector3, duration := 0.12) -> void:
 	tw.parallel().tween_property(self, "rotation", _rest_rotation + rot, duration * 0.3)
 	tw.tween_property(self, "position", _rest_position, duration * 0.7)
 	tw.parallel().tween_property(self, "rotation", _rest_rotation, duration * 0.7)
+
+
+## Rastro de bala de from até to (some rápido). Estático para os outros jogadores usarem também.
+static func spawn_tracer(context: Node, from: Vector3, to: Vector3) -> void:
+	var length := from.distance_to(to)
+	if length < 0.5:
+		return
+	var tracer := box(Vector3(0.008, 0.008, length), Color(1.0, 0.9, 0.6), Vector3.ZERO, true)
+	context.get_tree().current_scene.add_child(tracer)
+	tracer.global_position = (from + to) * 0.5
+	tracer.look_at(to)
+	var tw := tracer.create_tween()
+	tw.tween_property(tracer, "transparency", 1.0, 0.06)
+	tw.tween_callback(tracer.queue_free)
 
 
 ## Os modelos de verdade ainda não existem: cada arma monta formas simples.

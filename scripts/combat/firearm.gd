@@ -17,7 +17,7 @@ var _muzzle: Node3D
 var _flash: OmniLight3D
 
 
-func setup(entry: Dictionary, owner_player: CharacterBody3D, cam: Camera3D, head_node: Node3D) -> void:
+func setup(entry: Dictionary, owner_player: Player, cam: Camera3D, head_node: Node3D) -> void:
 	super(entry, owner_player, cam, head_node)
 	magazine = int(stat("magazine", 12))
 	_default_fov = cam.fov
@@ -121,17 +121,9 @@ func _build_viewmodel() -> void:
 
 
 func _spawn_tracer(to: Vector3) -> void:
-	var from := _muzzle.global_position
-	var length := from.distance_to(to)
-	if length < 0.5:
-		return
-	var tracer := box(Vector3(0.008, 0.008, length), Color(1.0, 0.9, 0.6), Vector3.ZERO, true)
-	get_tree().current_scene.add_child(tracer)
-	tracer.global_position = (from + to) * 0.5
-	tracer.look_at(to)
-	var tw := tracer.create_tween()
-	tw.tween_property(tracer, "transparency", 1.0, 0.06)
-	tw.tween_callback(tracer.queue_free)
+	Weapon.spawn_tracer(self, _muzzle.global_position, to)
+	# Nos outros jogadores, o rastro sai da cabeça do personagem (não há viewmodel lá).
+	user.broadcast_fx(&"tracer", head.global_position + head.global_basis.x * 0.2, to)
 
 
 func _spawn_impact(at: Vector3) -> void:

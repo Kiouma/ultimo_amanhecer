@@ -4,6 +4,8 @@ extends CharacterBody3D
 ## Estados (GDD 6.2): vagando → investigando → perseguindo → atacando → perdendo o alvo.
 ## Percepção: visão em cone com linha de visada + audição (EventBus.noise_emitted).
 ## A IA só roda no servidor (multiplayer autoritativo, GDD 14); offline o jogo é o servidor.
+## Nos clientes, posição/rotação/velocidade/estado chegam pelo MultiplayerSynchronizer
+## e o zumbi só anima.
 
 enum State { WANDER, INVESTIGATE, CHASE, ATTACK, DEAD }
 
@@ -26,6 +28,7 @@ enum State { WANDER, INVESTIGATE, CHASE, ATTACK, DEAD }
 @export var turn_speed := 6.0
 
 var state := State.WANDER
+var _shown_state := State.WANDER  # último estado animado num cliente
 var stats: Dictionary = {}
 var target: Node3D
 var _last_known_position := Vector3.ZERO
@@ -46,10 +49,12 @@ func _ready() -> void:
 	stats = GameData.get_entry("zombies", zombie_id)
 	if stats.is_empty():
 		push_warning("Zumbi '%s' não existe em zombies.json; usando valores padrão." % zombie_id)
-	health.reset(_stat("health", 100.0))
+	# Todos calculam a mesma vida a partir do zombie_id (que chega na criação).
+	health.configure(_stat("health", 100.0))
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
-	EventBus.noise_emitted.connect(_on_noise)
+	if multiplayer.is_server():
+		EventBus.noise_emitted.connect(_on_noise)
 	_home = global_position
 	_wander_wait = randf_range(0.5, 3.0)
 	model.play(&"Zombie_Idle")
@@ -58,7 +63,10 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
-	if state == State.DEAD or not multiplayer.is_server():
+	if not multiplayer.is_server():
+		_client_animate()
+		return
+	if state == State.DEAD:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
@@ -215,13 +223,15 @@ func _set_state(new_state: State) -> void:
 # --- Dano e morte ----------------------------------------------------------------
 
 func _on_damaged(_amount: float, source: Node) -> void:
+	model.play_action(&"Hit_Chest")
+	if not multiplayer.is_server():
+		return
 	if source is Node3D:
 		target = source
 		_last_known_position = source.global_position
 		_time_since_seen = 0.0
 		if state != State.ATTACK:
 			_set_state(State.CHASE)
-	model.play_action(&"Hit_Chest")
 
 
 func _on_died(_source: Node) -> void:
@@ -229,7 +239,9 @@ func _on_died(_source: Node) -> void:
 	collision_layer = 0
 	collision_mask = 1
 	model.play_action(&"Death01")
-	get_tree().create_timer(15.0, false).timeout.connect(queue_free)
+	if multiplayer.is_server():
+		# Sumir no servidor some em todos (MultiplayerSpawner).
+		get_tree().create_timer(15.0, false).timeout.connect(queue_free)
 
 
 # --- Movimento -------------------------------------------------------------------
@@ -271,6 +283,17 @@ func _speed() -> float:
 
 func _stat(key: String, default: float) -> float:
 	return float(stats.get(key, default))
+
+
+## Cliente: anima a partir do que chegou pela rede.
+func _client_animate() -> void:
+	if state != _shown_state:
+		_shown_state = state
+		if state == State.ATTACK:
+			model.play_action(&"Zombie_Scratch")
+		elif state == State.DEAD:
+			collision_layer = 0
+	_update_animation()
 
 
 func _update_animation() -> void:

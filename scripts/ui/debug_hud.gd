@@ -15,14 +15,18 @@ var _weapons: WeaponHolder
 func _ready() -> void:
 	death_label.visible = false
 	EventBus.player_spawned.connect(_on_player_spawned)
-	EventBus.player_died.connect(func(_p: Node) -> void: death_label.visible = true)
+	EventBus.player_died.connect(func(p: Node) -> void:
+		if p.is_multiplayer_authority():
+			death_label.visible = true)
 	# O player pode ter nascido antes do HUD.
-	var player := get_tree().get_first_node_in_group("player")
-	if player:
+	for player in get_tree().get_nodes_in_group("player"):
 		_on_player_spawned(player)
 
 
 func _on_player_spawned(player: Node) -> void:
+	# Na rede existem vários personagens; o HUD mostra só o desta máquina.
+	if not player.is_multiplayer_authority():
+		return
 	var health := Health.find_in(player)
 	if health and not health.changed.is_connected(_on_health_changed):
 		health.changed.connect(_on_health_changed)

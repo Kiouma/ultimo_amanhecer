@@ -19,10 +19,10 @@ const VIEW_OFFSETS := {
 
 var weapons: Array[Weapon] = []
 var current_index := -1
-var user: CharacterBody3D
+var user: Player
 
 
-func setup(player: CharacterBody3D, camera: Camera3D, head: Node3D) -> void:
+func setup(player: Player, camera: Camera3D, head: Node3D) -> void:
 	user = player
 	for id in loadout:
 		var weapon := _create_weapon(id)
@@ -91,7 +91,7 @@ func _quick_cast() -> void:
 
 
 func _accepts_input() -> bool:
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not user.is_multiplayer_authority() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return false
 	var health := Health.find_in(user)
 	return health == null or not health.is_dead

@@ -8,9 +8,22 @@ Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arma
 
 1. Abra o Godot 4.6.
 2. Clique em **Importar**, escolha a pasta deste projeto (`project.godot`) e abra.
-3. Aperte **F5**. A arena de teste carrega com um jogador controlável.
+3. Aperte **F5**. Abre o menu: **Jogar sozinho**, **Hospedar partida** ou **Entrar** (IP do host).
 
-Controles: WASD move, Shift corre, Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo). O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
+
+Armas: **1** pistola, **2** machado, **3** dardo de fogo (ou rodinha do mouse). Botão esquerdo ataca, botão direito mira, **R** recarrega, **Q** lança o feitiço sem trocar de arma. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+
+## Testar o co-op no mesmo PC
+
+1. No editor: *Depurar > Personalizar instâncias de execução*, ative **Ativar várias instâncias** e escolha 2 (ou mais).
+2. Aperte F5. Numa janela clique **Hospedar partida**; na outra, **Entrar** com `127.0.0.1`.
+
+Atalhos de linha de comando (pulam o menu): `godot -- --host`, `godot -- --join=IP`, `godot -- --solo`.
+
+Entre PCs: na mesma rede use o IP local do host (ex.: `192.168.0.10`). Pela internet, o host libera a porta **7777 UDP** no roteador (ou usa uma VPN como Tailscale/ZeroTier/Radmin).
+
+**Como a rede funciona** (autoload `Network`): o host é o servidor e manda nos zumbis, na vida, no dano e nas mortes. Cada jogador controla o movimento do próprio personagem. Ataques detectam o acerto em quem atacou e pedem o dano ao servidor (`Health.take_damage`).
 
 ## Estrutura
 
@@ -19,10 +32,12 @@ assets/        Arte e som (veja assets/README.md e assets/LICENSES.md)
 data/          Conteúdo do jogo em JSON: itens, receitas, zumbis, feitiços,
                proficiências, passados. Carregado pelo autoload GameData.
 scenes/        Cenas .tscn, separadas por módulo
-  levels/      Mapas (test_arena.tscn é a cena principal por enquanto)
+  main.tscn    Cena inicial: menu e contêiner do nível
+  levels/      Mapas (test_arena.tscn é a arena da Fase 1)
   player/ enemies/ weapons/ building/ ui/
 scripts/       Código GDScript, um diretório por módulo do GDD (16.2)
   autoload/    EventBus (sinais globais) e GameData (dados JSON)
+  network/     Network (autoload): host, entrar, barulho até o servidor
   player/ combat/ enemies/ inventory/ crafting/ building/
   world/ progression/ ui/ save/ audio/ network/
 addons/        Plugins do Godot
@@ -44,4 +59,4 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 
 ## Roadmap
 
-Fase atual: **0. Preparação** (concluída com este esqueleto). Próxima: **Fase 1. Núcleo** (zumbi que persegue, uma arma de cada estilo e rede com 2+ jogadores). Detalhes no GDD, seção 17.
+Fase atual: **1. Núcleo** concluída (arena com zumbis que perseguem, pistola/machado/dardo de fogo e co-op em rede). Próxima: **Fase 2. Sobrevivência** (fome, sede, inventário, coleta, ciclo dia/noite). Detalhes no GDD, seção 17.

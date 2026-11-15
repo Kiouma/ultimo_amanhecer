@@ -1,5 +1,7 @@
 extends Area3D
 ## Projétil mágico simples (dardo de fogo). Voa reto, acerta o primeiro corpo e some.
+## visual_only: cópia mostrada nas telas dos outros jogadores; não causa dano
+## (o dano é pedido ao servidor só pela cópia de quem conjurou).
 
 var damage := 30.0
 var speed := 22.0
@@ -7,6 +9,7 @@ var max_lifetime := 4.0
 var direction := Vector3.FORWARD
 var caster: Node
 var color := Color(1.0, 0.45, 0.1)
+var visual_only := false
 
 var _age := 0.0
 ## Evita acertar duas vezes no mesmo frame (raio + sinal de colisão).
@@ -57,7 +60,7 @@ func _explode(target: Object, at: Vector3) -> void:
 		return
 	_exploded = true
 	set_physics_process(false)
-	if target is Node:
+	if target is Node and not visual_only:
 		var health := Health.find_in(target)
 		if health and not health.is_dead:
 			health.take_damage(damage, caster)
