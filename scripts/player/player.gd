@@ -11,6 +11,17 @@ extends CharacterBody3D
 @export var jump_velocity := 4.5
 @export var acceleration := 12.0
 
+@export_group("Barulho")
+## Raio (em metros) em que zumbis ouvem os passos (GDD 5.1). Multiplicado pela audição do zumbi.
+@export var walk_noise := 6.0
+@export var sprint_noise := 14.0
+@export var crouch_noise := 1.5
+@export var noise_interval := 0.5
+
+@export_group("Morte (provisório)")
+## Fase 1: renasce no ponto inicial. Regras do GDD 7 (bag, perda de XP) entram na Fase 2.
+@export var respawn_delay := 3.0
+
 @export_group("Câmera")
 @export var mouse_sensitivity := 0.0025
 @export var stand_head_height := 1.6
@@ -19,16 +30,22 @@ extends CharacterBody3D
 @export var third_person_offset := Vector3(0.5, 0.2, 0.0)
 
 var first_person := true
+var _noise_timer := 0.0
+var _spawn_point := Vector3.ZERO
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var head: Node3D = $Head
 @onready var spring_arm: SpringArm3D = $Head/SpringArm3D
 ## Visual do personagem (corpo, cabelo e animações). Ver character_model.gd.
 @onready var model: CharacterModel = $Model
+@onready var health: Health = $Health
 
 
 func _ready() -> void:
 	spring_arm.add_excluded_object(get_rid())
+	_spawn_point = global_position
+	health.damaged.connect(_on_damaged)
+	health.died.connect(_on_died)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_apply_camera_mode()
 	EventBus.player_spawned.emit(self)
@@ -49,6 +66,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if health.is_dead:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		if not is_on_floor():
+			velocity.y -= _gravity * delta
+		move_and_slide()
+		return
+
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
 	elif Input.is_action_just_pressed("jump"):
@@ -69,6 +94,31 @@ func _physics_process(delta: float) -> void:
 
 	var sprinting := Input.is_action_pressed("sprint") and not crouching
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
+	_emit_footstep_noise(delta, crouching, sprinting)
+
+
+func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> void:
+	_noise_timer -= delta
+	if _noise_timer > 0.0 or not is_on_floor() or Vector2(velocity.x, velocity.z).length() < 0.5:
+		return
+	_noise_timer = noise_interval
+	var loudness := crouch_noise if crouching else (sprint_noise if sprinting else walk_noise)
+	EventBus.noise_emitted.emit(global_position, loudness, self)
+
+
+func _on_damaged(_amount: float, _source: Node) -> void:
+	model.play_action(&"Hit_Chest")
+
+
+func _on_died(_source: Node) -> void:
+	model.play_action(&"Death01")
+	EventBus.player_died.emit(self)
+	await get_tree().create_timer(respawn_delay, false).timeout
+	global_position = _spawn_point
+	velocity = Vector3.ZERO
+	health.reset()
+	model.cancel_action()
+	model.play(&"Idle")
 
 
 func _current_speed(crouching: bool) -> float:

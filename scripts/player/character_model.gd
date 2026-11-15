@@ -14,6 +14,8 @@ const LIB_EXTRA := &"ual2"
 @export var blend_time := 0.2
 ## A textura de cabelo do pacote é cinza e feita para ser tingida. Vale para cabelo e sobrancelhas.
 @export var hair_color := Color(0.22, 0.14, 0.08)
+## Multiplica a cor da pele (branco = original). Zumbis usam um tom cinza-esverdeado.
+@export var skin_tint := Color.WHITE
 
 var _current := &""
 var _in_action := false
@@ -28,6 +30,8 @@ func _ready() -> void:
 		if scene:
 			attach(scene)
 	set_hair_color(hair_color)
+	if skin_tint != Color.WHITE:
+		set_skin_tint(skin_tint)
 	anim.animation_finished.connect(func(_n: StringName) -> void: _in_action = false)
 	play(&"Idle")
 
@@ -47,6 +51,20 @@ func set_hair_color(color: Color) -> void:
 	hair_color = color
 	for mesh: MeshInstance3D in skeleton.get_children():
 		if not (String(mesh.name).begins_with("Hair") or String(mesh.name).begins_with("Eyebrows")):
+			continue
+		for i in mesh.get_surface_override_material_count():
+			var mat := mesh.get_active_material(i) as StandardMaterial3D
+			if mat:
+				mat = mat.duplicate()
+				mat.albedo_color = color
+				mesh.set_surface_override_material(i, mat)
+
+
+func set_skin_tint(color: Color) -> void:
+	skin_tint = color
+	for mesh: MeshInstance3D in skeleton.get_children():
+		var n := String(mesh.name)
+		if n.begins_with("Hair") or n.begins_with("Eyebrows") or n.begins_with("Eyes"):
 			continue
 		for i in mesh.get_surface_override_material_count():
 			var mat := mesh.get_active_material(i) as StandardMaterial3D
@@ -90,11 +108,22 @@ func play_action(anim_name: StringName) -> void:
 	_in_action = true
 
 
+func is_in_action() -> bool:
+	return _in_action
+
+
+## Libera a locomoção na hora (ex.: ao renascer no meio da animação de morte).
+func cancel_action() -> void:
+	_in_action = false
+	_current = &""
+
+
 func play(anim_name: StringName, speed_scale := 1.0) -> void:
 	var full := _resolve(anim_name)
 	if full.is_empty():
 		return
-	if full == _current and is_equal_approx(anim.speed_scale, speed_scale):
+	if full == _current and anim.is_playing():
+		anim.speed_scale = speed_scale
 		return
 	anim.speed_scale = speed_scale
 	anim.play(full, blend_time)
