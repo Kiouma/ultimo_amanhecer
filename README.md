@@ -12,7 +12,9 @@ Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arma
 
 Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
 
-Armas: **1** pistola, **2** machado, **3** dardo de fogo (ou rodinha do mouse). Botão esquerdo ataca, botão direito mira, **R** recarrega, **Q** lança o feitiço sem trocar de arma. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira, **R** recarrega, **Q** lança o 1º feitiço da hotbar.
+
+Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida). O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
 
 ## Testar o co-op no mesmo PC
 

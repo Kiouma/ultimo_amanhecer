@@ -115,7 +115,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_quick_cast()
 
 
-## Usa o item selecionado (consumíveis). Cura passa pelo servidor (Health.heal).
+## Usa o item selecionado (consumíveis): cura ("heals"), comida ("food"), água ("water").
+## Não gasta se não ajudar em nada. Cura passa pelo servidor (Health.heal).
 func use_selected() -> void:
 	var s := selected_item()
 	if s.is_empty() or _use_cooldown > 0.0:
@@ -124,9 +125,11 @@ func use_selected() -> void:
 	if data.get("type", "") != "consumable":
 		return
 	var heals := float(data.get("heals", 0.0))
-	if heals > 0.0:
-		if user.health.current >= user.health.max_health:
-			return  # vida cheia: não desperdiça
+	var can_heal := heals > 0.0 and user.health.current < user.health.max_health
+	var fed := user.survival.consume(float(data.get("food", 0.0)), float(data.get("water", 0.0)))
+	if not can_heal and not fed:
+		return  # nada a ganhar: não desperdiça
+	if can_heal:
 		user.health.heal(heals)
 	inventory.take_from_slot(selected, 1)
 	_use_cooldown = 1.0

@@ -17,6 +17,7 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @export var player_spacing := 1.5
 ## Itens espalhados para testar a coleta: [id, quantidade]. Saque de verdade: Fase 7.
 @export var loot := [
+	["canned_food", 2], ["water_bottle", 2], ["berries", 8],
 	["arrow", 8], ["feather", 6], ["stick", 10], ["stick", 6], ["bandage", 2], ["medkit_basic", 1],
 	# Arma de fogo é achado raro (GDD 5.2): uma pistola vazia e um pouco de munição.
 	["pistol_9mm", 1], ["ammo_9mm", 12],

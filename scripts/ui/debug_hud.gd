@@ -41,6 +41,7 @@ func _on_player_spawned(player: Node) -> void:
 		_weapons.changed.connect(_update_weapon)
 	_update_weapon()
 	_bind_inventory(player)
+	_bind_survival(player)
 
 
 func _bind_inventory(player: Player) -> void:
@@ -76,6 +77,46 @@ func _bind_inventory(player: Player) -> void:
 	_inventory_ui = InventoryUI.new()
 	add_child(_inventory_ui)
 	_inventory_ui.bind(player)
+
+
+## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
+func _bind_survival(player: Player) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	health_bar.get_parent().add_child(row)
+	var hunger := _labeled_bar(row, "Fome", Color(0.85, 0.55, 0.2))
+	var thirst := _labeled_bar(row, "Sede", Color(0.3, 0.75, 0.9))
+	var update := func(h: float, t: float) -> void:
+		hunger.value = h
+		thirst.value = t
+		# Pisca o rótulo em vermelho quando está acabando.
+		hunger.get_parent().get_child(0).modulate = Color(1, 0.35, 0.3) if h < 20.0 else Color.WHITE
+		thirst.get_parent().get_child(0).modulate = Color(1, 0.35, 0.3) if t < 20.0 else Color.WHITE
+	player.survival.changed.connect(update)
+	update.call(player.survival.hunger, player.survival.thirst)
+
+
+func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 0)
+	parent.add_child(box)
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 12)
+	box.add_child(label)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(0, 8)
+	bar.max_value = 100.0
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.1, 0.1, 0.7)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = color
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	box.add_child(bar)
+	return bar
 
 
 func _update_hotbar() -> void:

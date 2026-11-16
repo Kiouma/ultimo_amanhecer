@@ -1,0 +1,5 @@
+[
+  { "id": "berries", "name": "Frutas silvestres", "type": "consumable", "weight": 0.05, "stack": 30, "food": 8, "water": 2 },
+  { "id": "canned_food", "name": "Comida enlatada", "type": "consumable", "weight": 0.4, "stack": 10, "food": 35 },
+  { "id": "water_bottle", "name": "Garrafa de água", "type": "consumable", "weight": 0.6, "stack": 5, "water": 40 }
+]

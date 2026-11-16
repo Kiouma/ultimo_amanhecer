@@ -15,6 +15,7 @@ signal interaction_prompt_changed(text: String)
 const STARTER_KIT := [
 	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3],
 	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
+	["berries", 6, 4], ["water_bottle", 1, 5],
 ]
 
 @export_group("Movimento")
@@ -72,6 +73,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var camera: Camera3D = $Head/SpringArm3D/Camera3D
 @onready var weapons: WeaponHolder = $Head/SpringArm3D/Camera3D/WeaponHolder
 @onready var inventory: Inventory = $Inventory
+@onready var survival: Survival = $Survival
 
 var _focused: Node = null
 var _pickup_timer := 0.0
@@ -91,6 +93,8 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 	health.revived.connect(_on_revived)
 	weapons.setup(self, camera, head, inventory)
+	# Fome e sede só correm na máquina do dono (ver Survival).
+	survival.set_process(is_local())
 	if is_local():
 		camera.current = true
 		_give_starter_kit()
@@ -166,6 +170,7 @@ func _physics_process(delta: float) -> void:
 	var sprinting := _wants_sprint(crouching) and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 0.5
 	if sprinting:
 		stamina.drain(sprint_stamina_per_second * delta)
+	survival.exerting = sprinting
 	net_crouching = crouching
 	net_sprinting = sprinting
 	net_on_floor = is_on_floor()
@@ -281,7 +286,9 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 
 # --- Vida, morte e renascimento -----------------------------------------------------
 
-func _on_damaged(_amount: float, _source: Node) -> void:
+func _on_damaged(_amount: float, source: Node) -> void:
+	if source == self:
+		return  # fome/sede: sem animação de golpe
 	model.play_action(&"Hit_Chest")
 
 
@@ -295,6 +302,7 @@ func _on_died(_source: Node) -> void:
 	velocity = Vector3.ZERO
 	stamina.refill()
 	mana.refill()
+	survival.refill()
 	health.reset()  # pede ao servidor; quando voltar, dispara revived
 
 
