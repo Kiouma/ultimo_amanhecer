@@ -64,7 +64,10 @@ func display_name() -> String:
 	var s := selected_item()
 	if s.is_empty():
 		return "Mãos livres"
-	return str(GameData.get_item(s.id).get("name", s.id))
+	var item_name := str(GameData.get_item(s.id).get("name", s.id))
+	if Inventory.max_durability(s.id) > 0.0:
+		item_name += " · Q%d" % Inventory.quality_of(s)
+	return item_name
 
 
 func hud_text() -> String:

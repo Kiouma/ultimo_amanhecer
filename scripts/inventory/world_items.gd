@@ -43,7 +43,7 @@ func _clean_extra(extra: Dictionary) -> Dictionary:
 	var out := {}
 	for key in Inventory.EXTRA_KEYS:
 		if extra.has(key):
-			out[key] = maxf(float(extra[key]), 0.0)
+			out[key] = clampi(int(extra[key]), 1, Inventory.MAX_QUALITY) if key == "q" else maxf(float(extra[key]), 0.0)
 	return out
 
 

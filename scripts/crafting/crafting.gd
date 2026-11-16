@@ -53,17 +53,63 @@ static func give_ingredients(inventory: Inventory, recipe: Dictionary, times: in
 		_give(inventory, id, int(ingredients[id]) * times)
 
 
+## Entrega o resultado. Armas/ferramentas (com "durability") saem uma a uma com
+## qualidade sorteada; o resto empilha normal.
 static func give_result(inventory: Inventory, recipe: Dictionary, times: int) -> void:
-	_give(inventory, str(recipe.get("result", "")), int(recipe.get("amount", 1)) * times)
+	var id := str(recipe.get("result", ""))
+	var count := int(recipe.get("amount", 1)) * times
+	if Inventory.max_durability(id) <= 0.0 or not recipe.has("ingredients"):
+		_give(inventory, id, count)
+		return
+	for i in count:
+		var quality := roll_quality(crafting_skill(inventory))
+		_give(inventory, id, 1, {"q": quality})
+		if quality >= 4:
+			var player := inventory.get_parent()
+			if player.has_method(&"notify"):
+				player.notify("%s de qualidade %d!" % [GameData.get_item(id).get("name", id), quality])
 
 
-static func _give(inventory: Inventory, id: String, count: int) -> void:
+## Chances base de Q1..Q5 (em %), sem proficiência.
+const QUALITY_WEIGHTS := [50.0, 30.0, 14.0, 5.0, 1.0]
+
+
+## Sorteia a qualidade. Cada nível de skill acima de 1 tira 1 ponto de Q1 e espalha
+## para cima (a proficiência de Crafting chega na Fase 6).
+static func roll_quality(skill_level := 1) -> int:
+	var weights: Array = QUALITY_WEIGHTS.duplicate()
+	var shift := clampf(float(skill_level - 1), 0.0, 45.0)
+	weights[0] -= shift
+	weights[1] += shift * 0.4
+	weights[2] += shift * 0.3
+	weights[3] += shift * 0.2
+	weights[4] += shift * 0.1
+	var total := 0.0
+	for w in weights:
+		total += w
+	var roll := randf() * total
+	for q in weights.size():
+		roll -= weights[q]
+		if roll <= 0.0:
+			return q + 1
+	return 1
+
+
+## Nível de Crafting de quem fabrica (1 enquanto a progressão não existir).
+static func crafting_skill(inventory: Inventory) -> int:
+	var progression := inventory.get_parent().get_node_or_null(^"Progression")
+	if progression and progression.has_method(&"get_level"):
+		return int(progression.get_level("crafting"))
+	return 1
+
+
+static func _give(inventory: Inventory, id: String, count: int, extra: Dictionary = {}) -> void:
 	if count <= 0:
 		return
-	var left := inventory.add_item(id, count)
+	var left := inventory.add_item(id, count, extra)
 	if left > 0:
 		var player := inventory.get_parent() as Node3D
-		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, null)
+		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, null, extra)
 
 
 ## Nome da estação para mostrar ("hands" → "mãos").

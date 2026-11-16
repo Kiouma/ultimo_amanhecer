@@ -3,11 +3,15 @@ extends Node
 ## Inventário do jogador (GDD 7 e 13.2): slots com empilhamento e limite de peso.
 ## Os 9 primeiros slots são a hotbar (teclas 1-9); o resto é a mochila.
 ## Cada slot é {} (vazio) ou {"id": String, "count": int}, mais dados extras de itens
-## que não empilham: "dur" (durabilidade atual) e "mag" (balas no pente).
+## que não empilham: "dur" (durabilidade atual), "mag" (balas no pente) e "q" (qualidade 1-5).
 ## Os extras acompanham o item ao soltar, ir para a bag e ser pego de novo.
 
 ## Chaves de estado do item que viajam com ele.
-const EXTRA_KEYS := ["dur", "mag"]
+const EXTRA_KEYS := ["dur", "mag", "q"]
+
+## Qualidade (GDD 8.3): cada nível acima de 1 dá +12% em dano, durabilidade e eficiência.
+const QUALITY_STEP := 0.12
+const MAX_QUALITY := 5
 ##
 ## Rede: o inventário vive na máquina do dono do personagem. O que vem do mundo
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
@@ -201,16 +205,33 @@ static func extra_of(slot: Dictionary) -> Dictionary:
 
 # --- Durabilidade (GDD 8.3) -----------------------------------------------------------
 
-## Durabilidade máxima do item (0 = não se desgasta).
+## Durabilidade máxima base do item (0 = não se desgasta).
 static func max_durability(id: String) -> float:
 	return float(GameData.get_item(id).get("durability", 0.0))
+
+
+## Qualidade do slot (1 se não tiver: achado, kit inicial).
+static func quality_of(slot: Dictionary) -> int:
+	return clampi(int(slot.get("q", 1)), 1, MAX_QUALITY)
+
+
+## Multiplicador da qualidade: Q1 = 1,0 ... Q5 = 1,48.
+static func quality_multiplier(slot: Dictionary) -> float:
+	return 1.0 + QUALITY_STEP * (quality_of(slot) - 1)
+
+
+## Durabilidade máxima deste item, já com a qualidade.
+static func max_durability_of(slot: Dictionary) -> float:
+	if slot.is_empty():
+		return 0.0
+	return max_durability(slot.id) * quality_multiplier(slot)
 
 
 ## Durabilidade atual do slot (cheia se nunca foi usado).
 static func durability_of(slot: Dictionary) -> float:
 	if slot.is_empty():
 		return 0.0
-	return float(slot.get("dur", max_durability(slot.id)))
+	return float(slot.get("dur", max_durability_of(slot)))
 
 
 static func is_broken(slot: Dictionary) -> bool:

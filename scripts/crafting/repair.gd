@@ -21,7 +21,7 @@ static func recipe_for(id: String) -> Dictionary:
 
 ## Fração desgastada (0 = novo, 1 = quebrado).
 static func wear_fraction(slot: Dictionary) -> float:
-	var max_dur := Inventory.max_durability(slot.id)
+	var max_dur := Inventory.max_durability_of(slot)
 	return 0.0 if max_dur <= 0.0 else clampf(1.0 - Inventory.durability_of(slot) / max_dur, 0.0, 1.0)
 
 
@@ -67,7 +67,7 @@ static func repair(inventory: Inventory, slot: Dictionary) -> bool:
 	var cost := repair_cost(slot)
 	for id: String in cost:
 		inventory.remove_item(id, int(cost[id]))
-	slot["dur"] = Inventory.max_durability(slot.id)
+	slot["dur"] = Inventory.max_durability_of(slot)
 	inventory.changed.emit()
 	return true
 

@@ -178,9 +178,10 @@ func _add_repair_section() -> void:
 		var info := VBoxContainer.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var title := Label.new()
-		var max_dur := Inventory.max_durability(s.id)
+		var max_dur := Inventory.max_durability_of(s)
 		title.text = str(GameData.get_item(s.id).get("name", s.id))
 		if max_dur > 0.0:
+			title.text += " Q%d" % Inventory.quality_of(s)
 			title.text += "  %d/%d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)]
 		title.add_theme_color_override("font_color", Color(1, 0.5, 0.4) if Inventory.is_broken(s) else Color(0.92, 0.92, 0.88))
 		info.add_child(title)

@@ -220,6 +220,8 @@ Madeira, graveto, pena, pedra, sucata de metal, tecido, couro, ervas, comida, co
 - **Desmontar:** itens encontrados podem ser desmontados para recuperar parte dos recursos.
 - **Reparo:** armas e ferramentas se desgastam e podem ser reparadas.
 
+Implementado na Fase 3 (valores provisórios): fogueira e bancada como estações colocáveis; fila de fabricação com tempo (receita de estação só avança perto dela). Qualidade **Q1 a Q5** em armas e ferramentas fabricadas: +12% de dano, durabilidade máxima e eficiência de coleta por nível, e menos stamina por golpe; sorteio base Q1 50%, Q2 30%, Q3 14%, Q4 5%, Q5 1%, deslocado para cima pela proficiência de Crafting (Fase 6). Reparo na bancada custa metade da receita proporcional ao desgaste; desmontar devolve metade da receita proporcional à condição.
+
 ## 9. Construção e base
 
 ### 9.1 Sistema de construção

@@ -88,8 +88,19 @@ func on_unequip() -> void:
 	pass
 
 
+## Número do JSON, já com a qualidade do item na mão: dano maior e custo de
+## stamina menor em qualidade alta.
 func stat(key: String, default: float) -> float:
-	return float(data.get(key, default))
+	var value := float(data.get(key, default))
+	if key == "damage":
+		return value * quality_multiplier()
+	if key == "stamina_cost":
+		return value / quality_multiplier()
+	return value
+
+
+func quality_multiplier() -> float:
+	return Inventory.quality_multiplier(slot) if not slot.is_empty() and data.has("durability") else 1.0
 
 
 # --- Utilitários para as armas ---------------------------------------------------

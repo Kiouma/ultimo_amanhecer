@@ -18,6 +18,10 @@ var _name_label: Label
 var _count_label: Label
 var _key_label: Label
 var _dur_bar: ColorRect
+var _quality_label: Label
+## Cor da borda por qualidade (Q1..Q5); "" = sem qualidade.
+const QUALITY_COLORS := [Color(0.55, 0.55, 0.55), Color(0.4, 0.8, 0.4), Color(0.35, 0.6, 1.0), Color(0.75, 0.45, 1.0), Color(1.0, 0.6, 0.2)]
+var _quality_color := Color(0.3, 0.3, 0.3, 0.9)
 var _style := StyleBoxFlat.new()
 
 
@@ -52,10 +56,14 @@ func _init() -> void:
 	_key_label.position = Vector2(0, -2)
 	box.add_child(_key_label)
 
+	_quality_label = _make_label(10, Color.WHITE)
+	_quality_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_quality_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	box.add_child(_quality_label)
+
 	# Durabilidade: faixa fina embaixo (verde → vermelho).
 	_dur_bar = ColorRect.new()
 	_dur_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dur_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_dur_bar.size = Vector2(0, 3)
 	box.add_child(_dur_bar)
 
@@ -75,6 +83,8 @@ func setup(inv: Inventory, slot_index: int, is_interactive := true, compact := f
 
 func refresh() -> void:
 	var s := inventory.get_slot(index)
+	_quality_label.text = ""
+	_quality_color = Color(0.3, 0.3, 0.3, 0.9)
 	if s.is_empty():
 		_name_label.text = ""
 		_count_label.text = ""
@@ -87,8 +97,15 @@ func refresh() -> void:
 		_count_label.text = str(count) if count > 1 else ""
 		if s.has("mag"):
 			_count_label.text = "%d" % int(s.mag)
-		var max_dur := Inventory.max_durability(s.id)
+		var max_dur := Inventory.max_durability_of(s)
 		if max_dur > 0.0:
+			var q := Inventory.quality_of(s)
+			_quality_label.text = "Q%d" % q
+			_quality_color = QUALITY_COLORS[q - 1]
+			_quality_label.add_theme_color_override("font_color", _quality_color)
+			if interactive:
+				tooltip_text += "
+Qualidade %d (+%d%% dano, durabilidade e eficiência)" % [q, roundi((Inventory.quality_multiplier(s) - 1.0) * 100)]
 			tooltip_text += "
 Durabilidade %d / %d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)] if interactive else ""
 			if Inventory.is_broken(s):
@@ -103,7 +120,7 @@ Durabilidade %d / %d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)] if
 
 func _update_dur_bar() -> void:
 	var s := inventory.get_slot(index)
-	var max_dur := Inventory.max_durability(s.id) if not s.is_empty() else 0.0
+	var max_dur := Inventory.max_durability_of(s)
 	_dur_bar.visible = max_dur > 0.0
 	if not _dur_bar.visible:
 		return
@@ -115,7 +132,7 @@ func _update_dur_bar() -> void:
 
 
 func _update_style() -> void:
-	_style.border_color = Color(0.95, 0.8, 0.35) if selected else Color(0.3, 0.3, 0.3, 0.9)
+	_style.border_color = Color(0.95, 0.8, 0.35) if selected else _quality_color.darkened(0.25)
 
 
 # --- Arrastar e soltar ---------------------------------------------------------------------

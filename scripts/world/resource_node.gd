@@ -54,27 +54,29 @@ func has_prompt() -> bool:
 
 
 ## Golpe ou colheita. tool_data = dados do item usado ({} = mãos/colheita).
-func request_gather(player: Node3D, tool_data: Dictionary) -> void:
+## quality: multiplicador da qualidade da ferramenta (1,0 a 1,48).
+func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> void:
 	_shake()
 	var tool_id := str(tool_data.get("id", ""))
 	if multiplayer.is_server():
-		_gather(player, tool_id)
+		_gather(player, tool_id, quality)
 	elif Network.is_online():
-		_request_gather.rpc_id(1, tool_id)
+		_request_gather.rpc_id(1, tool_id, quality)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_gather(tool_id: String) -> void:
+func _request_gather(tool_id: String, quality: float) -> void:
 	var sender := multiplayer.get_remote_sender_id()
+	var max_quality := 1.0 + Inventory.QUALITY_STEP * (Inventory.MAX_QUALITY - 1)
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.get_multiplayer_authority() == sender:
-			_gather(p, tool_id)
+			_gather(p, tool_id, clampf(quality, 1.0, max_quality))
 			return
 
 
 # --- Servidor ---------------------------------------------------------------------
 
-func _gather(player: Node3D, tool_id: String) -> void:
+func _gather(player: Node3D, tool_id: String, quality := 1.0) -> void:
 	if is_queued_for_deletion() or player.global_position.distance_to(global_position) > MAX_REACH:
 		return
 	var inventory := player.get_node_or_null(^"Inventory") as Inventory
@@ -92,6 +94,7 @@ func _gather(player: Node3D, tool_id: String) -> void:
 	var factor := _tool_factor(tool_id)
 	if factor <= 0.0:
 		return
+	factor *= quality
 	for id: String in data.get("per_hit", {}):
 		_grant_fraction(inventory, id, float(data.per_hit[id]) * factor)
 	for id: String in data.get("per_hit_chance", {}):
