@@ -161,6 +161,10 @@ func _ready() -> void:
 		camera.current = false
 		weapons.visible = false
 		set_process_unhandled_input(false)
+	# Nós criados aqui (Progression, Equipment, Exploration, BuildMode...) nasceram depois
+	# do set_multiplayer_authority do _enter_tree: reaplica para eles serem do dono também.
+	if name.is_valid_int():
+		set_multiplayer_authority(name.to_int())
 	EventBus.player_spawned.emit(self)
 
 
