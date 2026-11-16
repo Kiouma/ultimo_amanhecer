@@ -258,6 +258,7 @@ func _refresh_queue() -> void:
 
 func _build() -> void:
 	_built = true
+	UITabs.attach.call_deferred(self, "inventory")
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.45)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -13,6 +13,8 @@ var _weapons: WeaponHolder
 var _hotbar_slots: Array[InventorySlotUI] = []
 var _prompt: Label
 var _inventory_ui: InventoryUI
+var _progression_ui: ProgressionUI
+var _map_ui: MapUI
 var _weakness_label: Label
 var _queue_label: Label
 var _build_label: Label
@@ -116,13 +118,13 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_inventory_ui)
 	_inventory_ui.bind(player)
 
-	var progression_ui := ProgressionUI.new()
-	add_child(progression_ui)
-	progression_ui.bind(player)
+	_progression_ui = ProgressionUI.new()
+	add_child(_progression_ui)
+	_progression_ui.bind(player)
 
-	var map_ui := MapUI.new()
-	add_child(map_ui)
-	map_ui.bind(player)
+	_map_ui = MapUI.new()
+	add_child(_map_ui)
+	_map_ui.bind(player)
 
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
@@ -315,6 +317,19 @@ func _build_clock() -> void:
 		clock.add_theme_color_override("font_color", color)
 	day_night.time_changed.connect(update)
 	update.call(day_night.day, day_night.hour)
+
+
+## Troca de tela pelas abas (Inventário / Personagem / Mapa).
+func open_panel(which: String) -> void:
+	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "map": _map_ui}
+	var target: Control = panels.get(which)
+	if target == null:
+		return
+	for p: Control in panels.values():
+		if p != target and p.visible:
+			p.visible = false
+	if not target.visible:
+		target.toggle()
 
 
 func _update_hotbar() -> void:

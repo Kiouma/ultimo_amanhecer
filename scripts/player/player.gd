@@ -57,6 +57,8 @@ var first_person := true
 
 # Estado de animação replicado para os outros jogadores.
 var net_crouching := false
+## Agachar é alternado (Ctrl liga/desliga). Correr ou pular levanta.
+var _crouch_on := false
 var net_sprinting := false
 var net_on_floor := true
 ## Segurando uma tocha acesa (luz visível para todos).
@@ -192,7 +194,11 @@ func _physics_process(delta: float) -> void:
 		velocity.y = jump_velocity
 		progression.gain("athletics", 0.3)
 
-	var crouching := Input.is_action_pressed("crouch")
+	if Input.is_action_just_pressed("crouch") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		_crouch_on = not _crouch_on
+	if _crouch_on and (Input.is_action_just_pressed("jump") or Input.is_action_pressed("sprint")):
+		_crouch_on = false
+	var crouching := _crouch_on
 	var target_head := crouch_head_height if crouching else stand_head_height
 	head.position.y = lerpf(head.position.y, target_head, minf(10.0 * delta, 1.0))
 

@@ -18,6 +18,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	_build()
+	UITabs.attach(self, "character")
 
 
 func bind(p: Player) -> void:
