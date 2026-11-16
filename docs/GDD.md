@@ -281,6 +281,8 @@ Chuva, neblina, tempestade e frio extremo. O clima afeta visão, barulho (chuva 
 - **Aviso:** um contador na interface e sinais no ambiente (sons distantes, céu avermelhado) avisam da aproximação.
 - **Recompensa:** sobreviver à horda dá itens raros e pontos de progressão.
 
+**Como está implementado (Fase 5):** a horda começa ao anoitecer dos dias 7, 14, 21... (`Horde.every_days`). Vem em 3 ondas, de 1 ou 2 direções, num anel de 34 a 44 m em volta da base (média das peças construídas) ou dos jogadores, e cada zumbi caça o jogador vivo mais perto; se a base bloqueia, ele a ataca. O tamanho cresce com o número da horda e com o número de jogadores (horda 1, 1 jogador: ~20 zumbis); teto de 60 vivos ao mesmo tempo. Termina quando todos morrem (depois da última onda) ou ao amanhecer; cada jogador vivo ganha pedras de refino, cristal arcano, flechas, munição e kit médico (mais a cada horda). Aviso: contador no relógio ("Horda em N dias"), faixa no dia da horda e céu avermelhado a partir das 16h. F9 (no servidor) começa uma horda na hora, para testes.
+
 ## 12. Progressão
 
 - **Nível do personagem:** vem de experiência por matar, coletar, construir e fabricar. Cada nível dá pontos de habilidade; as proficiências (seção 4.1) sobem pelo uso, sem pontos a distribuir.

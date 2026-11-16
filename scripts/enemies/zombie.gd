@@ -54,6 +54,8 @@ var _stuck := 0.0
 var _wants_move := false
 ## Lentidão (armadilhas): fator de velocidade e tempo restante. Fator 0 = preso.
 var _slow_factor := 1.0
+## Faz parte de uma horda (Horde manda ele caçar os jogadores).
+var horde := false
 var _slow_time := 0.0
 
 @onready var model: CharacterModel = $Model
@@ -347,6 +349,18 @@ func _on_damaged(_amount: float, source: Node) -> void:
 		_time_since_seen = 0.0
 		if state != State.ATTACK:
 			_set_state(State.CHASE)
+
+
+## Horda: sem alvo à vista, vai até `pos` (onde estão os jogadores).
+func hunt(pos: Vector3) -> void:
+	if state in [State.WANDER, State.INVESTIGATE]:
+		_last_known_position = pos
+		_set_state(State.INVESTIGATE)
+		agent.target_position = pos
+
+
+func is_dead() -> bool:
+	return state == State.DEAD
 
 
 func _on_died(_source: Node) -> void:

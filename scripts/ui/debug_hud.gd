@@ -232,16 +232,35 @@ func _build_clock() -> void:
 		tw.tween_property(banner, "modulate:a", 1.0, 0.6)
 		tw.tween_interval(3.0)
 		tw.tween_property(banner, "modulate:a", 0.0, 1.2)
-	EventBus.night_started.connect(func(d: int) -> void: show_banner.call("Noite %d
-os mortos estão mais rápidos" % d, Color(0.75, 0.8, 1.0)))
-	EventBus.day_started.connect(func(d: int) -> void: show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
+	EventBus.night_started.connect(func(d: int) -> void:
+		var h := Horde.find(get_tree())
+		if h and h.is_horde_day(d):
+			return  # a faixa da horda ocupa o lugar
+		show_banner.call("Noite %d\nos mortos estão mais rápidos" % d, Color(0.75, 0.8, 1.0)))
+	EventBus.day_started.connect(func(d: int) -> void:
+		var h := Horde.find(get_tree())
+		if h and h.is_horde_day(d):
+			show_banner.call("Dia %d\na horda vem esta noite: preparem a base" % d, Color(1.0, 0.55, 0.4))
+		else:
+			show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
+	EventBus.horde_started.connect(func(n: int) -> void:
+		show_banner.call("A HORDA %d CHEGOU" % n, Color(1.0, 0.3, 0.25)))
+	EventBus.horde_ended.connect(func(n: int, survived: bool) -> void:
+		show_banner.call("Horda %d vencida!\nrecompensa no inventário" % n if survived else "A horda %d passou" % n,
+			Color(0.6, 1.0, 0.6)))
 
 	var day_night := DayNight.find(get_tree())
 	if day_night == null:
 		return
-	var update := func(d: int, _h: float) -> void:
+	var update := func(d: int, h: float) -> void:
 		clock.text = "%s %d · %s" % ["Noite" if day_night.is_night() else "Dia", d, day_night.clock_text()]
-		clock.add_theme_color_override("font_color", Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85))
+		var color := Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85)
+		var horde := Horde.find(get_tree())
+		if horde:
+			clock.text += "\n" + horde.status_text(d, h)
+			if horde.active or horde.days_until(d) == 0:
+				color = Color(1.0, 0.45, 0.4)
+		clock.add_theme_color_override("font_color", color)
 	day_night.time_changed.connect(update)
 	update.call(day_night.day, day_night.hour)
 

@@ -28,6 +28,8 @@ var _moon: DirectionalLight3D
 var _env: Environment
 var _sky: ProceduralSkyMaterial
 var _was_night := false
+## Céu avermelhado da horda (0 a 1), definido pela Horde em todas as máquinas.
+var red_sky := 0.0
 var _sync_timer := 0.0
 
 
@@ -145,6 +147,12 @@ func _apply_visuals() -> void:
 		_sky.sky_horizon_color = horizon.lerp(Color(0.85, 0.5, 0.3), dusk * 0.6)
 		_sky.ground_horizon_color = _sky.sky_horizon_color
 		_sky.ground_bottom_color = Color(0.03, 0.03, 0.04).lerp(Color(0.2, 0.17, 0.13), daylight)
+		if red_sky > 0.0:
+			_sky.sky_horizon_color = _sky.sky_horizon_color.lerp(Color(0.6, 0.08, 0.05), red_sky * 0.75)
+			_sky.ground_horizon_color = _sky.sky_horizon_color
+			_sky.sky_top_color = _sky.sky_top_color.lerp(Color(0.18, 0.02, 0.03), red_sky * 0.5)
+	if _moon.visible and red_sky > 0.0:
+		_moon.light_color = Color(0.55, 0.65, 1.0).lerp(Color(1.0, 0.35, 0.3), red_sky)
 	if _env:
 		_env.ambient_light_energy = lerpf(0.25, 1.0, daylight)
 		_env.background_energy_multiplier = lerpf(0.35, 1.0, daylight)

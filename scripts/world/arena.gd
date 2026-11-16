@@ -55,6 +55,10 @@ func _ready() -> void:
 	WorldItems.register(items_root, item_spawner)
 	resource_spawner.spawn_function = _create_resource
 	Structures.register(structures_root, structure_spawner)
+	# Hordas (GDD 11): mesmo nome em todas as máquinas (RPCs de aviso).
+	var horde := Horde.new()
+	horde.name = "Horde"
+	add_child(horde)
 	var pond := WaterSource.new()
 	pond.name = "Pond"
 	pond.position = POND_POSITION
@@ -170,10 +174,16 @@ func _scatter_loot() -> void:
 func _spawn_zombies() -> void:
 	for zombie_id: String in spawns:
 		for i in int(spawns[zombie_id]):
-			var z: Zombie = ZOMBIE_SCENE.instantiate()
-			z.zombie_id = zombie_id
 			var angle := randf() * TAU
 			var dist := randf_range(spawn_min_distance, spawn_max_distance)
-			z.position = Vector3(cos(angle) * dist, 0.1, sin(angle) * dist)
-			z.rotation.y = randf() * TAU
-			zombies_root.add_child(z, true)
+			spawn_zombie(zombie_id, Vector3(cos(angle) * dist, 0.1, sin(angle) * dist))
+
+
+## Servidor: cria um zumbi (o spawner replica). Usado também pela horda.
+func spawn_zombie(zombie_id: String, pos: Vector3) -> Zombie:
+	var z: Zombie = ZOMBIE_SCENE.instantiate()
+	z.zombie_id = zombie_id
+	z.position = pos
+	z.rotation.y = randf() * TAU
+	zombies_root.add_child(z, true)
+	return z

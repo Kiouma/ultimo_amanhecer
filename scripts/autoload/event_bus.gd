@@ -13,6 +13,9 @@ signal player_died(player: Node)
 signal day_started(day: int)
 signal night_started(day: int)
 signal horde_incoming(day: int)
+## Horda começou (número da horda) / terminou (sobreviveram = recompensa entregue).
+signal horde_started(number: int)
+signal horde_ended(number: int, survived: bool)
 
 # Crafting e construção (GDD 8 e 9)
 signal item_crafted(item_id: StringName, quality: int)

@@ -20,6 +20,8 @@ Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e
 
 Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Zumbis presos do lado de fora batem na peça mais fraca.
 
+Hordas: a cada **7 dias**, ao anoitecer, uma horda ataca em ondas (o relógio mostra quantos dias faltam; o céu fica vermelho na tarde da horda). Sobreviver dá recompensa. **F9** (host) chama uma horda agora, para testar.
+
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
 Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os zumbis ficam mais rápidos e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
