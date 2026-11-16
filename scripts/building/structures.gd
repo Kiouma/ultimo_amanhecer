@@ -11,6 +11,9 @@ signal layout_changed
 
 const STATION_SCRIPT := preload("res://scripts/crafting/station.gd")
 const PIECE_SCRIPT := preload("res://scripts/building/build_piece.gd")
+const TRAP_SCRIPT := preload("res://scripts/building/trap.gd")
+## Tipos de item colocados no chão pelo item (estação, armadilha).
+const PLACEABLE_TYPES := ["station", "trap"]
 ## Distância máxima entre o jogador e o ponto onde a estação vai.
 const MAX_PLACE_DISTANCE := 5.0
 ## Distância máxima entre o jogador e o centro da peça construída/desmontada.
@@ -48,17 +51,17 @@ func can_place_at(position: Vector3) -> bool:
 	if _root == null:
 		return false
 	for s in _root.get_children():
-		if s is CraftingStation and s.global_position.distance_to(position) < MIN_SPACING:
+		if (s is CraftingStation or s is Trap) and s.global_position.distance_to(position) < MIN_SPACING:
 			return false
 	return true
 
 
-## Quem chama já tirou o item do inventário.
-func place(item_id: String, position: Vector3, rotation_y: float) -> void:
+## Quem chama já tirou o item do inventário. durability: a do item (-1 = cheia).
+func place(item_id: String, position: Vector3, rotation_y: float, durability := -1.0) -> void:
 	if multiplayer.is_server():
-		_spawn(item_id, position, rotation_y)
+		_spawn(item_id, position, rotation_y, durability)
 	elif Network.is_online():
-		_request_place.rpc_id(1, item_id, position, rotation_y)
+		_request_place.rpc_id(1, item_id, position, rotation_y, durability)
 
 
 ## Estações de um tipo ("campfire") a até `radius` metros de `position`.
@@ -72,24 +75,25 @@ func stations_near(station: String, position: Vector3, radius: float) -> Array[N
 	return out
 
 
-func _spawn(item_id: String, position: Vector3, rotation_y: float) -> void:
+func _spawn(item_id: String, position: Vector3, rotation_y: float, durability := -1.0) -> void:
 	if _spawner == null or not can_place_at(position):
 		return
-	_spawner.spawn({"kind": "station", "id": item_id, "pos": position, "rot": rotation_y})
+	_spawner.spawn({"kind": "station", "id": item_id, "pos": position, "rot": rotation_y, "dur": durability})
 	layout_changed.emit()
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_place(item_id: String, position: Vector3, rotation_y: float) -> void:
+func _request_place(item_id: String, position: Vector3, rotation_y: float, durability: float) -> void:
 	var player := _sender_player()
-	if player == null or GameData.get_item(item_id).get("type", "") != "station":
+	if player == null or not GameData.get_item(item_id).get("type", "") in PLACEABLE_TYPES:
 		return
 	# Recusado (longe demais ou lugar ocupado): devolve o item, que o cliente já tirou.
 	if player.global_position.distance_to(position) > MAX_PLACE_DISTANCE or not can_place_at(position):
-		(player.get_node(^"Inventory") as Inventory).grant(item_id, 1)
+		var extra := {"dur": durability} if durability >= 0.0 else {}
+		(player.get_node(^"Inventory") as Inventory).grant(item_id, 1, extra)
 		_notify.rpc_id(multiplayer.get_remote_sender_id(), "Não deu para colocar aí (item devolvido)")
 		return
-	_spawn(item_id, position, rotation_y)
+	_spawn(item_id, position, rotation_y, durability)
 
 
 # --- Peças de construção --------------------------------------------------------------
@@ -499,6 +503,13 @@ func _create(data: Dictionary) -> Node:
 		piece.rot = data.rot
 		piece.transform = BuildPiece.slot_transform(data.slot, data.rot)
 		return piece
+	if GameData.get_item(data.id).get("type", "") == "trap":
+		var trap: Trap = TRAP_SCRIPT.new()
+		trap.item_id = data.id
+		trap.uses = float(data.get("dur", -1.0))
+		trap.position = data.pos
+		trap.rotation.y = data.rot
+		return trap
 	var node: StaticBody3D = STATION_SCRIPT.new()
 	node.item_id = data.id
 	node.position = data.pos

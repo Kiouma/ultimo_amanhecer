@@ -1,0 +1,6 @@
+[
+  { "id": "spike_trap", "name": "Armadilha de espetos", "type": "trap", "weight": 3.0, "stack": 1, "durability": 60,
+    "trap": { "look": "spikes", "damage": 12, "interval": 0.8, "slow": 0.45, "slow_time": 1.0 } },
+  { "id": "jaw_trap", "name": "Armadilha de mandíbula", "type": "trap", "weight": 2.5, "stack": 1, "durability": 10,
+    "trap": { "look": "jaw", "damage": 45, "interval": 6.0, "slow": 0.0, "slow_time": 3.5 } }
+]

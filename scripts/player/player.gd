@@ -378,7 +378,7 @@ func place_station(slot_index: int) -> bool:
 		notify("Não dá para colocar aqui")
 		return false
 	inventory.take_from_slot(slot_index, 1)
-	Structures.place(s.id, hit.position, rotation.y)
+	Structures.place(s.id, hit.position, rotation.y, float(s.get("dur", -1.0)))
 	return true
 
 

@@ -52,6 +52,9 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _siege: BuildPiece
 var _stuck := 0.0
 var _wants_move := false
+## Lentidão (armadilhas): fator de velocidade e tempo restante. Fator 0 = preso.
+var _slow_factor := 1.0
+var _slow_time := 0.0
 
 @onready var model: CharacterModel = $Model
 @onready var health: Health = $Health
@@ -87,6 +90,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	if _slow_time > 0.0:
+		_slow_time -= delta
+		if _slow_time <= 0.0:
+			_slow_factor = 1.0
 	_update_perception(delta)
 
 	match state:
@@ -294,7 +301,7 @@ func _start_siege_hit() -> void:
 
 ## Conta quanto tempo está tentando andar sem sair do lugar.
 func _update_stuck(delta: float) -> void:
-	if _wants_move and Vector2(get_real_velocity().x, get_real_velocity().z).length() < 0.35:
+	if _wants_move and _slow_time <= 0.0 and Vector2(get_real_velocity().x, get_real_velocity().z).length() < 0.35:
 		_stuck += delta
 	else:
 		_stuck = maxf(_stuck - delta * 2.0, 0.0)
@@ -399,8 +406,14 @@ func _face(point: Vector3, delta: float) -> void:
 func _speed() -> float:
 	var base := _stat("speed", 1.2)
 	if _is_night():
-		return _stat("night_speed", base * NIGHT_SPEED_MULTIPLIER)
-	return base
+		base = _stat("night_speed", base * NIGHT_SPEED_MULTIPLIER)
+	return base * _slow_factor
+
+
+## Armadilha: deixa mais lento (factor < 1) ou prende (0) por `duration` segundos.
+func apply_slow(factor: float, duration: float) -> void:
+	_slow_factor = minf(_slow_factor, factor) if _slow_time > 0.0 else factor
+	_slow_time = maxf(_slow_time, duration)
 
 
 func _is_night() -> bool:

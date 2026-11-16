@@ -248,6 +248,7 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 ### 9.2 Defesa
 
 - **Armadilhas:** espetos, fosso, cerca elétrica, mina, armadilha de fogo.
+  - Implementadas (fabricadas na bancada, colocadas pela hotbar como as estações, só ferem inimigos, zumbis passam por cima): **espetos** (3 madeira + 8 gravetos; 12 de dano a cada 0,8 s e lentidão de 55%; 60 usos) e **mandíbula** (3 sucata + 2 gravetos; 45 de dano e prende por 3,5 s; 10 usos). Cada acerto gasta durabilidade; com 0 param de funcionar mas não somem: **E** recolhe com a durabilidade atual e a bancada conserta.
 - **Torretas:** automáticas, precisam de munição e energia.
 - **Magia defensiva:** muros de terra, runas de gelo no chão, totens de cura.
 - **Pontos fortes do projeto:** o jogador pode criar um "funil" para guiar zumbis a um caminho de morte.

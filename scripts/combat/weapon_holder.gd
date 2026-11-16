@@ -82,7 +82,7 @@ func hud_text() -> String:
 		return "×%d" % int(s.count)
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "consumable":
 		return "clique para usar"
-	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "station":
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") in Structures.PLACEABLE_TYPES:
 		return "clique para colocar à frente"
 	return ""
 
@@ -93,7 +93,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station"]):
+	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -159,7 +159,7 @@ func use_selected() -> void:
 		if user.build and user.build.hammer_repair(selected):
 			_use_cooldown = 0.6
 		return
-	if data.get("type", "") == "station":
+	if data.get("type", "") in Structures.PLACEABLE_TYPES:
 		if user.place_station(selected):
 			_use_cooldown = 0.5
 		return
