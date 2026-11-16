@@ -9,6 +9,8 @@ extends CharacterBody3D
 
 ## Avisa o HUD sobre o que está na mira para interagir ("" = nada).
 signal interaction_prompt_changed(text: String)
+## Aviso curto para o HUD ("Você passou mal", "Não dá para colocar aqui"...).
+signal notified(text: String)
 
 ## Kit inicial provisório (até existir criação de personagem, GDD 4.4).
 ## Cada entrada: [id, quantidade, slot da hotbar ou -1].
@@ -83,6 +85,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var inventory: Inventory = $Inventory
 @onready var survival: Survival = $Survival
 @onready var death_penalty: DeathPenalty = $DeathPenalty
+@onready var craft_queue: CraftQueue = $CraftQueue
 
 var _focused: Node = null
 var _has_focus := false
@@ -114,6 +117,7 @@ func _ready() -> void:
 	# Fome e sede só correm na máquina do dono (ver Survival).
 	survival.set_process(is_local())
 	death_penalty.set_process(is_local())
+	craft_queue.set_process(is_local())
 	if is_local():
 		camera.current = true
 		_give_starter_kit()
@@ -338,6 +342,30 @@ func _on_died(_source: Node) -> void:
 	mana.refill()
 	survival.refill()
 	health.reset()  # pede ao servidor; quando voltar, dispara revived
+
+
+## Mostra um aviso curto no HUD (só faz sentido no jogador local).
+func notify(text: String) -> void:
+	notified.emit(text)
+
+
+## Coloca uma estação (item do tipo "station") 2 m à frente, no chão.
+## Retorna true se colocou (e tirou o item do slot).
+func place_station(slot_index: int) -> bool:
+	var s := inventory.get_slot(slot_index)
+	if s.is_empty():
+		return false
+	var forward := -global_basis.z
+	var from := global_position + forward * 2.0 + Vector3.UP * 1.5
+	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 4.0, 1)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty() or hit.normal.y < 0.8 or not Structures.can_place_at(hit.position):
+		notify("Não dá para colocar aqui")
+		return false
+	inventory.take_from_slot(slot_index, 1)
+	Structures.place(s.id, hit.position, rotation.y)
+	return true
 
 
 ## Tira tudo da mochila (slots depois da hotbar) e devolve como lista de pilhas.

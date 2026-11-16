@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/inventory/inventory.gd" id="6_inventory"]
 [ext_resource type="Script" path="res://scripts/player/survival.gd" id="7_survival"]
 [ext_resource type="Script" path="res://scripts/player/death_penalty.gd" id="8_death"]
+[ext_resource type="Script" path="res://scripts/crafting/craft_queue.gd" id="9_queue"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -71,6 +72,9 @@ script = ExtResource("7_survival")
 
 [node name="DeathPenalty" type="Node" parent="."]
 script = ExtResource("8_death")
+
+[node name="CraftQueue" type="Node" parent="."]
+script = ExtResource("9_queue")
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)

@@ -22,6 +22,7 @@ EventBus="*res://scripts/autoload/event_bus.gd"
 GameData="*res://scripts/autoload/game_data.gd"
 Network="*res://scripts/network/network.gd"
 WorldItems="*res://scripts/inventory/world_items.gd"
+Structures="*res://scripts/building/structures.gd"
 
 [input]
 

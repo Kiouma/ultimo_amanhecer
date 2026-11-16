@@ -14,6 +14,7 @@ var _hotbar_slots: Array[InventorySlotUI] = []
 var _prompt: Label
 var _inventory_ui: InventoryUI
 var _weakness_label: Label
+var _queue_label: Label
 
 
 func _ready() -> void:
@@ -45,6 +46,7 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_inventory(player)
 	_bind_survival(player)
 	_bind_death_penalty(player)
+	_bind_notifications(player)
 
 
 func _bind_inventory(player: Player) -> void:
@@ -144,6 +146,50 @@ func _on_weakness_changed(level: int, time_left: float, penalty: DeathPenalty) -
 	_weakness_label.text = "Fraqueza %d · %d:%02d  (−%d%% vel. · −%d%% dano · stamina lenta)" % [
 		level, int(time_left) / 60, int(time_left) % 60,
 		roundi((1.0 - penalty.speed_factor()) * 100), roundi((1.0 - penalty.damage_factor()) * 100)]
+
+
+## Avisos curtos (player.notify) e linha da fila de fabricação, acima da hotbar.
+func _bind_notifications(player: Player) -> void:
+	var toast := Label.new()
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.6))
+	toast.add_theme_color_override("font_outline_color", Color.BLACK)
+	toast.add_theme_constant_override("outline_size", 5)
+	toast.modulate.a = 0.0
+	add_child(toast)
+	player.notified.connect(_on_notified.bind(toast))
+
+	_queue_label = Label.new()
+	_queue_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 86)
+	_queue_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_queue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_queue_label.add_theme_font_size_override("font_size", 13)
+	_queue_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_queue_label.add_theme_constant_override("outline_size", 4)
+	add_child(_queue_label)
+	player.craft_queue.changed.connect(_on_queue_changed.bind(player.craft_queue))
+
+
+func _on_notified(text: String, toast: Label) -> void:
+	toast.text = text
+	var tw := toast.create_tween()
+	tw.tween_property(toast, "modulate:a", 1.0, 0.15)
+	tw.tween_interval(2.2)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.6)
+
+
+func _on_queue_changed(queue: CraftQueue) -> void:
+	if queue.jobs.is_empty():
+		_queue_label.text = ""
+		return
+	var job: Dictionary = queue.jobs[0]
+	var item_name := str(GameData.get_item(str(job.recipe.result)).get("name", ""))
+	var paused := not queue.is_station_ok(job.recipe)
+	_queue_label.text = "Fabricando %s (faltam %d) %s" % [item_name, int(job.left),
+		"· pausado: volte à %s" % Crafting.station_name(str(job.recipe.station)) if paused else "%d%%" % int(float(job.progress) * 100)]
+	_queue_label.modulate = Color(1, 0.6, 0.5) if paused else Color(0.85, 0.85, 0.8)
 
 
 ## Relógio (canto superior direito) e aviso grande quando a noite/o dia começa.

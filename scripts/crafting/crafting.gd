@@ -1,9 +1,8 @@
 class_name Crafting
 extends RefCounted
 ## Fabricação a partir das receitas de data/recipes/*.json (GDD 8).
-## Por enquanto só a estação "hands" (mãos, sem bancada), usada pela tela de
-## inventário. Estações, qualidade e tempo de fabricação entram na Fase 3.
-## Roda na máquina do dono do inventário (o inventário é local, ver Inventory).
+## Estações: "hands" (mãos), "campfire", "workbench"... A fila com tempo fica em
+## CraftQueue. Qualidade entra depois. Roda na máquina do dono do inventário.
 
 
 ## Receitas de uma estação, na ordem dos arquivos.
@@ -32,20 +31,52 @@ static func max_times(inventory: Inventory, recipe: Dictionary) -> int:
 	return best if not ingredients.is_empty() else 0
 
 
-## Gasta os ingredientes e entrega o resultado. O que não couber cai no chão.
-## Retorna true se fabricou.
+## Fabricação instantânea (usada em testes). No jogo, use CraftQueue.enqueue (com tempo).
 static func craft(inventory: Inventory, recipe: Dictionary, times := 1) -> bool:
 	if times <= 0 or not can_craft(inventory, recipe, times):
 		return false
+	take_ingredients(inventory, recipe, times)
+	give_result(inventory, recipe, times)
+	return true
+
+
+static func take_ingredients(inventory: Inventory, recipe: Dictionary, times: int) -> void:
 	var ingredients: Dictionary = recipe.get("ingredients", {})
 	for id: String in ingredients:
 		inventory.remove_item(id, int(ingredients[id]) * times)
-	var result := str(recipe.get("result", ""))
-	var left := inventory.add_item(result, int(recipe.get("amount", 1)) * times)
+
+
+## Devolve ingredientes (cancelar na fila). O que não couber cai no chão.
+static func give_ingredients(inventory: Inventory, recipe: Dictionary, times: int) -> void:
+	var ingredients: Dictionary = recipe.get("ingredients", {})
+	for id: String in ingredients:
+		_give(inventory, id, int(ingredients[id]) * times)
+
+
+static func give_result(inventory: Inventory, recipe: Dictionary, times: int) -> void:
+	_give(inventory, str(recipe.get("result", "")), int(recipe.get("amount", 1)) * times)
+
+
+static func _give(inventory: Inventory, id: String, count: int) -> void:
+	if count <= 0:
+		return
+	var left := inventory.add_item(id, count)
 	if left > 0:
 		var player := inventory.get_parent() as Node3D
-		WorldItems.drop(result, left, player.global_position + Vector3.UP * 0.3, player)
-	return true
+		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, null)
+
+
+## Nome da estação para mostrar ("hands" → "mãos").
+static func station_name(station: String) -> String:
+	match station:
+		"hands": return "mãos"
+		"campfire": return "fogueira"
+		"workbench": return "bancada"
+		"forge": return "forja"
+		"weapon_bench": return "bancada de armas"
+		"arcane_table": return "mesa arcana"
+		"electric_bench": return "bancada elétrica"
+		_: return station
 
 
 ## "Pena 1 · Graveto 1"

@@ -16,6 +16,8 @@ Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o b
 
 Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida).
 
+Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar; **E** nelas abre as receitas da estação. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela). Água: beber a garrafa deixa uma garrafa vazia; encha no **lago** (água suja, pode fazer passar mal) e ferva na fogueira.
+
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
 Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os zumbis ficam mais rápidos e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.

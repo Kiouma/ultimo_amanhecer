@@ -1,0 +1,6 @@
+[
+  { "id": "craft_campfire", "result": "campfire", "amount": 1, "station": "hands", "time": 4, "ingredients": { "stone": 5, "wood": 3, "stick": 2 } },
+  { "id": "craft_workbench", "result": "workbench", "amount": 1, "station": "hands", "time": 8, "ingredients": { "wood": 8, "stone": 4 } },
+  { "id": "boil_water", "result": "water_bottle", "amount": 1, "station": "campfire", "time": 6, "ingredients": { "dirty_water": 1 } },
+  { "id": "craft_arrow_bundle", "result": "arrow", "amount": 6, "station": "workbench", "time": 5, "ingredients": { "feather": 5, "stick": 5 } }
+]

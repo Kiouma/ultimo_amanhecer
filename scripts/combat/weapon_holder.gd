@@ -76,6 +76,8 @@ func hud_text() -> String:
 		return "×%d" % int(s.count)
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "consumable":
 		return "clique para usar"
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "station":
+		return "clique para colocar à frente"
 	return ""
 
 
@@ -85,7 +87,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and (s.is_empty() or GameData.get_item(s.id).get("type", "") != "consumable"):
+	if weapon == null and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -136,6 +138,10 @@ func use_selected() -> void:
 	if s.is_empty() or _use_cooldown > 0.0:
 		return
 	var data := GameData.get_item(s.id)
+	if data.get("type", "") == "station":
+		if user.place_station(selected):
+			_use_cooldown = 0.5
+		return
 	if data.get("type", "") != "consumable":
 		return
 	var heals := float(data.get("heals", 0.0))
@@ -146,6 +152,13 @@ func use_selected() -> void:
 	if can_heal:
 		user.health.heal(heals)
 	inventory.take_from_slot(selected, 1)
+	# Garrafa: beber devolve a garrafa vazia.
+	if data.has("returns"):
+		Crafting.give_result(inventory, {"result": data.returns, "amount": 1}, 1)
+	# Água suja e afins: chance de passar mal.
+	if randf() < float(data.get("sick_chance", 0.0)):
+		user.health.take_damage(float(data.get("sick_damage", 10.0)), user)
+		user.notify("Você passou mal (%s)" % str(data.get("name", s.id)).to_lower())
 	_use_cooldown = 1.0
 	user.play_action_synced(&"Consume")
 

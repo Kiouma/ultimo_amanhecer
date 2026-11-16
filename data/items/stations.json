@@ -1,0 +1,4 @@
+[
+  { "id": "campfire", "name": "Fogueira", "type": "station", "station": "campfire", "weight": 4.0, "stack": 1 },
+  { "id": "workbench", "name": "Bancada", "type": "station", "station": "workbench", "weight": 12.0, "stack": 1 }
+]

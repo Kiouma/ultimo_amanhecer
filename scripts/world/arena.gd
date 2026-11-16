@@ -17,7 +17,7 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @export var player_spacing := 1.5
 ## Itens espalhados para testar a coleta: [id, quantidade]. Saque de verdade: Fase 7.
 @export var loot := [
-	["canned_food", 2], ["water_bottle", 2], ["berries", 8],
+	["canned_food", 2], ["water_bottle", 2], ["berries", 8], ["empty_bottle", 2],
 	["arrow", 8], ["bandage", 2], ["medkit_basic", 1],
 	# Arma de fogo é achado raro (GDD 5.2): uma pistola vazia e um pouco de munição.
 	["pistol_9mm", 1], ["ammo_9mm", 12],
@@ -31,6 +31,8 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @export var resource_max_distance := 45.0
 
 const RESOURCE_SCRIPT := preload("res://scripts/world/resource_node.gd")
+## Lago fixo (mesmo lugar em todas as máquinas): fonte de água suja.
+const POND_POSITION := Vector3(-18.0, 0.0, 14.0)
 
 @onready var nav_region: NavigationRegion3D = $NavigationRegion3D
 @onready var players_root: Node3D = $Players
@@ -40,6 +42,8 @@ const RESOURCE_SCRIPT := preload("res://scripts/world/resource_node.gd")
 @onready var item_spawner: MultiplayerSpawner = $ItemSpawner
 @onready var resources_root: Node3D = $Resources
 @onready var resource_spawner: MultiplayerSpawner = $ResourceSpawner
+@onready var structures_root: Node3D = $Structures
+@onready var structure_spawner: MultiplayerSpawner = $StructureSpawner
 
 var _rebake_queued := false
 
@@ -50,6 +54,11 @@ func _ready() -> void:
 	player_spawner.spawn_function = _create_player
 	WorldItems.register(items_root, item_spawner)
 	resource_spawner.spawn_function = _create_resource
+	Structures.register(structures_root, structure_spawner)
+	var pond := WaterSource.new()
+	pond.name = "Pond"
+	pond.position = POND_POSITION
+	add_child(pond)
 	if not multiplayer.is_server():
 		return
 	multiplayer.peer_connected.connect(_add_player)
@@ -102,7 +111,7 @@ func _free_spot(taken: Array[Vector3]) -> Vector3:
 		var angle := randf() * TAU
 		var dist := randf_range(resource_min_distance, resource_max_distance)
 		pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
-		var clear := absf(pos.x) > 6.0 or absf(pos.z + 6.0) > 8.0  # área das paredes e caixotes
+		var clear := (absf(pos.x) > 6.0 or absf(pos.z + 6.0) > 8.0) and pos.distance_to(POND_POSITION) > 6.0
 		for other in taken:
 			if other.distance_to(pos) < 3.0:
 				clear = false

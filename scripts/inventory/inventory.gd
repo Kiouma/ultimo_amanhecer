@@ -100,7 +100,7 @@ func add_item(id: String, count: int) -> int:
 	return left
 
 
-const HOTBAR_FIRST_TYPES := ["bow", "firearm", "melee", "spell", "consumable", "tool"]
+const HOTBAR_FIRST_TYPES := ["bow", "firearm", "melee", "spell", "consumable", "tool", "station"]
 
 
 func _fill_order(id: String) -> Array:

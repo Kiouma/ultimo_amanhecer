@@ -18,6 +18,8 @@ signal horde_incoming(day: int)
 signal item_crafted(item_id: StringName, quality: int)
 signal structure_placed(structure: Node)
 signal structure_destroyed(structure: Node)
+## Um jogador apertou E numa estação (fogueira, bancada). A tela de inventário abre nela.
+signal station_opened(station: Node, player: Node)
 
 # Barulho (GDD 5.1): zumbis escutam isto para investigar
 signal noise_emitted(position: Vector3, loudness: float, source: Node)

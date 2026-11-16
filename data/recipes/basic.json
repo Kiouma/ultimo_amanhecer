@@ -1,9 +1,9 @@
 [
-  { "id": "craft_arrow", "result": "arrow", "amount": 1, "station": "hands", "ingredients": { "feather": 1, "stick": 1 } },
-  { "id": "craft_bow_wood", "result": "bow_wood", "amount": 1, "station": "hands", "ingredients": { "wood": 2, "cloth": 2 } },
-  { "id": "craft_pickaxe_stone", "result": "pickaxe_stone", "amount": 1, "station": "hands", "ingredients": { "wood": 2, "stone": 3 } },
-  { "id": "craft_torch", "result": "torch", "amount": 1, "station": "hands", "ingredients": { "wood": 1, "cloth": 1 } },
-  { "id": "craft_bandage", "result": "bandage", "amount": 2, "station": "hands", "ingredients": { "cloth": 2 } },
-  { "id": "craft_spear_wood", "result": "spear_wood", "amount": 1, "station": "hands", "ingredients": { "wood": 4 } },
-  { "id": "craft_axe_iron", "result": "axe_iron", "amount": 1, "station": "workbench", "ingredients": { "wood": 3, "scrap_metal": 5 }, "min_proficiency": { "crafting": 5 } }
+  { "id": "craft_arrow", "result": "arrow", "amount": 1, "station": "hands", "time": 1.5, "ingredients": { "feather": 1, "stick": 1 } },
+  { "id": "craft_bow_wood", "result": "bow_wood", "amount": 1, "station": "hands", "time": 6, "ingredients": { "wood": 2, "cloth": 2 } },
+  { "id": "craft_pickaxe_stone", "result": "pickaxe_stone", "amount": 1, "station": "hands", "time": 5, "ingredients": { "wood": 2, "stone": 3 } },
+  { "id": "craft_torch", "result": "torch", "amount": 1, "station": "hands", "time": 2, "ingredients": { "wood": 1, "cloth": 1 } },
+  { "id": "craft_bandage", "result": "bandage", "amount": 2, "station": "hands", "time": 2, "ingredients": { "cloth": 2 } },
+  { "id": "craft_spear_wood", "result": "spear_wood", "amount": 1, "station": "hands", "time": 4, "ingredients": { "wood": 4 } },
+  { "id": "craft_axe_iron", "result": "axe_iron", "amount": 1, "station": "workbench", "time": 10, "ingredients": { "wood": 3, "scrap_metal": 5 }, "min_proficiency": { "crafting": 5 } }
 ]
