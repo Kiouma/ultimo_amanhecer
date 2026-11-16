@@ -1,4 +1,8 @@
 [
+  { "id": "fuse_refine_uncommon", "result": "refine_stone_uncommon", "amount": 1, "station": "workbench", "time": 3, "ingredients": { "refine_stone": 5 } },
+  { "id": "fuse_refine_rare", "result": "refine_stone_rare", "amount": 1, "station": "workbench", "time": 4, "ingredients": { "refine_stone_uncommon": 5 } },
+  { "id": "fuse_refine_epic", "result": "refine_stone_epic", "amount": 1, "station": "workbench", "time": 5, "ingredients": { "refine_stone_rare": 5 } },
+  { "id": "fuse_refine_legendary", "result": "refine_stone_legendary", "amount": 1, "station": "workbench", "time": 6, "ingredients": { "refine_stone_epic": 5 } },
   { "id": "craft_campfire", "result": "campfire", "amount": 1, "station": "hands", "time": 4, "ingredients": { "stone": 5, "wood": 3, "stick": 2 } },
   { "id": "craft_workbench", "result": "workbench", "amount": 1, "station": "hands", "time": 8, "ingredients": { "wood": 8, "stone": 4 } },
   { "id": "craft_chest", "result": "chest", "amount": 1, "station": "hands", "time": 6, "ingredients": { "wood": 8, "stick": 2 } },

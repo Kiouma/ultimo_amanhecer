@@ -103,6 +103,26 @@ var skill_wheel: SkillWheel
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
 
+## Modo criativo (Esc > configurações): itens não se gastam, aba Criativo, pode voar.
+var creative := false:
+	set(value):
+		creative = value
+		if inventory:
+			inventory.creative = value
+		if not value:
+			flying = false
+		EventBus.creative_changed.emit(value)
+## Voando (só no criativo): Espaço sobe, Ctrl desce. Espaço duas vezes liga/desliga.
+var flying := false:
+	set(value):
+		flying = value and creative
+		if flying:
+			_crouch_on = false
+const FLY_SPEED_FACTOR := 2.0
+const FLY_VERTICAL := 7.0
+const DOUBLE_TAP_MS := 300
+var _last_jump_ms := -10000
+
 var _focused: Node = null
 var _has_focus := false
 var _pickup_timer := 0.0
@@ -207,13 +227,28 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	if not is_on_floor():
+	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	if creative and captured and Input.is_action_just_pressed("jump"):
+		var now := Time.get_ticks_msec()
+		if now - _last_jump_ms < DOUBLE_TAP_MS:
+			flying = not flying
+			notify("Voo %s" % ("ligado (Espaço sobe, Ctrl desce)" if flying else "desligado"))
+			now = -10000
+		_last_jump_ms = now
+	if flying:
+		var up := 0.0
+		if captured and Input.is_action_pressed("jump"):
+			up += 1.0
+		if captured and Input.is_action_pressed("crouch"):
+			up -= 1.0
+		velocity.y = lerpf(velocity.y, up * FLY_VERTICAL, minf(acceleration * delta, 1.0))
+	elif not is_on_floor():
 		velocity.y -= _gravity * delta
 	elif Input.is_action_just_pressed("jump"):
 		velocity.y = jump_velocity
 		progression.gain("athletics", 0.3)
 
-	if Input.is_action_just_pressed("crouch") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if not flying and Input.is_action_just_pressed("crouch") and captured:
 		_crouch_on = not _crouch_on
 	if _crouch_on and (Input.is_action_just_pressed("jump") or Input.is_action_pressed("sprint")):
 		_crouch_on = false
@@ -223,7 +258,7 @@ func _physics_process(delta: float) -> void:
 
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
-	var target := direction * _current_speed(crouching)
+	var target := direction * _current_speed(crouching) * (FLY_SPEED_FACTOR if flying else 1.0)
 	var weight := minf(acceleration * delta, 1.0)
 	velocity.x = lerpf(velocity.x, target.x, weight)
 	velocity.z = lerpf(velocity.z, target.z, weight)
@@ -473,7 +508,7 @@ func place_station(slot_index: int) -> bool:
 	if hit.is_empty() or hit.normal.y < 0.8 or not Structures.can_place_at(hit.position):
 		notify("Não dá para colocar aqui")
 		return false
-	inventory.take_from_slot(slot_index, 1)
+	inventory.consume_from_slot(slot_index, 1)
 	Structures.place(s.id, hit.position, rotation.y, float(s.get("dur", -1.0)))
 	return true
 

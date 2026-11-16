@@ -19,10 +19,14 @@ var _count_label: Label
 var _key_label: Label
 var _dur_bar: ColorRect
 var _quality_label: Label
-## Cor da borda por qualidade (Q1..Q5); "" = sem qualidade.
-const QUALITY_COLORS := [Color(0.55, 0.55, 0.55), Color(0.4, 0.8, 0.4), Color(0.35, 0.6, 1.0), Color(0.75, 0.45, 1.0), Color(1.0, 0.6, 0.2)]
+## Cor da borda e do fundo por qualidade/raridade (Q1..Q5: cinza, verde, azul, roxo, laranja).
+const QUALITY_COLORS := Inventory.TIER_COLORS
+const EMPTY_BG := Color(0.1, 0.1, 0.1, 0.75)
 var _quality_color := Color(0.3, 0.3, 0.3, 0.9)
+var _bg_color := EMPTY_BG
 var _style := StyleBoxFlat.new()
+## Brilho do item refinado (a cada 3 níveis muda a cor).
+var _sparkles: CPUParticles2D
 
 
 func _init() -> void:
@@ -67,12 +71,34 @@ func _init() -> void:
 	_dur_bar.size = Vector2(0, 3)
 	box.add_child(_dur_bar)
 
+	_sparkles = CPUParticles2D.new()
+	_sparkles.emitting = false
+	_sparkles.amount = 10
+	_sparkles.lifetime = 1.0
+	_sparkles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_sparkles.emission_rect_extents = Vector2(26, 26)
+	_sparkles.position = SIZE * 0.5 - Vector2(4, 4)
+	_sparkles.direction = Vector2.UP
+	_sparkles.spread = 30.0
+	_sparkles.gravity = Vector2(0, -12)
+	_sparkles.initial_velocity_min = 4.0
+	_sparkles.initial_velocity_max = 12.0
+	_sparkles.scale_amount_min = 2.0
+	_sparkles.scale_amount_max = 3.5
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 1))
+	fade.set_color(1, Color(1, 1, 1, 0))
+	_sparkles.color_ramp = fade
+	box.add_child(_sparkles)
+
 
 ## compact: versão menor da hotbar do HUD (fonte menor para o nome caber).
 func setup(inv: Inventory, slot_index: int, is_interactive := true, compact := false) -> void:
 	if compact:
 		custom_minimum_size = Vector2(60, 60)
 		_name_label.add_theme_font_size_override("font_size", 9)
+		_sparkles.position = Vector2(26, 26)
+		_sparkles.emission_rect_extents = Vector2(22, 22)
 	inventory = inv
 	index = slot_index
 	interactive = is_interactive
@@ -85,6 +111,16 @@ func refresh() -> void:
 	var s := inventory.get_slot(index)
 	_quality_label.text = ""
 	_quality_color = Color(0.3, 0.3, 0.3, 0.9)
+	_bg_color = EMPTY_BG
+	var tier := Inventory.tier_of(s)
+	if tier > 0:
+		_quality_color = QUALITY_COLORS[tier - 1]
+		_bg_color = Color(_quality_color.darkened(0.55), 0.85)
+	var fx := Inventory.refine_fx_tier(s)
+	_sparkles.emitting = fx > 0
+	if fx > 0:
+		_sparkles.color = Inventory.REFINE_FX_COLORS[mini(fx, Inventory.REFINE_FX_COLORS.size()) - 1]
+		_sparkles.amount = 6 + 3 * fx
 	if s.is_empty():
 		_name_label.text = ""
 		_count_label.text = ""
@@ -101,7 +137,6 @@ func refresh() -> void:
 		if max_dur > 0.0:
 			var q := Inventory.quality_of(s)
 			_quality_label.text = "Q%d" % q
-			_quality_color = QUALITY_COLORS[q - 1]
 			_quality_label.add_theme_color_override("font_color", _quality_color)
 			var refine := Inventory.refine_of(s)
 			if refine > 0:
@@ -139,6 +174,7 @@ func _update_dur_bar() -> void:
 
 func _update_style() -> void:
 	_style.border_color = Color(0.95, 0.8, 0.35) if selected else _quality_color.darkened(0.25)
+	_style.bg_color = _bg_color
 
 
 # --- Arrastar e soltar ---------------------------------------------------------------------

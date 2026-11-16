@@ -8,6 +8,8 @@ extends Node
 # Jogador
 signal player_spawned(player: Node)
 signal player_died(player: Node)
+## Modo criativo ligado/desligado (jogador local).
+signal creative_changed(on: bool)
 
 # Mundo / ciclo dia-noite (GDD 11)
 signal day_started(day: int)

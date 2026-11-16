@@ -221,7 +221,12 @@ func finish(survived: bool) -> void:
 
 ## Recompensa por jogador vivo (GDD 11: itens raros).
 func reward_for(n: int) -> Dictionary:
-	return {"refine_stone": 2 + 2 * n, "arcane_crystal": n, "arrow": 10, "ammo_9mm": 6 * n, "medkit_basic": 1}
+	var out := {"refine_stone": 2 + 2 * n, "refine_stone_uncommon": n, "arcane_crystal": n, "arrow": 10, "ammo_9mm": 6 * n, "medkit_basic": 1}
+	if n >= 2:
+		out["refine_stone_rare"] = n / 2
+	if n >= 4:
+		out["refine_stone_epic"] = n / 4
+	return out
 
 
 func _living_players() -> Array[Node3D]:

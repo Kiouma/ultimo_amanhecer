@@ -54,7 +54,7 @@ func _ready() -> void:
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_image_rect.add_child(_overlay)
 	_overlay.draw.connect(_draw_markers)
-	UITabs.attach(self, "map")
+	UITabs.attach(self, "map", box)
 	var hint := Label.new()
 	hint.text = "Botão direito: marcar / desmarcar · [M] fechar"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -6,6 +6,10 @@
   { "id": "feather", "name": "Pena", "type": "resource", "weight": 0.01, "stack": 100 },
   { "id": "cloth", "name": "Tecido", "type": "resource", "weight": 0.1, "stack": 100 },
   { "id": "herbs", "name": "Ervas", "type": "resource", "weight": 0.1, "stack": 50 },
-  { "id": "refine_stone", "name": "Pedra de refino", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare" },
+  { "id": "refine_stone", "name": "Pedra de refino comum", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare", "tier": 1 },
+  { "id": "refine_stone_uncommon", "name": "Pedra de refino incomum", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare", "tier": 2 },
+  { "id": "refine_stone_rare", "name": "Pedra de refino rara", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare", "tier": 3 },
+  { "id": "refine_stone_epic", "name": "Pedra de refino épica", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare", "tier": 4 },
+  { "id": "refine_stone_legendary", "name": "Pedra de refino lendária", "type": "resource", "weight": 0.1, "stack": 50, "rarity": "rare", "tier": 5 },
   { "id": "arcane_crystal", "name": "Cristal arcano", "type": "resource", "weight": 0.2, "stack": 20, "rarity": "rare" }
 ]

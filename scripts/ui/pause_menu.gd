@@ -9,6 +9,7 @@ var player: Player
 var _sensitivity: HSlider
 var _status: Label
 var _volume: HSlider
+var _mode: OptionButton
 
 
 func _ready() -> void:
@@ -60,6 +61,17 @@ func _ready() -> void:
 		Sfx.volume = v
 		_save_setting("audio", "volume", v))
 	box.add_child(_volume)
+	var mode_label := Label.new()
+	mode_label.text = "Modo de jogo"
+	box.add_child(mode_label)
+	_mode = OptionButton.new()
+	_mode.add_item("Sobrevivência", 0)
+	_mode.add_item("Criativo (itens infinitos, voo, aba Criativo)", 1)
+	_mode.item_selected.connect(func(index: int) -> void:
+		if player:
+			player.creative = index == 1
+			_status.text = "Modo criativo: abra o Tab e use a aba Criativo." if player.creative else "Modo sobrevivência.")
+	box.add_child(_mode)
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.modulate = Color(0.7, 1.0, 0.7)
@@ -110,6 +122,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func toggle() -> void:
 	visible = not visible
 	_status.text = ""
+	if _mode and player:
+		_mode.select(1 if player.creative else 0)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
 
 

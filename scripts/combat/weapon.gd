@@ -40,6 +40,49 @@ func _process(delta: float) -> void:
 	cooldown = maxf(cooldown - delta, 0.0)
 
 
+## Partículas coloridas na arma refinada (a cada 3 níveis muda a cor). 0 = nenhuma.
+func set_refine_fx(tier: int) -> void:
+	var fx := get_node_or_null(^"RefineFx") as CPUParticles3D
+	if tier <= 0:
+		if fx:
+			fx.queue_free()
+		return
+	if fx == null:
+		fx = CPUParticles3D.new()
+		fx.name = "RefineFx"
+		fx.amount = 24
+		fx.lifetime = 0.9
+		fx.local_coords = true
+		fx.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		fx.emission_box_extents = Vector3(0.05, 0.12, 0.25)
+		fx.direction = Vector3.UP
+		fx.spread = 60.0
+		fx.gravity = Vector3(0, 0.3, 0)
+		fx.initial_velocity_min = 0.03
+		fx.initial_velocity_max = 0.12
+		fx.scale_amount_min = 0.5
+		fx.scale_amount_max = 1.0
+		var curve := Curve.new()
+		curve.add_point(Vector2(0, 1))
+		curve.add_point(Vector2(1, 0))
+		fx.scale_amount_curve = curve
+		var quad := QuadMesh.new()
+		quad.size = Vector2(0.012, 0.012)
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		mat.vertex_color_use_as_albedo = true
+		quad.material = mat
+		fx.mesh = quad
+		fx.position = Vector3(0, 0.05, -0.15)
+		add_child(fx)
+	var tiers: Array = Inventory.REFINE_FX_COLORS
+	fx.color = tiers[clampi(tier, 1, tiers.size()) - 1]
+	fx.amount = 12 + 6 * tier
+
+
 ## Arma do slot sem durabilidade (ex.: 0 de 250)? Não funciona até ser reparada.
 func is_broken() -> bool:
 	return float(data.get("durability", 0.0)) > 0.0 and Inventory.is_broken(slot)

@@ -164,6 +164,7 @@ func _capture_character(p: Player, level: Node) -> Dictionary:
 		"seed": int(level.get("world_seed")) if "world_seed" in level else 0,
 		"pos": _v(p.global_position), "rot": p.rotation.y,
 		"bed": _v(p._spawn_point) if p.has_bed else [],
+		"creative": p.creative,
 		"inventory": p.inventory.slots,
 		"equipment": p.equipment.to_save(),
 		"exploration": (p.get_node(^"Exploration") as Exploration).to_save() if p.has_node(^"Exploration") else {},
@@ -217,6 +218,7 @@ func apply_character(p: Player) -> bool:
 	p.equipment.from_save(data.get("equipment", {}))
 	p.survival.hunger = float(data.get("hunger", 100.0))
 	p.survival.thirst = float(data.get("thirst", 100.0))
+	p.creative = bool(data.get("creative", false))
 	var weak: Dictionary = data.get("weakness", {})
 	p.death_penalty.level = int(weak.get("level", 0))
 	p.death_penalty.time_left = float(weak.get("time_left", 0.0))

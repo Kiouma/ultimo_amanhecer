@@ -19,6 +19,8 @@ var _craft_title: Label
 var _queue_box: VBoxContainer
 ## Estação aberta (null = só mãos).
 var _station: CraftingStation
+## Slot sob o mouse (-1 = nenhum): apertar 1-9 troca com aquele slot da hotbar.
+var _hovered := -1
 
 
 func _ready() -> void:
@@ -56,6 +58,17 @@ func _process(_delta: float) -> void:
 			_refresh()
 
 
+func _input(event: InputEvent) -> void:
+	if not visible or player == null or _hovered < 0 or not event is InputEventKey:
+		return
+	for i in Inventory.HOTBAR_SIZE:
+		if event.is_action_pressed("hotbar_%d" % (i + 1)):
+			if _hovered != i:
+				player.inventory.move_slot(_hovered, i)
+			get_viewport().set_input_as_handled()
+			return
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if player == null:
 		return
@@ -70,6 +83,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func toggle() -> void:
 	visible = not visible and not player.health.is_dead
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
+	_hovered = -1
 	if visible:
 		_refresh()
 	else:
@@ -186,7 +200,7 @@ func _add_repair_section() -> void:
 		info.add_child(title)
 		var cost := Repair.repair_cost(s)
 		var details := Label.new()
-		var refine_text := "máximo" if Refine.is_maxed(s) else "+%d por %d pedra(s) de refino" % [Inventory.refine_of(s) + 1, Refine.cost(s)]
+		var refine_text := "máximo" if Refine.is_maxed(s) else "+%d: %d× %s, %d%% de chance" % [Inventory.refine_of(s) + 1, Refine.cost(s), str(GameData.get_item(Refine.stone_for(s)).get("name", "")).to_lower(), roundi(Refine.chance(s) * 100.0)]
 		details.text = "reparo: %s · refino: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", refine_text if Refine.can_be_refined(s) else "—", Repair.describe(Repair.salvage_result(s))]
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
@@ -200,9 +214,14 @@ func _add_repair_section() -> void:
 		row.add_child(repair_button)
 		var refine_button := Button.new()
 		refine_button.text = "Refinar"
-		refine_button.tooltip_text = "+5% de dano/eficiência por nível (até +12). Pedra de refino cai de inimigos."
+		refine_button.tooltip_text = "+5% de dano/eficiência por nível (até +21). Pode falhar (as pedras se perdem, o nível fica).\nPedras: +1~5 comum, +6~10 incomum, +11~15 rara, +16~20 épica, +21 lendária.\nCinco pedras viram uma de nível acima, aqui na bancada."
 		refine_button.disabled = not Refine.can_refine(inv, s)
-		refine_button.pressed.connect(func() -> void: Refine.refine(player.inventory, s))
+		refine_button.pressed.connect(func() -> void:
+			var result := Refine.refine(player.inventory, s)
+			if result == Refine.Result.SUCCESS:
+				player.notify("Refino deu certo: %s" % Inventory.display_name_of(s))
+			elif result == Refine.Result.FAILED:
+				player.notify("O refino falhou (as pedras se perderam)"))
 		row.add_child(refine_button)
 		var salvage_button := Button.new()
 		salvage_button.text = "Desmontar"
@@ -258,7 +277,6 @@ func _refresh_queue() -> void:
 
 func _build() -> void:
 	_built = true
-	UITabs.attach.call_deferred(self, "inventory")
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.45)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -277,6 +295,7 @@ func _build() -> void:
 	style.set_content_margin_all(18)
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
+	UITabs.attach(self, "inventory", panel)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 24)
@@ -344,7 +363,7 @@ func _build() -> void:
 		hotbar.add_child(_new_slot(i))
 
 	var help := Label.new()
-	help.text = "Arraste para mover · botão direito divide · solte fora da janela para jogar no chão · Tab fecha"
+	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nsolte fora da janela para jogar no chão · Tab fecha"
 	help.add_theme_font_size_override("font_size", 12)
 	help.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 	vbox.add_child(help)
@@ -353,5 +372,9 @@ func _build() -> void:
 func _new_slot(i: int) -> InventorySlotUI:
 	var slot := InventorySlotUI.new()
 	slot.setup(player.inventory, i)
+	slot.mouse_entered.connect(func() -> void: _hovered = i)
+	slot.mouse_exited.connect(func() -> void:
+		if _hovered == i:
+			_hovered = -1)
 	_slots.append(slot)
 	return slot

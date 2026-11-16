@@ -10,7 +10,11 @@ signal changed(current: float, maximum: float)
 ## Segundos sem gastar até começar a regenerar.
 @export var regen_delay := 1.0
 
+## Canalizando: regenera o tempo todo (sem esperar regen_delay), mas a CHANNEL_REGEN da velocidade.
+const CHANNEL_REGEN := 0.25
+
 var current: float
+var channeling := false
 var _since_spent := 0.0
 
 
@@ -20,7 +24,11 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_since_spent += delta
-	if _since_spent >= regen_delay and current < max_value:
+	if channeling:
+		if current < max_value:
+			current = minf(current + regen_per_second * CHANNEL_REGEN * delta, max_value)
+			changed.emit(current, max_value)
+	elif _since_spent >= regen_delay and current < max_value:
 		current = minf(current + regen_per_second * delta, max_value)
 		changed.emit(current, max_value)
 

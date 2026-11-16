@@ -3,7 +3,8 @@ extends Weapon
 ## Cajado (foco arcano): conjura a última habilidade (a do Q).
 ## Toque = conjuração normal. Segurar = canalizar: gasta mana enquanto segura, até
 ## MAX_COST vezes o custo da habilidade, e aumenta o efeito (dano, cura, alcance,
-## raio) até MAX_POWER vezes. Soltar conjura. Sem mana, solta sozinho.
+## raio) até MAX_POWER vezes. Soltar conjura. Enquanto canaliza, a mana regenera a 25%;
+## se a mana acabar, a canalização continua, consumindo o que a regeneração devolver.
 
 const TAP := 0.2
 const FULL := 2.0
@@ -12,6 +13,8 @@ const MAX_POWER := 3.0
 
 var _pressing := false
 var _time := 0.0
+## Carga da canalização (0 a 1), proporcional à mana extra paga.
+var _charge := 0.0
 var _caster: SpellCaster
 var _orb: MeshInstance3D
 
@@ -27,28 +30,49 @@ func handle_attack(held: bool, just_pressed: bool) -> void:
 			return
 		if _caster.casting or _caster.cooldown > 0.0:
 			return
+		var pool: StatPool = user.get(&"mana")
+		if pool and not pool.has(_caster.stat("mana", 15.0)):
+			user.notify("Mana insuficiente")
+			return
 		_pressing = true
 		_time = 0.0
+		_charge = 0.0
 	if not _pressing:
 		return
 	if held:
 		var dt := get_process_delta_time()
 		_time += dt
-		if _time > TAP and _time < FULL:
-			# Canalizando: o custo extra (MAX_COST - 1 vezes) se espalha até FULL segundos.
-			var extra := _caster.stat("mana", 15.0) * (MAX_COST - 1.0) / (FULL - TAP) * dt
-			var mana: StatPool = user.get(&"mana")
-			if mana and not mana.spend(extra):
-				_release()
-				return
+		var mana: StatPool = user.get(&"mana")
+		if _time > TAP:
+			_set_channeling(true)
+		if _time > TAP and _charge < 1.0:
+			# Canalizando: o custo extra (MAX_COST - 1 vezes) se espalha em FULL - TAP segundos.
+			# O custo base fica reservado para a conjuração. Sem mana sobrando, a carga não
+			# para: avança no ritmo do que a regeneração (reduzida) for devolvendo.
+			var base := _caster.stat("mana", 15.0)
+			var need := base * (MAX_COST - 1.0) / (FULL - TAP) * dt
+			var paid := need
+			if mana:
+				paid = minf(need, maxf(mana.current - base, 0.0))
+				if paid > 0.0:
+					mana.drain(paid)
+			if need > 0.0:
+				_charge = minf(_charge + paid / need * dt / (FULL - TAP), 1.0)
 		hud_changed.emit()
 	else:
 		_release()
 
 
+func _set_channeling(on: bool) -> void:
+	var mana: StatPool = user.get(&"mana") if user else null
+	if mana:
+		mana.channeling = on
+
+
 func _release() -> void:
 	var frac := channel_fraction()  # antes de soltar (depois vira -1)
 	_pressing = false
+	_set_channeling(false)
 	var power := 1.0 + (MAX_POWER - 1.0) * maxf(frac, 0.0) * user.progression.mult("magic.channel")
 	_time = 0.0
 	hud_changed.emit()
@@ -60,7 +84,7 @@ func _release() -> void:
 func channel_fraction() -> float:
 	if not _pressing or _time <= TAP:
 		return -1.0
-	return clampf((_time - TAP) / (FULL - TAP), 0.0, 1.0)
+	return clampf(_charge, 0.0, 1.0)
 
 
 func channel_label() -> String:
@@ -70,6 +94,8 @@ func channel_label() -> String:
 func on_unequip() -> void:
 	_pressing = false
 	_time = 0.0
+	_charge = 0.0
+	_set_channeling(false)
 
 
 func hud_text() -> String:

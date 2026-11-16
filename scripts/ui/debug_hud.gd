@@ -15,6 +15,7 @@ var _prompt: Label
 var _inventory_ui: InventoryUI
 var _progression_ui: ProgressionUI
 var _map_ui: MapUI
+var _creative_ui: CreativeUI
 var _weakness_label: Label
 var _queue_label: Label
 var _build_label: Label
@@ -143,6 +144,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_map_ui)
 	_map_ui.bind(player)
 
+	_creative_ui = CreativeUI.new()
+	add_child(_creative_ui)
+	_creative_ui.bind(player)
+
 	var chest_ui := ChestUI.new()
 	add_child(chest_ui)
 	chest_ui.bind(player)
@@ -219,7 +224,7 @@ func _on_weakness_changed(level: int, time_left: float, penalty: DeathPenalty) -
 ## Avisos curtos (player.notify) e linha da fila de fabricação, acima da hotbar.
 func _bind_notifications(player: Player) -> void:
 	var toast := Label.new()
-	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 150)
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 206)
 	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.6))
@@ -230,7 +235,7 @@ func _bind_notifications(player: Player) -> void:
 	player.notified.connect(_on_notified.bind(toast))
 
 	_queue_label = Label.new()
-	_queue_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 130)
+	_queue_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 184)
 	_queue_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_queue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_queue_label.add_theme_font_size_override("font_size", 13)
@@ -342,7 +347,7 @@ func _build_clock() -> void:
 
 ## Troca de tela pelas abas (Inventário / Personagem / Mapa).
 func open_panel(which: String) -> void:
-	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "map": _map_ui}
+	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "map": _map_ui, "creative": _creative_ui}
 	var target: Control = panels.get(which)
 	if target == null:
 		return

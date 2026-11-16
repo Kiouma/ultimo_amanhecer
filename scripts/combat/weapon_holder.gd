@@ -118,6 +118,7 @@ func _refresh() -> void:
 			_current.on_equip()
 	if _current:
 		_current.slot = s
+		_current.set_refine_fx(Inventory.refine_fx_tier(s))
 	# Tocha na mão = luz (GDD 11: a noite é escura).
 	user.net_torch = s.get("id", "") == "torch" and not Inventory.is_broken(s)
 	user.set_torch_power(Inventory.refine_multiplier(s) if user.net_torch else 1.0)
@@ -187,7 +188,7 @@ func use_selected() -> void:
 		return
 	if data.get("type", "") == "grimoire":
 		if _read_grimoire(data):
-			inventory.take_from_slot(selected, 1)
+			inventory.consume_from_slot(selected, 1)
 			_use_cooldown = 1.0
 		return
 	if data.get("type", "") in Structures.PLACEABLE_TYPES:
@@ -204,7 +205,7 @@ func use_selected() -> void:
 		return  # nada a ganhar: não desperdiça
 	if can_heal:
 		user.health.heal(heals)
-	inventory.take_from_slot(selected, 1)
+	inventory.consume_from_slot(selected, 1)
 	prog.gain("survival", 1.0)
 	# Garrafa: beber devolve a garrafa vazia.
 	if data.has("returns"):

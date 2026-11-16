@@ -4,7 +4,7 @@ extends Node
 ## Os 9 primeiros slots são a hotbar (teclas 1-9); o resto é a mochila.
 ## Cada slot é {} (vazio) ou {"id": String, "count": int}, mais dados extras de itens
 ## que não empilham: "dur" (durabilidade atual), "mag" (balas no pente), "q" (qualidade 1-5)
-## e "r" (refino 0-12).
+## e "r" (refino 0-21).
 ## Os extras acompanham o item ao soltar, ir para a bag e ser pego de novo.
 
 ## Chaves de estado do item que viajam com ele.
@@ -13,9 +13,15 @@ const EXTRA_KEYS := ["dur", "mag", "q", "r"]
 ## Qualidade (GDD 8.3): cada nível acima de 1 dá +12% em dano, durabilidade e eficiência.
 const QUALITY_STEP := 0.12
 const MAX_QUALITY := 5
-## Refino (+1 a +12): cada nível dá +5% de dano/eficiência.
+## Refino (+1 a +21): cada nível dá +5% de dano/eficiência.
 const REFINE_STEP := 0.05
-const MAX_REFINE := 12
+const MAX_REFINE := 21
+## Cores por nível de qualidade/raridade (1 cinza, 2 verde, 3 azul, 4 roxo, 5 laranja).
+const TIER_COLORS := [Color(0.55, 0.55, 0.55), Color(0.4, 0.8, 0.4), Color(0.35, 0.6, 1.0), Color(0.75, 0.45, 1.0), Color(1.0, 0.6, 0.2)]
+## Brilho do refino, a cada 3 níveis (+3, +6 ... +21).
+const REFINE_FX_COLORS := [Color(0.95, 0.95, 0.95), Color(0.45, 1.0, 0.45), Color(0.4, 0.7, 1.0), Color(0.8, 0.45, 1.0), Color(1.0, 0.6, 0.15), Color(1.0, 0.25, 0.25), Color(1.0, 0.9, 0.3)]
+## Modo criativo: quem tem pelo menos 1 unidade "tem" esta quantidade, e nada se gasta.
+const CREATIVE_COUNT := 999
 ##
 ## Rede: o inventário vive na máquina do dono do personagem. O que vem do mundo
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
@@ -29,6 +35,8 @@ const HOTBAR_SIZE := 9
 @export var max_weight := 40.0
 
 var slots: Array[Dictionary] = []
+## Modo criativo (ver Player.creative): itens não se gastam nem se desgastam.
+var creative := false
 
 
 func _ready() -> void:
@@ -48,6 +56,8 @@ func count_of(id: String) -> int:
 	for s in slots:
 		if s.get("id", "") == id:
 			total += int(s.count)
+	if creative and total > 0:
+		return maxi(total, CREATIVE_COUNT)
 	return total
 
 
@@ -134,6 +144,8 @@ func _fill_order(id: String) -> Array:
 func remove_item(id: String, count: int) -> bool:
 	if count_of(id) < count:
 		return false
+	if creative:
+		return true
 	var left := count
 	for i in range(slots.size() - 1, -1, -1):
 		if left <= 0:
@@ -161,6 +173,13 @@ func take_from_slot(index: int, count: int) -> Dictionary:
 	var out := {"id": s.id, "count": taken}
 	out.merge(extra_of(s))
 	return out
+
+
+## Gasta (come, lê, coloca) itens de um slot. No criativo não gasta.
+func consume_from_slot(index: int, count: int) -> void:
+	if creative:
+		return
+	take_from_slot(index, count)
 
 
 ## Arrastar de um slot para outro: junta pilhas iguais, senão troca.
@@ -224,14 +243,29 @@ static func quality_multiplier(slot: Dictionary) -> float:
 	return 1.0 + QUALITY_STEP * (quality_of(slot) - 1)
 
 
-## Nível de refino do slot (0 a 12).
+## Nível de refino do slot (0 a 21).
 static func refine_of(slot: Dictionary) -> int:
 	return clampi(int(slot.get("r", 0)), 0, MAX_REFINE)
 
 
-## Multiplicador do refino: +0 = 1,0 ... +12 = 1,6.
+## Multiplicador do refino: +0 = 1,0 ... +21 = 2,05.
 static func refine_multiplier(slot: Dictionary) -> float:
 	return 1.0 + REFINE_STEP * refine_of(slot)
+
+
+## Faixa do brilho do refino: 0 = sem brilho, 1 (+3) ... 7 (+21).
+static func refine_fx_tier(slot: Dictionary) -> int:
+	return refine_of(slot) / 3
+
+
+## Nível de cor do slot (fundo): qualidade de armas/ferramentas/equipamentos ou
+## "tier" do item (pedras de refino). 0 = sem cor.
+static func tier_of(slot: Dictionary) -> int:
+	if slot.is_empty():
+		return 0
+	if max_durability(slot.id) > 0.0:
+		return quality_of(slot)
+	return clampi(int(GameData.get_item(slot.id).get("tier", 0)), 0, MAX_QUALITY)
 
 
 ## Nome com refino e qualidade: "Machado de ferro +3 · Q2".
@@ -268,6 +302,8 @@ static func is_broken(slot: Dictionary) -> bool:
 func wear(slot: Dictionary, amount: float) -> float:
 	if slot.is_empty() or max_durability(slot.id) <= 0.0:
 		return 0.0
+	if creative:
+		return durability_of(slot)
 	slot["dur"] = maxf(durability_of(slot) - amount, 0.0)
 	changed.emit()
 	return slot.dur
