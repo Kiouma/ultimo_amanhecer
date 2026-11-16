@@ -374,7 +374,9 @@ func _empty_backpack() -> Array:
 	for i in range(Inventory.HOTBAR_SIZE, inventory.slots.size()):
 		var s := inventory.get_slot(i)
 		if not s.is_empty():
-			contents.append({"id": s.id, "count": int(s.count)})
+			var stack := {"id": s.id, "count": int(s.count)}
+			stack.merge(Inventory.extra_of(s))
+			contents.append(stack)
 			inventory.slots[i] = {}
 	inventory.changed.emit()
 	return contents

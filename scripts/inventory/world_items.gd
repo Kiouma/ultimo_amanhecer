@@ -32,19 +32,28 @@ func all_items() -> Array[Node]:
 
 
 ## by_peer: id do jogador que soltou (0 = o mundo: saque, flecha recuperada...).
-func spawn(id: String, count: int, position: Vector3, by_peer := 0) -> void:
+func spawn(id: String, count: int, position: Vector3, by_peer := 0, extra: Dictionary = {}) -> void:
 	if not multiplayer.is_server() or _spawner == null or count <= 0:
 		return
-	_spawner.spawn({"id": id, "count": count, "pos": _snap_to_ground(position), "by": by_peer})
+	_spawner.spawn({"id": id, "count": count, "pos": _snap_to_ground(position), "by": by_peer, "extra": _clean_extra(extra)})
+
+
+## Só os campos de estado conhecidos, como números (dados vindos de clientes).
+func _clean_extra(extra: Dictionary) -> Dictionary:
+	var out := {}
+	for key in Inventory.EXTRA_KEYS:
+		if extra.has(key):
+			out[key] = maxf(float(extra[key]), 0.0)
+	return out
 
 
 ## Solta itens no chão (quem chama já tirou do inventário).
 ## by: jogador que soltou (ganha a espera da coleta automática) ou null.
-func drop(id: String, count: int, position: Vector3, by: Node3D) -> void:
+func drop(id: String, count: int, position: Vector3, by: Node3D, extra: Dictionary = {}) -> void:
 	if multiplayer.is_server():
-		spawn(id, count, position, by.get_multiplayer_authority() if by else 0)
+		spawn(id, count, position, by.get_multiplayer_authority() if by else 0, extra)
 	elif Network.is_online():
-		_request_drop.rpc_id(1, id, count, position, by != null)
+		_request_drop.rpc_id(1, id, count, position, by != null, extra)
 
 
 ## auto = coleta por proximidade (respeita a espera de quem soltou).
@@ -94,7 +103,9 @@ func _request_bag(contents: Array, position: Vector3, owner_name: String) -> voi
 	var clean: Array = []
 	for stack in contents:
 		if stack is Dictionary and not GameData.get_item(str(stack.get("id", ""))).is_empty():
-			clean.append({"id": str(stack.id), "count": clampi(int(stack.get("count", 1)), 1, 10000)})
+			var entry := {"id": str(stack.id), "count": clampi(int(stack.get("count", 1)), 1, 10000)}
+			entry.merge(_clean_extra(stack))
+			clean.append(entry)
 	if player.global_position.distance_to(position) > MAX_REACH:
 		position = player.global_position
 	_spawn_bag(clean, position, owner_name.left(24))
@@ -116,20 +127,20 @@ func _do_loot(bag: Node, player: Node3D) -> void:
 		return
 	bag.queue_free()
 	for stack in bag.contents:
-		inventory.grant(str(stack.id), int(stack.count))
+		inventory.grant(str(stack.id), int(stack.count), Inventory.extra_of(stack))
 
 
 # --- Servidor ---------------------------------------------------------------------------
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_drop(id: String, count: int, position: Vector3, by_player: bool) -> void:
+func _request_drop(id: String, count: int, position: Vector3, by_player: bool, extra: Dictionary) -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	var player := _player_of(sender)
 	if player == null or GameData.get_item(id).is_empty():
 		return
 	if player.global_position.distance_to(position) > MAX_REACH:
 		position = player.global_position
-	spawn(id, clampi(count, 1, 10000), position, sender if by_player else 0)
+	spawn(id, clampi(count, 1, 10000), position, sender if by_player else 0, extra)
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -150,7 +161,7 @@ func _do_pickup(item: Node, player: Node3D, auto := false) -> void:
 	if inventory == null:
 		return
 	item.queue_free()
-	inventory.grant(item.item_id, item.count)
+	inventory.grant(item.item_id, item.count, item.extra)
 
 
 func _player_of(peer_id: int) -> Node3D:
@@ -183,4 +194,5 @@ func _create(data: Dictionary) -> Node:
 	item.count = data.count
 	item.position = data.pos
 	item.dropped_by = int(data.get("by", 0))
+	item.extra = data.get("extra", {})
 	return item

@@ -17,6 +17,7 @@ var selected := false:
 var _name_label: Label
 var _count_label: Label
 var _key_label: Label
+var _dur_bar: ColorRect
 var _style := StyleBoxFlat.new()
 
 
@@ -51,6 +52,13 @@ func _init() -> void:
 	_key_label.position = Vector2(0, -2)
 	box.add_child(_key_label)
 
+	# Durabilidade: faixa fina embaixo (verde → vermelho).
+	_dur_bar = ColorRect.new()
+	_dur_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dur_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_dur_bar.size = Vector2(0, 3)
+	box.add_child(_dur_bar)
+
 
 ## compact: versão menor da hotbar do HUD (fonte menor para o nome caber).
 func setup(inv: Inventory, slot_index: int, is_interactive := true, compact := false) -> void:
@@ -79,10 +87,31 @@ func refresh() -> void:
 		_count_label.text = str(count) if count > 1 else ""
 		if s.has("mag"):
 			_count_label.text = "%d" % int(s.mag)
+		var max_dur := Inventory.max_durability(s.id)
+		if max_dur > 0.0:
+			tooltip_text += "
+Durabilidade %d / %d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)] if interactive else ""
+			if Inventory.is_broken(s):
+				_name_label.text += "
+(quebrado)"
 		var weight := float(data.get("weight", 0.0))
 		tooltip_text = "%s\n%s · %.2f kg cada · %.1f kg" % [item_name, str(data.get("type", "")), weight, weight * count] \
 			if interactive else ""
+	_update_dur_bar()
 	_update_style()
+
+
+func _update_dur_bar() -> void:
+	var s := inventory.get_slot(index)
+	var max_dur := Inventory.max_durability(s.id) if not s.is_empty() else 0.0
+	_dur_bar.visible = max_dur > 0.0
+	if not _dur_bar.visible:
+		return
+	var frac := clampf(Inventory.durability_of(s) / max_dur, 0.0, 1.0)
+	var full := maxf(custom_minimum_size.x - 8.0, 1.0)
+	_dur_bar.position = Vector2(0, custom_minimum_size.y - 11.0)
+	_dur_bar.size = Vector2(maxf(full * frac, 2.0), 3)
+	_dur_bar.color = Color(0.85, 0.25, 0.2).lerp(Color(0.4, 0.8, 0.35), frac) if frac > 0.0 else Color(0.6, 0.1, 0.1)
 
 
 func _update_style() -> void:

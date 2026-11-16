@@ -24,6 +24,9 @@ func _process(delta: float) -> void:
 func handle_attack(held: bool, _just_pressed: bool) -> void:
 	if not held or cooldown > 0.0:
 		return
+	if is_broken():
+		warn_broken()
+		return
 	var stamina: StatPool = user.get(&"stamina")
 	if stamina and not stamina.spend(stat("stamina_cost", 12.0)):
 		return
@@ -62,6 +65,7 @@ func _hit() -> void:
 	if _hit_resource(reach):
 		hits += 1
 	if hits > 0:
+		wear(1.0)  # só desgasta quando acerta algo
 		kick(Vector3(0, 0, 0.03), Vector3(0, 0, 0), 0.08)  # tranco do impacto
 
 

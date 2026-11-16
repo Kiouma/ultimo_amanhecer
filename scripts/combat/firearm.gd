@@ -40,6 +40,9 @@ func _process(delta: float) -> void:
 func handle_attack(_held: bool, just_pressed: bool) -> void:
 	if not just_pressed or reloading or cooldown > 0.0:
 		return
+	if is_broken():
+		warn_broken()
+		return
 	if magazine <= 0:
 		reload()
 		return
@@ -67,6 +70,7 @@ func _fire() -> void:
 	_flash.visible = true
 	get_tree().create_timer(0.05).timeout.connect(func() -> void: _flash.visible = false)
 	make_noise(stat("noise", 0.8))
+	wear(1.0)
 	head.rotation.x += deg_to_rad(1.2)  # recuo da câmera
 	kick(Vector3(0, 0.01, 0.06), Vector3(deg_to_rad(8), 0, 0))
 	play_body_anim(&"Pistol_Shoot")

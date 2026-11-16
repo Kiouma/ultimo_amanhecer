@@ -34,6 +34,7 @@ var _head: Node3D
 var _cache: Dictionary = {}
 var _current: Weapon
 var _use_cooldown := 0.0
+var _torch_burn := 0.0
 
 
 func setup(player: Player, camera: Camera3D, head: Node3D, inv: Inventory) -> void:
@@ -68,6 +69,8 @@ func display_name() -> String:
 
 func hud_text() -> String:
 	var s := selected_item()
+	if _current and _current.is_broken():
+		return "QUEBRADO · repare na bancada"
 	if _current and _current.data.get("no_viewmodel", false):
 		return "×%d" % int(s.count) if not s.is_empty() and int(s.count) > 1 else "soco"
 	if _current:
@@ -106,6 +109,7 @@ func _refresh() -> void:
 
 func _process(delta: float) -> void:
 	_use_cooldown = maxf(_use_cooldown - delta, 0.0)
+	_burn_torch(delta)
 	if user == null or not _accepts_input():
 		return
 	if _current:
@@ -161,6 +165,20 @@ func use_selected() -> void:
 		user.notify("Você passou mal (%s)" % str(data.get("name", s.id)).to_lower())
 	_use_cooldown = 1.0
 	user.play_action_synced(&"Consume")
+
+
+## Tocha acesa queima 1 de durabilidade por segundo; no fim, se apaga e some.
+func _burn_torch(delta: float) -> void:
+	if user == null or not user.is_multiplayer_authority() or not user.net_torch:
+		return
+	_torch_burn += delta
+	if _torch_burn < 1.0:
+		return
+	_torch_burn -= 1.0
+	var s := selected_item()
+	if inventory.wear(s, 1.0) <= 0.0:
+		inventory.take_from_slot(selected, 1)
+		user.notify("A tocha apagou")
 
 
 func _quick_cast() -> void:

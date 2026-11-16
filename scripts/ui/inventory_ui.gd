@@ -88,7 +88,7 @@ func _drop_data(_at: Vector2, data: Variant) -> void:
 		return
 	var taken := player.inventory.take_from_slot(from, int(s.count))
 	var ahead := -player.global_basis.z * 1.8 + Vector3.UP * 0.3  # fora do raio da coleta automática
-	WorldItems.drop(taken.id, taken.count, player.global_position + ahead, player)
+	WorldItems.drop(taken.id, taken.count, player.global_position + ahead, player, Inventory.extra_of(taken))
 
 
 func _refresh() -> void:
@@ -121,6 +121,8 @@ func _refresh_crafting() -> void:
 			_craft_list.add_child(header)
 		for recipe in Crafting.recipes_for(station):
 			_craft_list.add_child(_recipe_row(recipe))
+	if _station and _station.station == "workbench":
+		_add_repair_section()
 
 
 func _recipe_row(recipe: Dictionary) -> Control:
@@ -157,6 +159,55 @@ func _craft_button(text: String, recipe: Dictionary, times: int, enabled: bool) 
 func _enqueue(recipe: Dictionary, times: int) -> void:
 	var n := Crafting.max_times(player.inventory, recipe) if times < 0 else times
 	player.craft_queue.enqueue(recipe, n)
+
+
+## Bancada: reparar (durabilidade cheia) e desmontar (recupera materiais) itens do inventário.
+func _add_repair_section() -> void:
+	var header := Label.new()
+	header.text = "Reparar e desmontar"
+	header.add_theme_color_override("font_color", Color(0.95, 0.8, 0.45))
+	_craft_list.add_child(header)
+	var inv := player.inventory
+	var any := false
+	for i in inv.slots.size():
+		var s := inv.get_slot(i)
+		if not (Repair.is_repairable(s) or Repair.is_salvageable(s)):
+			continue
+		any = true
+		var row := HBoxContainer.new()
+		var info := VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var title := Label.new()
+		var max_dur := Inventory.max_durability(s.id)
+		title.text = str(GameData.get_item(s.id).get("name", s.id))
+		if max_dur > 0.0:
+			title.text += "  %d/%d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)]
+		title.add_theme_color_override("font_color", Color(1, 0.5, 0.4) if Inventory.is_broken(s) else Color(0.92, 0.92, 0.88))
+		info.add_child(title)
+		var cost := Repair.repair_cost(s)
+		var details := Label.new()
+		details.text = "reparo: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", Repair.describe(Repair.salvage_result(s))]
+		details.add_theme_font_size_override("font_size", 12)
+		details.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
+		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info.add_child(details)
+		row.add_child(info)
+		var repair_button := Button.new()
+		repair_button.text = "Reparar"
+		repair_button.disabled = not Repair.can_repair(inv, s)
+		repair_button.pressed.connect(func() -> void: Repair.repair(player.inventory, s))
+		row.add_child(repair_button)
+		var salvage_button := Button.new()
+		salvage_button.text = "Desmontar"
+		salvage_button.disabled = Repair.salvage_result(s).is_empty()
+		salvage_button.pressed.connect(func() -> void: Repair.salvage(player.inventory, i))
+		row.add_child(salvage_button)
+		_craft_list.add_child(row)
+	if not any:
+		var none := Label.new()
+		none.text = "nada para reparar ou desmontar"
+		none.add_theme_color_override("font_color", Color(0.5, 0.5, 0.48))
+		_craft_list.add_child(none)
 
 
 ## Fila: uma linha por trabalho, com progresso, pausa (longe da estação) e cancelar.

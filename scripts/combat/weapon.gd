@@ -20,6 +20,8 @@ var cooldown := 0.0
 ## Slot do inventário de onde a arma foi equipada (guarda estado como balas no pente).
 var slot: Dictionary = {}
 
+var _last_broken_warning := -10000
+
 var _rest_position := Vector3.ZERO
 var _rest_rotation := Vector3.ZERO
 
@@ -36,6 +38,27 @@ func setup(entry: Dictionary, owner_player: Player, cam: Camera3D, head_node: No
 
 func _process(delta: float) -> void:
 	cooldown = maxf(cooldown - delta, 0.0)
+
+
+## Arma do slot sem durabilidade (ex.: 0 de 250)? Não funciona até ser reparada.
+func is_broken() -> bool:
+	return float(data.get("durability", 0.0)) > 0.0 and Inventory.is_broken(slot)
+
+
+## Desgasta a arma (só itens com "durability"). Avisa quando quebra.
+func wear(amount := 1.0) -> void:
+	if float(data.get("durability", 0.0)) <= 0.0 or slot.is_empty() or user == null:
+		return
+	if user.inventory.wear(slot, amount) <= 0.0:
+		user.notify("%s quebrou: repare na bancada" % display_name())
+
+
+## Tentou usar quebrada: avisa (no máximo a cada 2 s).
+func warn_broken() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_broken_warning > 2000:
+		_last_broken_warning = now
+		user.notify("%s está quebrado(a): repare na bancada" % display_name())
 
 
 func display_name() -> String:

@@ -16,6 +16,8 @@ var item_id := ""
 var count := 1
 ## Peer id de quem soltou (0 = o mundo). Ver WorldItems.DROP_COOLDOWN.
 var dropped_by := 0
+## Estado do item (durabilidade, balas no pente), ver Inventory.EXTRA_KEYS.
+var extra: Dictionary = {}
 
 var _born_msec := Time.get_ticks_msec()
 

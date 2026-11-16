@@ -39,6 +39,9 @@ func _process(delta: float) -> void:
 func handle_attack(held: bool, _just_pressed: bool) -> void:
 	if held:
 		if not drawing:
+			if is_broken():
+				warn_broken()
+				return
 			if cooldown > 0.0 or arrows() <= 0:
 				return
 			drawing = true
@@ -74,6 +77,7 @@ func _release() -> void:
 
 	user.broadcast_fx(&"arrow", from, from + direction * speed)
 	make_noise(stat("noise", 0.08))
+	wear(1.0)
 	kick(Vector3(0, 0, 0.04), Vector3(0, 0, 0), 0.15)
 
 

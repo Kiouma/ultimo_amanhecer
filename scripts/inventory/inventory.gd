@@ -2,7 +2,12 @@ class_name Inventory
 extends Node
 ## Inventário do jogador (GDD 7 e 13.2): slots com empilhamento e limite de peso.
 ## Os 9 primeiros slots são a hotbar (teclas 1-9); o resto é a mochila.
-## Cada slot é {} (vazio) ou {"id": String, "count": int}.
+## Cada slot é {} (vazio) ou {"id": String, "count": int}, mais dados extras de itens
+## que não empilham: "dur" (durabilidade atual) e "mag" (balas no pente).
+## Os extras acompanham o item ao soltar, ir para a bag e ser pego de novo.
+
+## Chaves de estado do item que viajam com ele.
+const EXTRA_KEYS := ["dur", "mag"]
 ##
 ## Rede: o inventário vive na máquina do dono do personagem. O que vem do mundo
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
@@ -73,9 +78,10 @@ func find_in_hotbar(type: String) -> int:
 # --- Mudanças -------------------------------------------------------------------------
 
 ## Adiciona itens: completa pilhas existentes, depois ocupa slots vazios.
+## extra: estado do item ({"dur": 40}), só para itens que não empilham.
 ## Armas, feitiços e consumíveis vão primeiro para a hotbar; recursos e munição,
 ## primeiro para a mochila. Retorna quantos NÃO couberam.
-func add_item(id: String, count: int) -> int:
+func add_item(id: String, count: int, extra: Dictionary = {}) -> int:
 	if GameData.get_item(id).is_empty():
 		push_warning("Inventário: item desconhecido '%s'." % id)
 		return count
@@ -84,7 +90,7 @@ func add_item(id: String, count: int) -> int:
 	for s in slots:
 		if left <= 0:
 			break
-		if s.get("id", "") == id and int(s.count) < limit:
+		if limit > 1 and s.get("id", "") == id and int(s.count) < limit:
 			var moved := mini(limit - int(s.count), left)
 			s.count = int(s.count) + moved
 			left -= moved
@@ -94,6 +100,10 @@ func add_item(id: String, count: int) -> int:
 		if slots[i].is_empty():
 			var moved := mini(limit, left)
 			slots[i] = {"id": id, "count": moved}
+			if limit == 1:
+				for key in EXTRA_KEYS:
+					if extra.has(key):
+						slots[i][key] = extra[key]
 			left -= moved
 	if left != count:
 		changed.emit()
@@ -140,7 +150,9 @@ func take_from_slot(index: int, count: int) -> Dictionary:
 	if int(s.count) <= 0:
 		slots[index] = {}
 	changed.emit()
-	return {"id": s.id, "count": taken}
+	var out := {"id": s.id, "count": taken}
+	out.merge(extra_of(s))
+	return out
 
 
 ## Arrastar de um slot para outro: junta pilhas iguais, senão troca.
@@ -178,6 +190,42 @@ func split_slot(index: int) -> void:
 			return
 
 
+## Estado extra de um slot (só as chaves de EXTRA_KEYS).
+static func extra_of(slot: Dictionary) -> Dictionary:
+	var out := {}
+	for key in EXTRA_KEYS:
+		if slot.has(key):
+			out[key] = slot[key]
+	return out
+
+
+# --- Durabilidade (GDD 8.3) -----------------------------------------------------------
+
+## Durabilidade máxima do item (0 = não se desgasta).
+static func max_durability(id: String) -> float:
+	return float(GameData.get_item(id).get("durability", 0.0))
+
+
+## Durabilidade atual do slot (cheia se nunca foi usado).
+static func durability_of(slot: Dictionary) -> float:
+	if slot.is_empty():
+		return 0.0
+	return float(slot.get("dur", max_durability(slot.id)))
+
+
+static func is_broken(slot: Dictionary) -> bool:
+	return not slot.is_empty() and max_durability(slot.id) > 0.0 and durability_of(slot) <= 0.0
+
+
+## Gasta durabilidade de um slot (dicionário do próprio inventário). Retorna a que sobrou.
+func wear(slot: Dictionary, amount: float) -> float:
+	if slot.is_empty() or max_durability(slot.id) <= 0.0:
+		return 0.0
+	slot["dur"] = maxf(durability_of(slot) - amount, 0.0)
+	changed.emit()
+	return slot.dur
+
+
 func clear() -> void:
 	for i in slots.size():
 		slots[i] = {}
@@ -188,22 +236,22 @@ func clear() -> void:
 
 ## O servidor concede itens a este jogador (ex.: pegou algo do chão).
 ## O que não couber volta para o chão, aos pés do jogador.
-func grant(id: String, count: int) -> void:
+func grant(id: String, count: int, extra: Dictionary = {}) -> void:
 	var owner_id := get_multiplayer_authority()
 	if owner_id == multiplayer.get_unique_id():
-		_receive(id, count)
+		_receive(id, count, extra)
 	elif multiplayer.is_server() and Network.is_online():
-		_grant_remote.rpc_id(owner_id, id, count)
+		_grant_remote.rpc_id(owner_id, id, count, extra)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _grant_remote(id: String, count: int) -> void:
+func _grant_remote(id: String, count: int, extra: Dictionary) -> void:
 	if multiplayer.get_remote_sender_id() == 1:
-		_receive(id, count)
+		_receive(id, count, extra)
 
 
-func _receive(id: String, count: int) -> void:
-	var left := add_item(id, count)
+func _receive(id: String, count: int, extra: Dictionary = {}) -> void:
+	var left := add_item(id, count, extra)
 	if left > 0:
 		var player := get_parent() as Node3D
-		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, player)
+		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, player, extra)
