@@ -42,6 +42,24 @@ const DENSITY := {
 }
 const CELL_SIZE := 8.0
 
+## População de zumbis por região (GDD 10.2): quantos manter perto de cada jogador e
+## de que tipos (peso), conforme o bioma onde ele está.
+const POPULATION := {
+	"plains": {"target": 5, "types": {"walker": 8, "runner": 1}},
+	"forest": {"target": 7, "types": {"walker": 6, "runner": 2}},
+	"lakeside": {"target": 6, "types": {"walker": 7, "runner": 1}},
+	"lake": {"target": 4, "types": {"walker": 1}},
+	"swamp": {"target": 8, "types": {"walker": 5, "spitter": 2, "runner": 1}},
+	"mountain": {"target": 5, "types": {"walker": 4, "brute": 1, "runner": 1}},
+	"contaminated": {"target": 11, "types": {"night_infected": 4, "exploder": 2, "spitter": 2, "brute": 1, "walker": 2}},
+}
+const POP_INTERVAL := 3.0
+const POP_SPAWN_MIN := 35.0
+const POP_SPAWN_MAX := 60.0
+const POP_DESPAWN := 95.0
+const POP_CAP := 50
+const NIGHT_POP_FACTOR := 1.5
+
 ## Semente do mundo (vem do host pela SeedSync antes do _ready).
 @export var world_seed := 0
 
@@ -54,6 +72,7 @@ var contaminated_radius := 36.0
 var _forest_noise := FastNoiseLite.new()
 var _swamp_noise := FastNoiseLite.new()
 var _hill_noise := FastNoiseLite.new()
+var _pop_timer := 2.0
 var _tiles: Array[NavigationRegion3D] = []
 var _dirty_tiles := {}
 
@@ -405,7 +424,12 @@ func _queue_rebake(at := Vector3.INF) -> void:
 			_dirty_tiles[k] = true
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if multiplayer.is_server():
+		_pop_timer -= delta
+		if _pop_timer <= 0.0:
+			_pop_timer = POP_INTERVAL
+			_update_population()
 	for k: int in _dirty_tiles.keys():
 		if not _tiles[k].is_baking():
 			_dirty_tiles.erase(k)
@@ -443,6 +467,77 @@ func _scatter_loot() -> void:
 		WorldItems.spawn(entry[0], entry[1], Vector3(x, ground_height(x, z) + 0.5, z))
 
 
+## Sem zumbis fixos: a população em volta dos jogadores cuida disso.
 func _spawn_zombies() -> void:
-	# Fase 7.3 troca por população por região. Por enquanto: alguns perto do centro.
-	super()
+	pass
+
+
+# --- População (servidor) ----------------------------------------------------------------
+
+func _update_population() -> void:
+	var players: Array = []
+	for p: Node3D in players_root.get_children():
+		players.append(p)
+	if players.is_empty():
+		return
+	var free_zombies: Array = []
+	for z: Zombie in zombies_root.get_children():
+		if z.horde or z.is_dead() or z.is_in_group("boss"):
+			continue
+		free_zombies.append(z)
+		# Longe de todos e sem caçar ninguém: some.
+		var nearest := INF
+		for p: Node3D in players:
+			nearest = minf(nearest, p.global_position.distance_to(z.global_position))
+		if nearest > POP_DESPAWN and z.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]:
+			z.queue_free()
+	if free_zombies.size() >= POP_CAP:
+		return
+	var night := DayNight.find(get_tree()) != null and DayNight.find(get_tree()).is_night()
+	var spawned := 0
+	for p: Node3D in players:
+		if spawned >= 2:
+			break
+		var biome := biome_at(p.global_position.x, p.global_position.z)
+		var rule: Dictionary = POPULATION.get(biome, POPULATION.plains)
+		var target := int(round(float(rule.target) * (NIGHT_POP_FACTOR if night else 1.0)))
+		var around := 0
+		for z: Zombie in free_zombies:
+			if z.global_position.distance_to(p.global_position) < POP_DESPAWN:
+				around += 1
+		if around >= target:
+			continue
+		var pos := _spawn_spot_near(p.global_position)
+		if pos == Vector3.INF:
+			continue
+		# Os tipos seguem a região do jogador; se o zumbi nasce na zona contaminada, vale ela.
+		var spawn_rule := rule
+		if biome_at(pos.x, pos.z) == "contaminated":
+			spawn_rule = POPULATION.contaminated
+		var z := spawn_zombie(_pick_weighted(spawn_rule.types), pos)
+		free_zombies.append(z)
+		spawned += 1
+
+
+func _spawn_spot_near(center: Vector3) -> Vector3:
+	for attempt in 12:
+		var a := randf() * TAU
+		var d := randf_range(POP_SPAWN_MIN, POP_SPAWN_MAX)
+		var x := center.x + cos(a) * d
+		var z := center.z + sin(a) * d
+		if maxf(absf(x), absf(z)) > HALF - 4.0 or biome_at(x, z) == "lake" or _in_poi(x, z):
+			continue
+		return Vector3(x, 0.0, z)
+	return Vector3.INF
+
+
+static func _pick_weighted(weights: Dictionary) -> String:
+	var total := 0.0
+	for id: String in weights:
+		total += float(weights[id])
+	var roll := randf() * total
+	for id: String in weights:
+		roll -= float(weights[id])
+		if roll <= 0.0:
+			return id
+	return weights.keys()[0]

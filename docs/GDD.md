@@ -281,7 +281,9 @@ Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminaç
 
 **Implementado:** pontos de interesse feitos com peças de construção (dá para ocupar, consertar e reforçar): vilarejo de 4 casas, uma cabana na margem de cada lago, 4 cabanas na floresta, um posto militar (muro de pedra 3 × 3) e ruínas arcanas na zona contaminada. Casas abandonadas às vezes têm parede ou telhado faltando. Saque por tipo de lugar (`data/loot/loot.json`): casas (comida, água, pano, bandagem), posto militar (munição, pistola, kit médico, sucata) e ruínas (cristais, grimórios, pedras de refino).
 
-Regiões mais perigosas têm mais zumbis fortes e melhor saque. Casas e vilarejos dão mantimentos e ervas, postos militares antigos dão armas de fogo, ruínas dão grimórios e cristais.
+Regiões mais perigosas têm mais zumbis fortes e melhor saque.
+
+**População implementada:** o servidor mantém zumbis em volta de cada jogador conforme o bioma onde ele está (planície 5, floresta 7, pântano 8 com cuspidores, montanhas 5 com brutos, zona contaminada 11 com infectados, explosivos, cuspidores e brutos), 50% a mais à noite. Eles nascem a 35–60 m (fora de lagos e construções) e somem quando ficam a mais de 95 m de todos sem caçar ninguém; teto de 50 fora da horda. Casas e vilarejos dão mantimentos e ervas, postos militares antigos dão armas de fogo, ruínas dão grimórios e cristais.
 
 ### 10.3 Clima
 
