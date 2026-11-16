@@ -3,15 +3,19 @@ extends Node
 ## Inventário do jogador (GDD 7 e 13.2): slots com empilhamento e limite de peso.
 ## Os 9 primeiros slots são a hotbar (teclas 1-9); o resto é a mochila.
 ## Cada slot é {} (vazio) ou {"id": String, "count": int}, mais dados extras de itens
-## que não empilham: "dur" (durabilidade atual), "mag" (balas no pente) e "q" (qualidade 1-5).
+## que não empilham: "dur" (durabilidade atual), "mag" (balas no pente), "q" (qualidade 1-5)
+## e "r" (refino 0-12).
 ## Os extras acompanham o item ao soltar, ir para a bag e ser pego de novo.
 
 ## Chaves de estado do item que viajam com ele.
-const EXTRA_KEYS := ["dur", "mag", "q"]
+const EXTRA_KEYS := ["dur", "mag", "q", "r"]
 
 ## Qualidade (GDD 8.3): cada nível acima de 1 dá +12% em dano, durabilidade e eficiência.
 const QUALITY_STEP := 0.12
 const MAX_QUALITY := 5
+## Refino (+1 a +12): cada nível dá +5% de dano/eficiência.
+const REFINE_STEP := 0.05
+const MAX_REFINE := 12
 ##
 ## Rede: o inventário vive na máquina do dono do personagem. O que vem do mundo
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
@@ -218,6 +222,28 @@ static func quality_of(slot: Dictionary) -> int:
 ## Multiplicador da qualidade: Q1 = 1,0 ... Q5 = 1,48.
 static func quality_multiplier(slot: Dictionary) -> float:
 	return 1.0 + QUALITY_STEP * (quality_of(slot) - 1)
+
+
+## Nível de refino do slot (0 a 12).
+static func refine_of(slot: Dictionary) -> int:
+	return clampi(int(slot.get("r", 0)), 0, MAX_REFINE)
+
+
+## Multiplicador do refino: +0 = 1,0 ... +12 = 1,6.
+static func refine_multiplier(slot: Dictionary) -> float:
+	return 1.0 + REFINE_STEP * refine_of(slot)
+
+
+## Nome com refino e qualidade: "Machado de ferro +3 · Q2".
+static func display_name_of(slot: Dictionary) -> String:
+	if slot.is_empty():
+		return ""
+	var text := str(GameData.get_item(slot.id).get("name", slot.id))
+	if refine_of(slot) > 0:
+		text += " +%d" % refine_of(slot)
+	if max_durability(slot.id) > 0.0:
+		text += " · Q%d" % quality_of(slot)
+	return text
 
 
 ## Durabilidade máxima deste item, já com a qualidade.

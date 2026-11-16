@@ -79,7 +79,7 @@ func _hit_resource(reach: float) -> bool:
 	var target: Object = hit.get("collider")
 	if target is ResourceNode and not target.data.get("by_hand", false):
 		if target.global_position.distance_to(user.global_position) <= reach + 1.5:
-			target.request_gather(user, data, quality_multiplier())
+			target.request_gather(user, data, power_multiplier())
 			return true
 	return false
 

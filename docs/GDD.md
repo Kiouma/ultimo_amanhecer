@@ -222,6 +222,10 @@ Madeira, graveto, pena, pedra, sucata de metal, tecido, couro, ervas, comida, co
 
 Implementado na Fase 3 (valores provisórios): fogueira e bancada como estações colocáveis; fila de fabricação com tempo (receita de estação só avança perto dela). Qualidade **Q1 a Q5** em armas e ferramentas fabricadas: +12% de dano, durabilidade máxima e eficiência de coleta por nível, e menos stamina por golpe; sorteio base Q1 50%, Q2 30%, Q3 14%, Q4 5%, Q5 1%, deslocado para cima pela proficiência de Crafting (Fase 6). Reparo na bancada custa metade da receita proporcional ao desgaste; desmontar devolve metade da receita proporcional à condição.
 
+**Durabilidade zero não destrói o item:** ele fica 0/máx no inventário, sem poder ser usado, até ser reparado (vale também para a tocha).
+
+**Refino (+1 a +12):** feito na bancada com **Pedra de refino**, que cai **exclusivamente de inimigos** (campo `drops` em zombies.json; andarilho 15%, bruto 60%...). Cada nível dá +5% de dano e de eficiência de coleta (+12 = +60%); na tocha, mais alcance de luz. Custo por nível: +1 a +3 = 1 pedra, +4 a +6 = 2, +7 a +9 = 3, +10 a +12 = 4 (30 no total). Sempre dá certo (sem chance de falha, por enquanto). Multiplica com a qualidade: Q5 +12 ≈ 2,4× o dano de Q1 +0.
+
 ## 9. Construção e base
 
 ### 9.1 Sistema de construção

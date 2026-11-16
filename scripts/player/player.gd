@@ -344,6 +344,13 @@ func _on_died(_source: Node) -> void:
 	health.reset()  # pede ao servidor; quando voltar, dispara revived
 
 
+## Alcance/brilho da tocha (refino da tocha aumenta). Local; a luz em si é sincronizada por net_torch.
+func set_torch_power(multiplier: float) -> void:
+	if _torch_light:
+		_torch_light.omni_range = 10.0 * multiplier
+		_torch_light.light_energy = 2.6 * minf(multiplier, 1.3)
+
+
 ## Mostra um aviso curto no HUD (só faz sentido no jogador local).
 func notify(text: String) -> void:
 	notified.emit(text)

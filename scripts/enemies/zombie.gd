@@ -243,8 +243,17 @@ func _on_died(_source: Node) -> void:
 	collision_mask = 1
 	model.play_action(&"Death01")
 	if multiplayer.is_server():
+		_drop_loot()
 		# Sumir no servidor some em todos (MultiplayerSpawner).
 		get_tree().create_timer(15.0, false).timeout.connect(queue_free)
+
+
+## Servidor: sorteia os "drops" do tipo (ex.: Pedra de refino, que só vem de inimigos).
+func _drop_loot() -> void:
+	var drops: Dictionary = stats.get("drops", {})
+	for id: String in drops:
+		if randf() < float(drops[id]):
+			WorldItems.spawn(id, 1, global_position + Vector3.UP * 0.5)
 
 
 # --- Movimento -------------------------------------------------------------------

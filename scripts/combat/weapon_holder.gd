@@ -64,15 +64,12 @@ func display_name() -> String:
 	var s := selected_item()
 	if s.is_empty():
 		return "Mãos livres"
-	var item_name := str(GameData.get_item(s.id).get("name", s.id))
-	if Inventory.max_durability(s.id) > 0.0:
-		item_name += " · Q%d" % Inventory.quality_of(s)
-	return item_name
+	return Inventory.display_name_of(s)
 
 
 func hud_text() -> String:
 	var s := selected_item()
-	if _current and _current.is_broken():
+	if (_current and _current.is_broken()) or Inventory.is_broken(s):
 		return "QUEBRADO · repare na bancada"
 	if _current and _current.data.get("no_viewmodel", false):
 		return "×%d" % int(s.count) if not s.is_empty() and int(s.count) > 1 else "soco"
@@ -106,7 +103,8 @@ func _refresh() -> void:
 	if _current:
 		_current.slot = s
 	# Tocha na mão = luz (GDD 11: a noite é escura).
-	user.net_torch = s.get("id", "") == "torch"
+	user.net_torch = s.get("id", "") == "torch" and not Inventory.is_broken(s)
+	user.set_torch_power(Inventory.refine_multiplier(s) if user.net_torch else 1.0)
 	changed.emit()
 
 
@@ -170,7 +168,8 @@ func use_selected() -> void:
 	user.play_action_synced(&"Consume")
 
 
-## Tocha acesa queima 1 de durabilidade por segundo; no fim, se apaga e some.
+## Tocha acesa queima 1 de durabilidade por segundo; no fim, apaga e fica 0/x no
+## inventário (nunca some): repare na bancada.
 func _burn_torch(delta: float) -> void:
 	if user == null or not user.is_multiplayer_authority() or not user.net_torch:
 		return
@@ -180,8 +179,8 @@ func _burn_torch(delta: float) -> void:
 	_torch_burn -= 1.0
 	var s := selected_item()
 	if inventory.wear(s, 1.0) <= 0.0:
-		inventory.take_from_slot(selected, 1)
-		user.notify("A tocha apagou")
+		user.net_torch = false
+		user.notify("A tocha apagou: repare na bancada")
 
 
 func _quick_cast() -> void:

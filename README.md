@@ -67,4 +67,4 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 
 ## Roadmap
 
-Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem e qualidade Q1–Q5). Próxima: **Fase 4. Construção** (blocos, materiais, integridade, armadilhas). Detalhes no GDD, seção 17.
+Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12 com pedras que caem de inimigos). Próxima: **Fase 4. Construção** (blocos, materiais, integridade, armadilhas). Detalhes no GDD, seção 17.

@@ -1,8 +1,8 @@
 [
-  { "id": "walker", "name": "Andarilho", "health": 100, "speed": 1.2, "damage": 10, "sight_range": 15, "hearing": 1.0 },
-  { "id": "runner", "name": "Corredor", "health": 60, "speed": 5.5, "damage": 8, "sight_range": 20, "hearing": 1.2 },
-  { "id": "brute", "name": "Bruto", "health": 500, "speed": 1.0, "damage": 40, "structure_damage": 3.0, "sight_range": 12, "hearing": 0.8 },
-  { "id": "spitter", "name": "Cuspidor", "health": 80, "speed": 1.5, "damage": 15, "ranged": true, "sight_range": 25, "hearing": 1.0 },
-  { "id": "night_infected", "name": "Infectado noturno", "health": 120, "speed": 2.0, "night_speed": 6.0, "damage": 15, "sight_range": 18, "hearing": 1.5 },
-  { "id": "exploder", "name": "Explosivo", "health": 50, "speed": 2.5, "damage": 60, "explodes": true, "sight_range": 15, "hearing": 1.0 }
+  { "id": "walker", "name": "Andarilho", "health": 100, "speed": 1.2, "damage": 10, "sight_range": 15, "hearing": 1, "drops": { "refine_stone": 0.15 } },
+  { "id": "runner", "name": "Corredor", "health": 60, "speed": 5.5, "damage": 8, "sight_range": 20, "hearing": 1.2, "drops": { "refine_stone": 0.2 } },
+  { "id": "brute", "name": "Bruto", "health": 500, "speed": 1, "damage": 40, "structure_damage": 3, "sight_range": 12, "hearing": 0.8, "drops": { "refine_stone": 0.6 } },
+  { "id": "spitter", "name": "Cuspidor", "health": 80, "speed": 1.5, "damage": 15, "ranged": true, "sight_range": 25, "hearing": 1, "drops": { "refine_stone": 0.25 } },
+  { "id": "night_infected", "name": "Infectado noturno", "health": 120, "speed": 2, "night_speed": 6, "damage": 15, "sight_range": 18, "hearing": 1.5, "drops": { "refine_stone": 0.3 } },
+  { "id": "exploder", "name": "Explosivo", "health": 50, "speed": 2.5, "damage": 60, "explodes": true, "sight_range": 15, "hearing": 1, "drops": { "refine_stone": 0.2 } }
 ]

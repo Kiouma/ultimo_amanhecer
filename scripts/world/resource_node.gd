@@ -54,7 +54,7 @@ func has_prompt() -> bool:
 
 
 ## Golpe ou colheita. tool_data = dados do item usado ({} = mãos/colheita).
-## quality: multiplicador da qualidade da ferramenta (1,0 a 1,48).
+## quality: multiplicador da ferramenta (qualidade × refino, 1,0 a ~2,37).
 func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> void:
 	_shake()
 	var tool_id := str(tool_data.get("id", ""))
@@ -67,7 +67,8 @@ func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> vo
 @rpc("any_peer", "call_remote", "reliable")
 func _request_gather(tool_id: String, quality: float) -> void:
 	var sender := multiplayer.get_remote_sender_id()
-	var max_quality := 1.0 + Inventory.QUALITY_STEP * (Inventory.MAX_QUALITY - 1)
+	var max_quality := (1.0 + Inventory.QUALITY_STEP * (Inventory.MAX_QUALITY - 1)) \
+		* (1.0 + Inventory.REFINE_STEP * Inventory.MAX_REFINE)
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.get_multiplayer_authority() == sender:
 			_gather(p, tool_id, clampf(quality, 1.0, max_quality))

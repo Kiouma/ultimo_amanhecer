@@ -103,6 +103,12 @@ func refresh() -> void:
 			_quality_label.text = "Q%d" % q
 			_quality_color = QUALITY_COLORS[q - 1]
 			_quality_label.add_theme_color_override("font_color", _quality_color)
+			var refine := Inventory.refine_of(s)
+			if refine > 0:
+				_name_label.text += " +%d" % refine
+				if interactive:
+					tooltip_text += "
+Refino +%d (+%d%% dano/eficiência)" % [refine, refine * 5]
 			if interactive:
 				tooltip_text += "
 Qualidade %d (+%d%% dano, durabilidade e eficiência)" % [q, roundi((Inventory.quality_multiplier(s) - 1.0) * 100)]

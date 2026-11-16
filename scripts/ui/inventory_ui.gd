@@ -164,14 +164,14 @@ func _enqueue(recipe: Dictionary, times: int) -> void:
 ## Bancada: reparar (durabilidade cheia) e desmontar (recupera materiais) itens do inventário.
 func _add_repair_section() -> void:
 	var header := Label.new()
-	header.text = "Reparar e desmontar"
+	header.text = "Reparar, refinar e desmontar"
 	header.add_theme_color_override("font_color", Color(0.95, 0.8, 0.45))
 	_craft_list.add_child(header)
 	var inv := player.inventory
 	var any := false
 	for i in inv.slots.size():
 		var s := inv.get_slot(i)
-		if not (Repair.is_repairable(s) or Repair.is_salvageable(s)):
+		if not (Repair.is_repairable(s) or Repair.is_salvageable(s) or Refine.can_be_refined(s)):
 			continue
 		any = true
 		var row := HBoxContainer.new()
@@ -179,15 +179,15 @@ func _add_repair_section() -> void:
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var title := Label.new()
 		var max_dur := Inventory.max_durability_of(s)
-		title.text = str(GameData.get_item(s.id).get("name", s.id))
+		title.text = Inventory.display_name_of(s)
 		if max_dur > 0.0:
-			title.text += " Q%d" % Inventory.quality_of(s)
 			title.text += "  %d/%d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)]
 		title.add_theme_color_override("font_color", Color(1, 0.5, 0.4) if Inventory.is_broken(s) else Color(0.92, 0.92, 0.88))
 		info.add_child(title)
 		var cost := Repair.repair_cost(s)
 		var details := Label.new()
-		details.text = "reparo: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", Repair.describe(Repair.salvage_result(s))]
+		var refine_text := "máximo" if Refine.is_maxed(s) else "+%d por %d pedra(s) de refino" % [Inventory.refine_of(s) + 1, Refine.cost(s)]
+		details.text = "reparo: %s · refino: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", refine_text if Refine.can_be_refined(s) else "—", Repair.describe(Repair.salvage_result(s))]
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -198,6 +198,12 @@ func _add_repair_section() -> void:
 		repair_button.disabled = not Repair.can_repair(inv, s)
 		repair_button.pressed.connect(func() -> void: Repair.repair(player.inventory, s))
 		row.add_child(repair_button)
+		var refine_button := Button.new()
+		refine_button.text = "Refinar"
+		refine_button.tooltip_text = "+5% de dano/eficiência por nível (até +12). Pedra de refino cai de inimigos."
+		refine_button.disabled = not Refine.can_refine(inv, s)
+		refine_button.pressed.connect(func() -> void: Refine.refine(player.inventory, s))
+		row.add_child(refine_button)
 		var salvage_button := Button.new()
 		salvage_button.text = "Desmontar"
 		salvage_button.disabled = Repair.salvage_result(s).is_empty()
