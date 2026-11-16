@@ -31,7 +31,31 @@ func _ready() -> void:
 			print("Jogador %d saiu." % id))
 	status_label.text = ""
 	_build_background_picker()
+	_build_save_options()
 	_parse_command_line()
+
+
+## Opções de carregar o mundo e o personagem salvos (aparecem se houver save).
+func _build_save_options() -> void:
+	var vbox := (%SoloButton as Control).get_parent()
+	var at := (%SoloButton as Control).get_index()
+	if SaveGame.has_character():
+		var check := CheckBox.new()
+		check.text = "Continuar personagem salvo (%s)" % SaveGame.character_summary()
+		check.button_pressed = true
+		SaveGame.load_character = true
+		check.toggled.connect(func(on: bool) -> void: SaveGame.load_character = on)
+		vbox.add_child(check)
+		vbox.move_child(check, at)
+		at += 1
+	if SaveGame.has_world():
+		var check := CheckBox.new()
+		check.text = "Continuar mundo salvo (%s) · sozinho ou hospedando" % SaveGame.world_summary()
+		check.button_pressed = true
+		SaveGame.load_world = true
+		check.toggled.connect(func(on: bool) -> void: SaveGame.load_world = on)
+		vbox.add_child(check)
+		vbox.move_child(check, at)
 
 
 ## Escolha do passado (GDD 4.4), acima dos botões do menu.
@@ -95,7 +119,14 @@ func _on_connection_failed(reason: String) -> void:
 
 func _start_level() -> void:
 	menu.visible = false
-	level_root.add_child((ARENA if _use_arena else WORLD).instantiate(), true)
+	var level := (ARENA if _use_arena else WORLD).instantiate()
+	var loading := not _use_arena and SaveGame.load_world and SaveGame.saved_seed() != 0
+	if loading:
+		level.world_seed = SaveGame.saved_seed()
+		level.from_save = true
+	level_root.add_child(level, true)
+	if loading:
+		SaveGame.apply_world(level)
 
 
 func _back_to_menu(message: String) -> void:
@@ -118,6 +149,9 @@ func _parse_command_line() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--arena":
 			_use_arena = true
+		if arg == "--new":
+			SaveGame.load_world = false
+			SaveGame.load_character = false
 		if arg.begins_with("--background="):
 			Network.background = arg.get_slice("=", 1)
 	for arg in OS.get_cmdline_user_args():

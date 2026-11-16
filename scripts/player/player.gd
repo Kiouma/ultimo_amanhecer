@@ -133,8 +133,10 @@ func _ready() -> void:
 		add_child(build)
 		build.setup(self)
 		camera.current = true
-		_give_starter_kit()
-		_apply_background(Network.background)
+		# Personagem salvo (se escolhido no menu) ou kit inicial + passado.
+		if not SaveGame.apply_character(self):
+			_give_starter_kit()
+			_apply_background(Network.background)
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_apply_camera_mode()
 	else:
@@ -158,8 +160,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("toggle_camera"):
 		first_person = not first_person
 		_apply_camera_mode()
-	elif event.is_action_pressed("pause"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event.is_action_pressed("interact") and _focused and not health.is_dead:
 		_focused.interact(self)
 	elif event.is_action_pressed("attack") and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:

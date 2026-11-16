@@ -24,7 +24,7 @@ var _boss_timer := 0.0
 func _ready() -> void:
 	death_label.visible = false
 	EventBus.player_spawned.connect(_on_player_spawned)
-	EventBus.player_died.connect(func(p: Node) -> void:
+	_bus(EventBus.player_died, func(p: Node) -> void:
 		if p.is_multiplayer_authority():
 			death_label.visible = true)
 	_build_clock()
@@ -32,6 +32,23 @@ func _ready() -> void:
 	# O player pode ter nascido antes do HUD.
 	for player in get_tree().get_nodes_in_group("player"):
 		_on_player_spawned(player)
+
+
+## Liga um sinal global a uma função anônima e lembra, para desligar ao sair
+## (voltar ao menu): lambdas não se desligam sozinhas quando o HUD é liberado.
+var _bus_links: Array = []
+
+
+func _bus(sig: Signal, callable: Callable) -> void:
+	sig.connect(callable)
+	_bus_links.append([sig, callable])
+
+
+func _exit_tree() -> void:
+	for link: Array in _bus_links:
+		if (link[0] as Signal).is_connected(link[1]):
+			(link[0] as Signal).disconnect(link[1])
+	_bus_links.clear()
 
 
 func _on_player_spawned(player: Node) -> void:
@@ -95,6 +112,10 @@ func _bind_inventory(player: Player) -> void:
 	var map_ui := MapUI.new()
 	add_child(map_ui)
 	map_ui.bind(player)
+
+	var pause_menu := PauseMenu.new()
+	add_child(pause_menu)
+	pause_menu.bind(player)
 
 
 ## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
@@ -244,25 +265,25 @@ func _build_clock() -> void:
 		tw.tween_property(banner, "modulate:a", 1.0, 0.6)
 		tw.tween_interval(3.0)
 		tw.tween_property(banner, "modulate:a", 0.0, 1.2)
-	EventBus.night_started.connect(func(d: int) -> void:
+	_bus(EventBus.night_started, func(d: int) -> void:
 		var h := Horde.find(get_tree())
 		if h and h.is_horde_day(d):
 			return  # a faixa da horda ocupa o lugar
 		show_banner.call("Noite %d\nos mortos estão mais rápidos" % d, Color(0.75, 0.8, 1.0)))
-	EventBus.day_started.connect(func(d: int) -> void:
+	_bus(EventBus.day_started, func(d: int) -> void:
 		var h := Horde.find(get_tree())
 		if h and h.is_horde_day(d):
 			show_banner.call("Dia %d\na horda vem esta noite: preparem a base" % d, Color(1.0, 0.55, 0.4))
 		else:
 			show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
-	EventBus.weather_changed.connect(func(state: String) -> void:
+	_bus(EventBus.weather_changed, func(state: String) -> void:
 		var texts := {"rain": "Começou a chover\nos sons ficam abafados", "fog": "A neblina baixou\nninguém enxerga longe",
 			"storm": "Tempestade!\nraios por toda parte", "cold": "Frio extremo\nfique perto de uma fogueira"}
 		if texts.has(state):
 			show_banner.call(texts[state], Color(0.8, 0.88, 1.0)))
-	EventBus.horde_started.connect(func(n: int) -> void:
+	_bus(EventBus.horde_started, func(n: int) -> void:
 		show_banner.call("A HORDA %d CHEGOU" % n, Color(1.0, 0.3, 0.25)))
-	EventBus.horde_ended.connect(func(n: int, survived: bool) -> void:
+	_bus(EventBus.horde_ended, func(n: int, survived: bool) -> void:
 		show_banner.call("Horda %d vencida!\nrecompensa no inventário" % n if survived else "A horda %d passou" % n,
 			Color(0.6, 1.0, 0.6)))
 

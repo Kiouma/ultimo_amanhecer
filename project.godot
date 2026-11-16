@@ -23,6 +23,7 @@ GameData="*res://scripts/autoload/game_data.gd"
 Network="*res://scripts/network/network.gd"
 WorldItems="*res://scripts/inventory/world_items.gd"
 Structures="*res://scripts/building/structures.gd"
+SaveGame="*res://scripts/autoload/save_game.gd"
 
 [input]
 

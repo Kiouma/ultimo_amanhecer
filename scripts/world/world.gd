@@ -62,6 +62,8 @@ const NIGHT_POP_FACTOR := 1.5
 
 ## Semente do mundo (vem do host pela SeedSync antes do _ready).
 @export var world_seed := 0
+## Carregado de um save: as construções e o saque vêm do arquivo (não gera os lugares).
+var from_save := false
 
 var lakes: Array = []  # [Vector2 centro, raio]
 ## Pontos de interesse: {type, name, cell (Vector2i), size (Vector2i), door, loot, pos}.
@@ -439,7 +441,8 @@ func _process(delta: float) -> void:
 # --- Conteúdo (servidor) ---------------------------------------------------------------
 
 func _scatter_resources() -> void:
-	_build_pois()
+	if not from_save:
+		_build_pois()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 1
 	var cells := int(SIZE / CELL_SIZE)
@@ -459,6 +462,8 @@ func _scatter_resources() -> void:
 
 
 func _scatter_loot() -> void:
+	if from_save:
+		return
 	for entry in loot:
 		var angle := randf() * TAU
 		var dist := randf_range(3.0, loot_radius)
