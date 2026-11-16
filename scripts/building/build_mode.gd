@@ -117,9 +117,7 @@ func place() -> bool:
 	if _reason != "":
 		user.notify(_reason)
 		return false
-	var price := Structures.cost(piece_id(), tier())
-	for id: String in price:
-		user.inventory.remove_item(id, int(price[id]))
+	_pay(Structures.cost(piece_id(), tier()))
 	Structures.build(piece_id(), tier(), _slot_key, _rot)
 	Network.emit_noise(BuildPiece.slot_transform(_slot_key, _rot).origin, BUILD_NOISE, user)
 	_cooldown = 0.25
@@ -137,11 +135,101 @@ func demolish() -> void:
 
 
 func can_afford() -> bool:
-	var price := Structures.cost(piece_id(), tier())
+	return _has(Structures.cost(piece_id(), tier()))
+
+
+func _has(price: Dictionary) -> bool:
 	for id: String in price:
 		if user.inventory.count_of(id) < int(price[id]):
 			return false
 	return true
+
+
+func _pay(price: Dictionary) -> void:
+	for id: String in price:
+		user.inventory.remove_item(id, int(price[id]))
+
+
+# --- Martelo (fora do modo construção) --------------------------------------------------
+
+## Peça de construção na mira (até ~5 m), ou null.
+func aimed_piece(max_distance := 5.0) -> BuildPiece:
+	var cam := user.camera
+	var from := cam.global_position
+	var reach := max_distance + user.spring_arm.get_hit_length()
+	var query := PhysicsRayQueryParameters3D.create(from, from - cam.global_basis.z * reach, 1 | 8 | BuildPiece.DOOR_LAYER)
+	query.exclude = [user.get_rid()]
+	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
+	var collider: Object = hit.get("collider")
+	if collider is BuildPiece:
+		return collider
+	if collider is BuildPiece.DoorPanel:
+		return collider.piece
+	return null
+
+
+## Clique com o martelo: conserta um pedaço da peça na mira. Retorna true se usou.
+func hammer_repair(slot_index: int) -> bool:
+	var piece := aimed_piece()
+	if not _hammer_ok(slot_index, piece):
+		return false
+	var price := Structures.repair_cost(piece)
+	if price.is_empty():
+		user.notify("%s já está inteira" % piece.display_name())
+		return false
+	if not _has(price):
+		user.notify("Falta material: " + Repair.describe(price))
+		return false
+	_pay(price)
+	Structures.repair(piece, user, price)
+	user.inventory.wear(user.inventory.get_slot(slot_index), 1.0)
+	Network.emit_noise(piece.global_position, BUILD_NOISE * 0.6, user)
+	return true
+
+
+## R com o martelo: melhora a peça na mira para o próximo material.
+func hammer_upgrade(slot_index: int) -> bool:
+	var piece := aimed_piece()
+	if not _hammer_ok(slot_index, piece):
+		return false
+	var next := Structures.next_tier(piece)
+	if next == "":
+		user.notify("%s já é do melhor material" % piece.display_name())
+		return false
+	var price := Structures.cost(piece.piece_id, next)
+	if not _has(price):
+		user.notify("Falta material: " + Repair.describe(price))
+		return false
+	_pay(price)
+	Structures.upgrade(piece, user, price)
+	user.inventory.wear(user.inventory.get_slot(slot_index), 2.0)
+	Network.emit_noise(piece.global_position, BUILD_NOISE, user)
+	return true
+
+
+func _hammer_ok(slot_index: int, piece: BuildPiece) -> bool:
+	if Inventory.is_broken(user.inventory.get_slot(slot_index)):
+		user.notify("Martelo quebrado: repare na bancada")
+		return false
+	if piece == null:
+		user.notify("Mire numa peça de construção")
+		return false
+	return true
+
+
+## Texto do HUD com o martelo na mão.
+func hammer_text() -> String:
+	var piece := aimed_piece()
+	if piece == null:
+		return "mire numa construção"
+	var parts: PackedStringArray = ["%s %d/%d" % [piece.display_name(), ceili(piece.health.current), int(piece.health.max_health)]]
+	var price := Structures.repair_cost(piece)
+	if not price.is_empty():
+		parts.append("[Clique] consertar (%s)" % Repair.describe(price))
+	var next := Structures.next_tier(piece)
+	if next != "":
+		parts.append("[R] melhorar p/ %s (%s)" % [BuildPiece.TIER_NAMES.get(next, next), Repair.describe(Structures.cost(piece.piece_id, next))])
+	return "\n".join(parts)
 
 
 ## Texto do painel do HUD.

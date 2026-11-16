@@ -19,6 +19,12 @@ const MAX_BUILD_DISTANCE := 8.0
 const MIN_SPACING := 1.4
 ## Desmontar devolve esta fração do custo (vezes a vida que sobra).
 const DEMOLISH_REFUND := 0.5
+## Cada martelada recupera até esta fração da vida máxima.
+const REPAIR_STEP := 0.25
+## Consertar 100% da vida custa esta fração do custo da peça.
+const REPAIR_COST := 0.5
+## Ordem dos materiais (melhorar = ir para o próximo).
+const TIERS := ["wood", "stone"]
 
 var _root: Node3D
 var _spawner: MultiplayerSpawner
@@ -267,10 +273,109 @@ func piece_destroyed(piece: BuildPiece) -> void:
 	_remove(piece)
 
 
-func _remove(piece: BuildPiece) -> void:
+## check_integrity: false ao trocar a peça por outra no mesmo lugar (melhoria).
+func _remove(piece: BuildPiece, _check_integrity := true) -> void:
 	unregister_piece(piece)
 	piece.queue_free()
 	layout_changed.emit()
+
+
+# --- Martelo: consertar e melhorar ----------------------------------------------------
+
+## Quanto uma martelada recupera agora (0 = vida cheia).
+func repair_amount(piece: BuildPiece) -> float:
+	var h := piece.health
+	return minf(h.max_health - h.current, h.max_health * REPAIR_STEP)
+
+
+## Material de uma martelada ({} = não precisa).
+func repair_cost(piece: BuildPiece) -> Dictionary:
+	var amount := repair_amount(piece)
+	if amount <= 0.0:
+		return {}
+	var fraction := amount / piece.health.max_health
+	var price := cost(piece.piece_id, piece.tier)
+	var out := {}
+	for id: String in price:
+		var n := roundi(float(price[id]) * REPAIR_COST * fraction)
+		if n > 0:
+			out[id] = n
+	if out.is_empty() and not price.is_empty():
+		out[price.keys()[0]] = 1
+	return out
+
+
+## Próximo material ("" = já é o melhor).
+func next_tier(piece: BuildPiece) -> String:
+	var index := TIERS.find(piece.tier)
+	if index < 0 or index + 1 >= TIERS.size():
+		return ""
+	var next: String = TIERS[index + 1]
+	return next if not cost(piece.piece_id, next).is_empty() else ""
+
+
+## Quem chama já tirou `paid` do inventário; se o servidor recusar, devolve.
+func repair(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
+	if multiplayer.is_server():
+		_repair(piece, player, paid)
+	elif Network.is_online():
+		_request_repair.rpc_id(1, piece.slot_key, paid)
+
+
+func upgrade(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
+	if multiplayer.is_server():
+		_upgrade(piece, player, paid)
+	elif Network.is_online():
+		_request_upgrade.rpc_id(1, piece.slot_key, paid)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_repair(key: String, paid: Dictionary) -> void:
+	var player := _sender_player()
+	if player:
+		_repair(piece_at(key), player, paid)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_upgrade(key: String, paid: Dictionary) -> void:
+	var player := _sender_player()
+	if player:
+		_upgrade(piece_at(key), player, paid)
+
+
+func _repair(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
+	if piece == null or not _in_reach(piece, player) or repair_amount(piece) <= 0.0:
+		_refund(player, paid, "Não deu para consertar")
+		return
+	piece.health.heal(repair_amount(piece))
+
+
+## Melhorar troca a peça por uma nova do próximo material, com vida cheia.
+func _upgrade(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
+	var next := next_tier(piece) if piece else ""
+	if next == "" or not _in_reach(piece, player):
+		_refund(player, paid, "Não deu para melhorar")
+		return
+	var key := piece.slot_key
+	var rot := piece.rot
+	var id := piece.piece_id
+	_remove(piece, false)
+	_spawn_piece(id, next, key, rot)
+
+
+func _in_reach(piece: BuildPiece, player: Node3D) -> bool:
+	return is_instance_valid(piece) and not piece.is_queued_for_deletion() \
+		and player.global_position.distance_to(piece.nearest_point(player.global_position)) <= MAX_BUILD_DISTANCE
+
+
+func _refund(player: Node3D, paid: Dictionary, text: String) -> void:
+	var inventory := player.get_node(^"Inventory") as Inventory
+	for id in paid:
+		inventory.grant(str(id), int(paid[id]))
+	if player.is_multiplayer_authority():
+		player.notify(text + " (material devolvido)")
+	else:
+		_notify.rpc_id(player.get_multiplayer_authority(), text + " (material devolvido)")
 
 
 # --- Rede ------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abr
 
 Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar; **E** nelas abre as receitas da estação. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela). Água: beber a garrafa deixa uma garrafa vazia; encha no **lago** (água suja, pode fazer passar mal) e ferva na fogueira.
 
-Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Zumbis presos do lado de fora batem na peça mais fraca.
+Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Zumbis presos do lado de fora batem na peça mais fraca.
 
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
@@ -69,4 +69,4 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 
 ## Roadmap
 
-Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12 com pedras que caem de inimigos). Em andamento: **4. Construção**. Feito: modo construção (B) com grade e prévia, fundação/parede/porta/piso/escada em madeira ou pedra, e zumbis que atacam a peça mais fraca quando a base os bloqueia. Faltam: reparo e melhoria de peças, integridade (desabamento) e armadilhas. Detalhes no GDD, seção 17.
+Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12 com pedras que caem de inimigos). Em andamento: **4. Construção**. Feito: modo construção (B) com grade e prévia, fundação/parede/porta/piso/escada em madeira ou pedra, e zumbis que atacam a peça mais fraca quando a base os bloqueia. Também: martelo para consertar e melhorar peças. Faltam: integridade (desabamento) e armadilhas. Detalhes no GDD, seção 17.

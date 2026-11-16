@@ -242,6 +242,7 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 - Materiais: madeira e pedra (pedra custa mais e tem cerca de 3× a vida). Dados em `data/buildings/pieces.json`.
 - Apoio simples: no chão, sempre; acima, a peça precisa encostar em parede, piso ou fundação. O desabamento quando um apoio cai fica para a etapa de integridade.
 - Só inimigos danificam construções. Um zumbi que fica preso atrás de uma construção (ou sem caminho até o alvo) ataca a parede ou porta **mais fraca** na direção do alvo. O campo `structure_damage` em zombies.json é o multiplicador contra construções (o Bruto tem 3×).
+- **Martelo** (fabricado nas mãos: 2 madeira + 2 pedra; vem no kit inicial): clique conserta 25% da vida da peça na mira por martelada (custo: metade do custo da peça, proporcional), **R** melhora de madeira para pedra (custo cheio da peça de pedra, volta com vida cheia). Gasta durabilidade do martelo.
 - A porta fica fora da malha de navegação: os zumbis traçam caminho por ela e, se estiver fechada, ela costuma ser o primeiro alvo.
 
 ### 9.2 Defesa

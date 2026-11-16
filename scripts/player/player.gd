@@ -17,7 +17,7 @@ signal notified(text: String)
 const STARTER_KIT := [
 	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3],
 	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
-	["berries", 6, 4], ["water_bottle", 1, 5], ["torch", 1, 6],
+	["berries", 6, 4], ["water_bottle", 1, 5], ["torch", 1, 6], ["hammer", 1, 7],
 ]
 
 @export_group("Movimento")

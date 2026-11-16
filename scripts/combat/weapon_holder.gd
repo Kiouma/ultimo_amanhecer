@@ -35,6 +35,7 @@ var _cache: Dictionary = {}
 var _current: Weapon
 var _use_cooldown := 0.0
 var _torch_burn := 0.0
+var _hud_timer := 0.0
 
 
 func setup(player: Player, camera: Camera3D, head: Node3D, inv: Inventory) -> void:
@@ -69,6 +70,8 @@ func display_name() -> String:
 
 func hud_text() -> String:
 	var s := selected_item()
+	if is_hammer(s) and not Inventory.is_broken(s) and user.build:
+		return user.build.hammer_text()
 	if (_current and _current.is_broken()) or Inventory.is_broken(s):
 		return "QUEBRADO · repare na bancada"
 	if _current and _current.data.get("no_viewmodel", false):
@@ -90,7 +93,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station"]):
+	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -111,6 +114,12 @@ func _refresh() -> void:
 func _process(delta: float) -> void:
 	_use_cooldown = maxf(_use_cooldown - delta, 0.0)
 	_burn_torch(delta)
+	# Martelo: o texto do HUD depende da peça na mira.
+	if is_hammer(selected_item()):
+		_hud_timer -= delta
+		if _hud_timer <= 0.0:
+			_hud_timer = 0.2
+			changed.emit()
 	if user == null or not _accepts_input():
 		return
 	if _current:
@@ -130,6 +139,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		select(selected + 1)
 	elif event.is_action_pressed("weapon_prev"):
 		select(selected - 1)
+	elif event.is_action_pressed("reload") and is_hammer(selected_item()):
+		if _use_cooldown <= 0.0 and user.build.hammer_upgrade(selected):
+			_use_cooldown = 0.6
 	elif event.is_action_pressed("reload") and _current:
 		_current.reload()
 	elif event.is_action_pressed("spell_1"):
@@ -143,6 +155,10 @@ func use_selected() -> void:
 	if s.is_empty() or _use_cooldown > 0.0:
 		return
 	var data := GameData.get_item(s.id)
+	if is_hammer(s):
+		if user.build and user.build.hammer_repair(selected):
+			_use_cooldown = 0.6
+		return
 	if data.get("type", "") == "station":
 		if user.place_station(selected):
 			_use_cooldown = 0.5
@@ -181,6 +197,10 @@ func _burn_torch(delta: float) -> void:
 	if inventory.wear(s, 1.0) <= 0.0:
 		user.net_torch = false
 		user.notify("A tocha apagou: repare na bancada")
+
+
+static func is_hammer(s: Dictionary) -> bool:
+	return not s.is_empty() and GameData.get_item(s.id).get("use", "") == "hammer"
 
 
 func _quick_cast() -> void:

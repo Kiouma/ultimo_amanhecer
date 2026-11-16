@@ -6,6 +6,7 @@
   { "id": "axe_iron", "name": "Machado de ferro", "type": "melee", "category": "medium", "weight": 2.5, "damage": 35, "stamina_cost": 12, "noise": 0.2, "durability": 250, "range": 2.2, "attack_time": 0.65, "hit_delay": 0.25, "gather": { "tree": 1.0, "rock": 0.35 } },
   { "id": "spear_wood", "name": "Lança de madeira", "type": "melee", "category": "reach", "weight": 1.5, "damage": 18, "stamina_cost": 8, "noise": 0.1, "durability": 80, "range": 2.8, "attack_time": 0.55, "hit_delay": 0.2, "gather": { "tree": 0.3 } },
   { "id": "pickaxe_stone", "name": "Picareta de pedra", "type": "melee", "category": "medium", "weight": 2.2, "damage": 18, "stamina_cost": 10, "noise": 0.25, "durability": 120, "range": 2.1, "attack_time": 0.7, "hit_delay": 0.3, "gather": { "rock": 1.0, "tree": 0.35 } },
+  { "id": "hammer", "name": "Martelo", "type": "tool", "use": "hammer", "weight": 1.2, "durability": 200 },
   { "id": "torch", "name": "Tocha", "type": "tool", "weight": 0.5, "durability": 300 },
   { "id": "bandage", "name": "Bandagem simples", "type": "consumable", "weight": 0.05, "stack": 20, "heals": 10, "cures": ["bleeding"] },
   { "id": "medkit_basic", "name": "Kit médico", "type": "consumable", "weight": 0.5, "stack": 5, "heals": 50 },
