@@ -46,6 +46,8 @@ const CELL_SIZE := 8.0
 @export var world_seed := 0
 
 var lakes: Array = []  # [Vector2 centro, raio]
+## Pontos de interesse: {type, name, cell (Vector2i), size (Vector2i), door, loot, pos}.
+var pois: Array = []
 var contaminated_center := Vector2.ZERO
 var contaminated_radius := 36.0
 
@@ -61,6 +63,7 @@ func _setup_level() -> void:
 		world_seed = randi_range(1, 2147483646)  # host (ou solo) sorteia
 	add_to_group("world")
 	_plan()
+	_plan_pois()
 	_build_terrain()
 	_build_water()
 
@@ -132,6 +135,162 @@ func ground_height(x: float, z: float) -> float:
 		if d < r:
 			return -1.6 * smoothstep(r, r * 0.6, d)
 	return 0.0
+
+
+# --- Pontos de interesse (GDD 10.1) ------------------------------------------------------
+# Feitos com peças de construção: dá para ocupar, consertar e reforçar (GDD 9.3).
+
+const POI_NAMES := {"house": "Casa abandonada", "cabin": "Cabana", "village": "Vilarejo",
+	"military": "Posto militar", "ruins": "Ruínas arcanas"}
+
+
+func _plan_pois() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed + 7
+	pois.clear()
+	# Vilarejo: 4 casas em volta de uma praça, a 45-70 m do centro.
+	for attempt in 40:
+		var a := rng.randf() * TAU
+		var center := Vector2(cos(a), sin(a)) * rng.randf_range(45.0, 70.0)
+		var cells := [Vector2i(-3, -3), Vector2i(1, -3), Vector2i(-3, 1), Vector2i(1, 1)]
+		var ok := true
+		for c: Vector2i in cells:
+			ok = ok and _poi_fits(_cell_of(center) + c, Vector2i(2, 1))
+		if ok:
+			for c: Vector2i in cells:
+				_add_poi("house", _cell_of(center) + c, Vector2i(2, 1), rng, "house", "Vilarejo")
+			break
+	# Uma cabana na margem de cada lago.
+	for lake: Array in lakes:
+		for attempt in 20:
+			var a := rng.randf() * TAU
+			var p: Vector2 = lake[0] + Vector2(cos(a), sin(a)) * (float(lake[1]) + 7.0)
+			if _poi_fits(_cell_of(p), Vector2i.ONE):
+				_add_poi("cabin", _cell_of(p), Vector2i.ONE, rng, "house")
+				break
+	# Cabanas soltas na floresta.
+	var placed := 0
+	for attempt in 200:
+		if placed >= 4:
+			break
+		var p := Vector2(rng.randf_range(-HALF + 40, HALF - 40), rng.randf_range(-HALF + 40, HALF - 40))
+		if biome_at(p.x, p.y) == "forest" and p.length() > 40.0 and _poi_fits(_cell_of(p), Vector2i.ONE):
+			_add_poi("cabin", _cell_of(p), Vector2i.ONE, rng, "house")
+			placed += 1
+	# Posto militar (3 × 3, muro de pedra, sem teto) longe do centro.
+	for attempt in 100:
+		var a := rng.randf() * TAU
+		var p := Vector2(cos(a), sin(a)) * rng.randf_range(80.0, 110.0)
+		if _poi_fits(_cell_of(p), Vector2i(3, 3)):
+			_add_poi("military", _cell_of(p), Vector2i(3, 3), rng, "military")
+			break
+	# Ruínas no meio da zona contaminada.
+	_add_poi("ruins", _cell_of(contaminated_center) - Vector2i.ONE, Vector2i(2, 2), rng, "ruins")
+
+
+func _cell_of(p: Vector2) -> Vector2i:
+	return Vector2i(floori(p.x / BuildPiece.CELL), floori(p.y / BuildPiece.CELL))
+
+
+## A área (com folga de 1 célula) está em chão construível e longe de outros lugares?
+func _poi_fits(cell: Vector2i, size: Vector2i) -> bool:
+	for j in range(-1, size.y + 1):
+		for i in range(-1, size.x + 1):
+			var x := (cell.x + i + 0.5) * BuildPiece.CELL
+			var z := (cell.y + j + 0.5) * BuildPiece.CELL
+			if biome_at(x, z) in ["lake", "mountain"] or Vector2(x, z).length() < SPAWN_SAFE + 8.0:
+				return false
+	var center := (Vector2(cell) + Vector2(size) * 0.5) * BuildPiece.CELL
+	for poi: Dictionary in pois:
+		if center.distance_to(poi.pos) < 14.0:
+			return false
+	return true
+
+
+func _add_poi(type: String, cell: Vector2i, size: Vector2i, rng: RandomNumberGenerator, loot_table: String, name_override := "") -> void:
+	pois.append({
+		"type": type, "name": name_override if name_override != "" else str(POI_NAMES.get(type, type)),
+		"cell": cell, "size": size, "door": rng.randi_range(0, 3), "loot": loot_table,
+		"pos": (Vector2(cell) + Vector2(size) * 0.5) * BuildPiece.CELL, "seed": rng.randi(),
+	})
+
+
+## Servidor: monta as construções e o saque dos lugares.
+func _build_pois() -> void:
+	for poi: Dictionary in pois:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(poi.seed)
+		var cell: Vector2i = poi.cell
+		var size: Vector2i = poi.size
+		match str(poi.type):
+			"military":
+				_ring_walls(cell, size, "stone", int(poi.door), 0.0, rng)
+			"ruins":
+				for j in size.y:
+					for i in size.x:
+						if rng.randf() < 0.6:
+							Structures._spawn_piece("foundation", "stone", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0)
+				_ring_walls(cell, size, "stone", int(poi.door), 0.4, rng)
+			_:
+				for j in size.y:
+					for i in size.x:
+						Structures._spawn_piece("foundation", "wood", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0)
+				_ring_walls(cell, size, "wood", int(poi.door), 0.12, rng)
+				# Telhado, se as paredes seguram (abandonada: às vezes falta um pedaço).
+				for j in size.y:
+					for i in size.x:
+						if rng.randf() < 0.85:
+							Structures._spawn_piece("floor", "wood", "c:%d:%d:1" % [cell.x + i, cell.y + j], 0)
+		Structures._collapse_unsupported()
+		_drop_loot(poi, rng)
+
+
+## Paredes em volta de um retângulo de células. door: lado da porta (0 norte, 1 sul,
+## 2 oeste, 3 leste). missing: chance de faltar uma parede (abandonado/ruína).
+func _ring_walls(cell: Vector2i, size: Vector2i, tier: String, door: int, missing: float, rng: RandomNumberGenerator) -> void:
+	var edges: Array = []  # [chave, rot, lado]
+	for i in size.x:
+		edges.append(["z:%d:%d:0" % [cell.x + i, cell.y], 0, 0])
+		edges.append(["z:%d:%d:0" % [cell.x + i, cell.y + size.y], 0, 1])
+	for j in size.y:
+		edges.append(["x:%d:%d:0" % [cell.x, cell.y + j], 1, 2])
+		edges.append(["x:%d:%d:0" % [cell.x + size.x, cell.y + j], 1, 3])
+	var door_edges := edges.filter(func(e: Array) -> bool: return int(e[2]) == door)
+	var door_key: String = door_edges[rng.randi_range(0, door_edges.size() - 1)][0]
+	for e: Array in edges:
+		if e[0] == door_key:
+			Structures._spawn_piece("doorway", tier, e[0], int(e[1]))
+		elif rng.randf() >= missing:
+			Structures._spawn_piece("wall", tier, e[0], int(e[1]))
+
+
+func _drop_loot(poi: Dictionary, rng: RandomNumberGenerator) -> void:
+	var table := GameData.get_entry("loot", str(poi.loot))
+	var items: Array = table.get("items", [])
+	var total := 0.0
+	for entry: Array in items:
+		total += float(entry[3])
+	var cell: Vector2i = poi.cell
+	var size: Vector2i = poi.size
+	for k in int(table.get("rolls", 3)):
+		var roll := rng.randf() * total
+		for entry: Array in items:
+			roll -= float(entry[3])
+			if roll <= 0.0:
+				var x := (cell.x + rng.randf_range(0.2, size.x - 0.2)) * BuildPiece.CELL
+				var z := (cell.y + rng.randf_range(0.2, size.y - 0.2)) * BuildPiece.CELL
+				WorldItems.spawn(str(entry[0]), rng.randi_range(int(entry[1]), int(entry[2])), Vector3(x, 1.0, z))
+				break
+
+
+## Algum lugar (com folga) cobre este ponto? Recursos não nascem dentro.
+func _in_poi(x: float, z: float) -> bool:
+	for poi: Dictionary in pois:
+		var min_corner := Vector2(poi.cell) * BuildPiece.CELL - Vector2.ONE * 4.0
+		var max_corner := Vector2(poi.cell + poi.size) * BuildPiece.CELL + Vector2.ONE * 4.0
+		if x > min_corner.x and x < max_corner.x and z > min_corner.y and z < max_corner.y:
+			return true
+	return false
 
 
 # --- Terreno ----------------------------------------------------------------------------
@@ -256,6 +415,7 @@ func _process(_delta: float) -> void:
 # --- Conteúdo (servidor) ---------------------------------------------------------------
 
 func _scatter_resources() -> void:
+	_build_pois()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 1
 	var cells := int(SIZE / CELL_SIZE)
@@ -263,7 +423,7 @@ func _scatter_resources() -> void:
 		for ci in cells:
 			var x := -HALF + (ci + rng.randf()) * CELL_SIZE
 			var z := -HALF + (cj + rng.randf()) * CELL_SIZE
-			if Vector2(x, z).length() < 7.0:
+			if Vector2(x, z).length() < 7.0 or _in_poi(x, z):
 				continue
 			var table: Dictionary = DENSITY.get(biome_at(x, z), {})
 			var roll := rng.randf()
