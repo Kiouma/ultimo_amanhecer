@@ -71,6 +71,9 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_notifications(player)
+	var compass := CompassBar.new()
+	compass.player = player
+	add_child(compass)
 	# Marca de acerto: a mira pisca (amarela em ataque surpresa).
 	var crosshair := get_node_or_null(^"Crosshair") as Label
 	if crosshair:
@@ -361,7 +364,7 @@ func _process(delta: float) -> void:
 ## Barra do chefe (Colosso...) no topo, quando algum está vivo a até 60 m.
 func _build_boss_bar() -> void:
 	var box := VBoxContainer.new()
-	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 18)
+	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 56)  # abaixo da bússola
 	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)

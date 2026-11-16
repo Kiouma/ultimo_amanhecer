@@ -130,6 +130,9 @@ func _ready() -> void:
 	death_penalty.set_process(is_local())
 	craft_queue.set_process(is_local())
 	if is_local():
+		var exploration := Exploration.new()
+		exploration.name = "Exploration"
+		add_child(exploration)
 		build = BuildMode.new()
 		build.name = "BuildMode"
 		add_child(build)
