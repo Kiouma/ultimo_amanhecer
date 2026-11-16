@@ -109,11 +109,13 @@ func pieces() -> Array[BuildPiece]:
 
 func register_piece(piece: BuildPiece) -> void:
 	_slots[piece.slot_key] = piece
+	_support_dirty = true
 
 
 func unregister_piece(piece: BuildPiece) -> void:
 	if _slots.get(piece.slot_key) == piece:
 		_slots.erase(piece.slot_key)
+		_support_dirty = true
 
 
 ## Custo da peça nesse material ({id: quantidade}).
@@ -158,26 +160,106 @@ func check_build(piece_id: String, key: String, rot: int, builder_pos: Vector3) 
 	return ""
 
 
-## Integridade simples (por enquanto): no chão sempre; acima, precisa encostar em algo.
+## Apoio da peça nova, com a construção como está agora.
 func _is_supported(kind: String, i: int, j: int, n: int) -> bool:
+	return _support_dist(kind, i, j, n, support_map()) >= 0
+
+
+# --- Integridade estrutural (GDD 9.1) ---------------------------------------------------
+# Toda peça precisa de um caminho de apoio até o chão:
+# - no andar 0 (fundação, parede, porta, escada) está apoiada;
+# - parede/porta acima: sobre outra parede/porta, ou sobre um piso de uma célula ao lado;
+# - piso/teto: sobre uma parede/porta numa das 4 bordas (balanço 0), ou preso a um piso
+#   vizinho do mesmo andar (balanço do vizinho + 1, no máximo MAX_OVERHANG);
+# - escada acima do chão: sobre o piso da própria célula.
+# Quando uma peça some, o que ficou sem caminho desaba (em cadeia).
+
+## Quantas células um piso pode avançar sem parede embaixo.
+const MAX_OVERHANG := 2
+## Fração do custo que vira destroços no chão quando uma peça desaba.
+const COLLAPSE_SALVAGE := 0.25
+
+var _support_cache: Dictionary = {}
+var _support_dirty := true
+
+
+## Encaixe → balanço (0 = apoiada direto). Peças fora do mapa não têm apoio.
+func support_map() -> Dictionary:
+	if not _support_dirty:
+		return _support_cache
+	var dist := {}
+	var keys: Array = []
+	for key: String in _slots:
+		if piece_at(key):
+			keys.append(key)
+	var changed := true
+	while changed:
+		changed = false
+		for key: String in keys:
+			var p := key.split(":")
+			var d := _support_dist(p[0], int(p[1]), int(p[2]), int(p[3]), dist)
+			if d >= 0 and (not dist.has(key) or d < int(dist[key])):
+				dist[key] = d
+				changed = true
+	_support_cache = dist
+	_support_dirty = false
+	return dist
+
+
+## Balanço de uma peça nesse encaixe, olhando só peças já apoiadas em `dist` (-1 = sem apoio).
+func _support_dist(kind: String, i: int, j: int, n: int, dist: Dictionary) -> int:
 	if n == 0:
-		return true
+		return 0
 	match kind:
-		"c":  # piso: parede embaixo numa das bordas, ou piso vizinho no mesmo andar
+		"c":
 			for k in ["x:%d:%d" % [i, j], "x:%d:%d" % [i + 1, j], "z:%d:%d" % [i, j], "z:%d:%d" % [i, j + 1]]:
-				if piece_at("%s:%d" % [k, n - 1]):
-					return true
+				if dist.has("%s:%d" % [k, n - 1]):
+					return 0
+			var best := -1
 			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				if piece_at("c:%d:%d:%d" % [i + d.x, j + d.y, n]):
-					return true
-			return false
+				var neighbor := "c:%d:%d:%d" % [i + d.x, j + d.y, n]
+				if dist.has(neighbor):
+					var value := int(dist[neighbor]) + 1
+					if value <= MAX_OVERHANG and (best < 0 or value < best):
+						best = value
+			return best
 		"r":
-			return piece_at("c:%d:%d:%d" % [i, j, n]) != null
-		_:  # parede/porta: em cima de outra, ou sobre piso de uma das células ao lado
-			if piece_at("%s:%d:%d:%d" % [kind, i, j, n - 1]):
-				return true
+			return int(dist.get("c:%d:%d:%d" % [i, j, n], -1))
+		_:
+			if dist.has("%s:%d:%d:%d" % [kind, i, j, n - 1]):
+				return 0
 			var other := Vector2i(i - 1, j) if kind == "x" else Vector2i(i, j - 1)
-			return piece_at("c:%d:%d:%d" % [i, j, n]) != null or piece_at("c:%d:%d:%d" % [other.x, other.y, n]) != null
+			var a := int(dist.get("c:%d:%d:%d" % [i, j, n], -1))
+			var b := int(dist.get("c:%d:%d:%d" % [other.x, other.y, n], -1))
+			if a < 0:
+				return b
+			return a if b < 0 else mini(a, b)
+
+
+## Servidor: derruba tudo que ficou sem apoio. Deixa destroços com parte do material.
+func _collapse_unsupported() -> void:
+	var dist := support_map()
+	var fallen := 0
+	for piece in pieces():
+		if dist.has(piece.slot_key):
+			continue
+		var price := cost(piece.piece_id, piece.tier)
+		for id: String in price:
+			var amount := floori(float(price[id]) * COLLAPSE_SALVAGE)
+			if amount > 0:
+				WorldItems.spawn(id, amount, piece.global_position + Vector3(randf_range(-1, 1), 0.5, randf_range(-1, 1)))
+		unregister_piece(piece)
+		piece.queue_free()
+		fallen += 1
+	if fallen > 0:
+		_collapse_fx_all(fallen)
+
+
+func _collapse_fx_all(count: int) -> void:
+	var text := "A construção desabou (%d peça%s)" % [count, "" if count == 1 else "s"]
+	_notify(text)
+	if Network.is_online():
+		_notify.rpc(text)
 
 
 ## Árvore, rocha, caixote, estação, jogador ou zumbi dentro do volume da peça?
@@ -244,6 +326,8 @@ func demolish_refund(piece: BuildPiece) -> Dictionary:
 
 
 func demolish(piece: BuildPiece, player: Node3D) -> void:
+	if piece == null:
+		return
 	if multiplayer.is_server():
 		_demolish(piece, player)
 	elif Network.is_online():
@@ -274,9 +358,11 @@ func piece_destroyed(piece: BuildPiece) -> void:
 
 
 ## check_integrity: false ao trocar a peça por outra no mesmo lugar (melhoria).
-func _remove(piece: BuildPiece, _check_integrity := true) -> void:
+func _remove(piece: BuildPiece, check_integrity := true) -> void:
 	unregister_piece(piece)
 	piece.queue_free()
+	if check_integrity:
+		_collapse_unsupported()
 	layout_changed.emit()
 
 
