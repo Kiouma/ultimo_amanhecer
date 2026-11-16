@@ -251,6 +251,11 @@ func _build_clock() -> void:
 			show_banner.call("Dia %d\na horda vem esta noite: preparem a base" % d, Color(1.0, 0.55, 0.4))
 		else:
 			show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
+	EventBus.weather_changed.connect(func(state: String) -> void:
+		var texts := {"rain": "Começou a chover\nos sons ficam abafados", "fog": "A neblina baixou\nninguém enxerga longe",
+			"storm": "Tempestade!\nraios por toda parte", "cold": "Frio extremo\nfique perto de uma fogueira"}
+		if texts.has(state):
+			show_banner.call(texts[state], Color(0.8, 0.88, 1.0)))
 	EventBus.horde_started.connect(func(n: int) -> void:
 		show_banner.call("A HORDA %d CHEGOU" % n, Color(1.0, 0.3, 0.25)))
 	EventBus.horde_ended.connect(func(n: int, survived: bool) -> void:
@@ -263,6 +268,9 @@ func _build_clock() -> void:
 	var update := func(d: int, h: float) -> void:
 		clock.text = "%s %d · %s" % ["Noite" if day_night.is_night() else "Dia", d, day_night.clock_text()]
 		var color := Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85)
+		var weather := Weather.find(get_tree())
+		if weather and weather.state != "clear":
+			clock.text += " · " + weather.display_name()
 		var horde := Horde.find(get_tree())
 		if horde:
 			clock.text += "\n" + horde.status_text(d, h)

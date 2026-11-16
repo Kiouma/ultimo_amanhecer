@@ -153,7 +153,7 @@ func _update_perception(delta: float) -> void:
 
 
 func _find_visible_player() -> Node3D:
-	var sight := _stat("sight_range", 15.0)
+	var sight := _stat("sight_range", 15.0) * Weather.sight_factor(get_tree())
 	var best: Node3D = null
 	var best_dist := INF
 	for p: Node3D in get_tree().get_nodes_in_group("player"):
@@ -188,7 +188,8 @@ func _has_line_of_sight(p: Node3D) -> bool:
 func _on_noise(noise_position: Vector3, loudness: float, source: Node) -> void:
 	if state == State.DEAD or source == self:
 		return
-	var heard_range := loudness * _stat("hearing", 1.0) * (NIGHT_HEARING_MULTIPLIER if _is_night() else 1.0)
+	var heard_range := loudness * _stat("hearing", 1.0) * (NIGHT_HEARING_MULTIPLIER if _is_night() else 1.0) \
+		* Weather.hearing_factor(get_tree())
 	if global_position.distance_to(noise_position) > heard_range:
 		return
 	_last_known_position = noise_position

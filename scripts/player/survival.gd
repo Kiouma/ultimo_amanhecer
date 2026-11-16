@@ -50,7 +50,8 @@ func _process(delta: float) -> void:
 	if _player == null or _player.health.is_dead:
 		return
 	var effort := sprint_multiplier if exerting else 1.0
-	hunger = maxf(hunger - hunger_per_minute / 60.0 * effort * delta, 0.0)
+	var cold := Weather.hunger_factor(get_tree(), get_parent().global_position)
+	hunger = maxf(hunger - hunger_per_minute / 60.0 * effort * cold * delta, 0.0)
 	thirst = maxf(thirst - thirst_per_minute / 60.0 * effort * delta, 0.0)
 	changed.emit(hunger, thirst)
 	_apply_stamina_penalty()

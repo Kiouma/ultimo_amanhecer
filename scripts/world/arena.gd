@@ -62,6 +62,10 @@ func _ready() -> void:
 	var horde := Horde.new()
 	horde.name = "Horde"
 	add_child(horde)
+	# Clima (GDD 10.3), mesmo nome em todas as máquinas.
+	var weather := Weather.new()
+	weather.name = "Weather"
+	add_child(weather)
 	if not multiplayer.is_server():
 		return
 	Structures.layout_changed.connect(func() -> void: _queue_rebake(Structures.last_change))

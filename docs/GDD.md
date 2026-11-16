@@ -289,6 +289,8 @@ Regiões mais perigosas têm mais zumbis fortes e melhor saque.
 
 Chuva, neblina, tempestade e frio extremo. O clima afeta visão, barulho (chuva abafa sons) e magia (raio mais forte em tempestade).
 
+**Implementado:** o servidor sorteia o clima a cada 2,5–6 minutos (limpo 50%, chuva 20%, neblina 14%, tempestade 8%, frio 8%). Chuva: zumbis ouvem 30% menos. Tempestade: ouvem 45% menos, relâmpagos e Raio em cadeia +30%. Neblina: zumbis enxergam 45% menos e a névoa fecha a vista. Frio extremo: neve e fome 60% mais rápida, a não ser a até 6 m de uma fogueira. Aviso na tela e no relógio. **F10** (host) troca o clima, para testes.
+
 ## 11. Ciclo dia/noite e hordas
 
 - **Dia:** zumbis mais lentos e dispersos. Bom para explorar e coletar.

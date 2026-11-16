@@ -95,7 +95,7 @@ func _cast_chain() -> void:
 		spawn_tracer(user, from, hit.position)
 		user.broadcast_fx(&"tracer", from, hit.position)
 		return
-	var damage := stat("damage", 25.0)
+	var damage := stat("damage", 25.0) * Weather.lightning_factor(get_tree())
 	var hit_list: Array = []
 	var current: Node3D = first
 	for i in int(stat("chains", 3)) + 1:
