@@ -20,6 +20,8 @@ Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e
 
 Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Zumbis presos do lado de fora batem na peça mais fraca.
 
+Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Atirador, Guerreiro, Arcano, Sobrevivente).
+
 Hordas: a cada **7 dias**, ao anoitecer, uma horda ataca em ondas (o relógio mostra quantos dias faltam; o céu fica vermelho na tarde da horda). Sobreviver dá recompensa. **F9** (host) chama uma horda agora, para testar.
 
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.

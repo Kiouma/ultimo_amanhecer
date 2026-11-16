@@ -88,6 +88,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_inventory_ui)
 	_inventory_ui.bind(player)
 
+	var progression_ui := ProgressionUI.new()
+	add_child(progression_ui)
+	progression_ui.bind(player)
+
 
 ## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
 func _bind_survival(player: Player) -> void:

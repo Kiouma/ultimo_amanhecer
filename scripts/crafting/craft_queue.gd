@@ -53,12 +53,15 @@ func _process(delta: float) -> void:
 	var job := jobs[0]
 	if not is_station_ok(job.recipe):
 		return  # pausado: longe da estação
-	var unit_time := maxf(float(job.recipe.get("time", 2.0)), 0.1)
+	var prog := Progression.of(get_parent())
+	var unit_time := maxf(float(job.recipe.get("time", 2.0)) * (prog.mult("craft_time") if prog else 1.0), 0.1)
 	job.progress = float(job.progress) + delta / unit_time
 	if job.progress >= 1.0:
 		job.progress = 0.0
 		job.left = int(job.left) - 1
 		Crafting.give_result(_inventory, job.recipe, 1)
+		if prog:
+			prog.gain("crafting", float(job.recipe.get("time", 2.0)))
 		if int(job.left) <= 0:
 			jobs.pop_front()
 	changed.emit()

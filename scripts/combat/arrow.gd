@@ -55,7 +55,8 @@ func _on_hit(target: Object, at: Vector3) -> void:
 		if not visual_only:
 			var amount := damage
 			if target is Node3D and at.y - target.global_position.y > HEADSHOT_HEIGHT:
-				amount *= HEADSHOT_MULTIPLIER
+				amount *= HEADSHOT_MULTIPLIER * (caster.progression.mult("headshot_damage") if caster is Player else 1.0)
+			amount = Progression.on_hit(caster, target, amount, "bow")
 			health.take_damage(amount, caster)
 		queue_free()
 		return

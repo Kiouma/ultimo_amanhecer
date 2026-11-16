@@ -50,7 +50,9 @@ func handle_attack(_held: bool, just_pressed: bool) -> void:
 
 
 func _fire() -> void:
-	magazine -= 1
+	# Munição reaproveitada (habilidade): chance de não gastar a bala.
+	if randf() >= user.progression.add("ammo_save_add"):
+		magazine -= 1
 	cooldown = 1.0 / stat("fire_rate", 4.0)
 	var aiming := Input.is_action_pressed("aim")
 	var spread := stat("spread_aim", 0.3) if aiming else stat("spread_hip", 1.5)
@@ -62,7 +64,7 @@ func _fire() -> void:
 		var damage := stat("damage", 25.0)
 		var collider: Object = hit.get("collider")
 		if collider is Node3D and hit.position.y - collider.global_position.y > 1.45:
-			damage *= headshot_multiplier
+			damage *= headshot_multiplier * user.progression.mult("headshot_damage")
 		if not deal_damage(collider, damage):
 			_spawn_impact(hit.position)
 
@@ -70,6 +72,7 @@ func _fire() -> void:
 	_flash.visible = true
 	get_tree().create_timer(0.05).timeout.connect(func() -> void: _flash.visible = false)
 	make_noise(stat("noise", 0.8))
+	count_use()
 	wear(1.0)
 	head.rotation.x += deg_to_rad(1.2)  # recuo da câmera
 	kick(Vector3(0, 0.01, 0.06), Vector3(deg_to_rad(8), 0, 0))

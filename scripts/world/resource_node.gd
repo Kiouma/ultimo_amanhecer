@@ -59,6 +59,11 @@ func has_prompt() -> bool:
 ## quality: multiplicador da ferramenta (qualidade × refino, 1,0 a ~2,37).
 func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> void:
 	_shake()
+	var prog := Progression.of(player)
+	if prog:
+		prog.gain("survival", 1.0)
+		if data.get("by_hand", false):
+			quality *= prog.mult("gather_yield")
 	var tool_id := str(tool_data.get("id", ""))
 	if multiplayer.is_server():
 		_gather(player, tool_id, quality)
@@ -69,8 +74,9 @@ func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> vo
 @rpc("any_peer", "call_remote", "reliable")
 func _request_gather(tool_id: String, quality: float) -> void:
 	var sender := multiplayer.get_remote_sender_id()
+	# Qualidade × refino máximos × rendimento máximo da Sobrevivência e habilidades.
 	var max_quality := (1.0 + Inventory.QUALITY_STEP * (Inventory.MAX_QUALITY - 1)) \
-		* (1.0 + Inventory.REFINE_STEP * Inventory.MAX_REFINE)
+		* (1.0 + Inventory.REFINE_STEP * Inventory.MAX_REFINE) * 2.0
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.get_multiplayer_authority() == sender:
 			_gather(p, tool_id, clampf(quality, 1.0, max_quality))
@@ -88,7 +94,7 @@ func _gather(player: Node3D, tool_id: String, quality := 1.0) -> void:
 	if data.get("by_hand", false):
 		for id: String in data.get("yield", {}):
 			var span: Array = data.yield[id]
-			var amount := randi_range(int(span[0]), int(span[1]))
+			var amount := roundi(randi_range(int(span[0]), int(span[1])) * quality)
 			if amount > 0:
 				inventory.grant(id, amount)
 		_deplete()

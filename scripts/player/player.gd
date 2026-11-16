@@ -86,6 +86,8 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var survival: Survival = $Survival
 @onready var death_penalty: DeathPenalty = $DeathPenalty
 @onready var craft_queue: CraftQueue = $CraftQueue
+## Proficiências, nível e habilidades (criado no _ready, em todas as máquinas).
+var progression: Progression
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
@@ -116,6 +118,10 @@ func _ready() -> void:
 	_torch_light.position = Vector3(0.35, -0.25, -0.3)
 	_torch_light.visible = net_torch
 	head.add_child(_torch_light)
+	progression = Progression.new()
+	progression.name = "Progression"
+	add_child(progression)
+	progression.leveled.connect(notify)
 	weapons.setup(self, camera, head, inventory)
 	# Fome e sede só correm na máquina do dono (ver Survival).
 	survival.set_process(is_local())
@@ -183,6 +189,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= _gravity * delta
 	elif Input.is_action_just_pressed("jump"):
 		velocity.y = jump_velocity
+		progression.gain("athletics", 0.3)
 
 	var crouching := Input.is_action_pressed("crouch")
 	var target_head := crouch_head_height if crouching else stand_head_height
@@ -199,7 +206,8 @@ func _physics_process(delta: float) -> void:
 
 	var sprinting := _wants_sprint(crouching) and is_on_floor() and Vector2(velocity.x, velocity.z).length() > 0.5
 	if sprinting:
-		stamina.drain(sprint_stamina_per_second * delta)
+		stamina.drain(sprint_stamina_per_second * progression.mult("sprint_stamina") * delta)
+		progression.gain("athletics", Vector2(velocity.x, velocity.z).length() * delta * 0.1)
 	survival.exerting = sprinting
 	net_crouching = crouching
 	net_sprinting = sprinting
@@ -274,7 +282,18 @@ func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> voi
 		return
 	_noise_timer = noise_interval
 	var loudness := crouch_noise if crouching else (sprint_noise if sprinting else walk_noise)
-	Network.emit_noise(global_position, loudness, self)
+	Network.emit_noise(global_position, loudness * progression.mult("noise"), self)
+	if crouching and _zombie_nearby(12.0):
+		progression.gain("stealth", 0.25)
+
+
+## Algum zumbi vivo e sem caçar ninguém por perto? (XP de furtividade)
+func _zombie_nearby(radius: float) -> bool:
+	for z: Node3D in get_tree().get_nodes_in_group("zombies"):
+		if z.global_position.distance_to(global_position) <= radius and not z.is_dead() \
+				and z.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]:
+			return true
+	return false
 
 
 # --- Ações visíveis para todos -----------------------------------------------------
@@ -327,9 +346,11 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 
 # --- Vida, morte e renascimento -----------------------------------------------------
 
-func _on_damaged(_amount: float, source: Node) -> void:
+func _on_damaged(amount: float, source: Node) -> void:
 	if source == self:
 		return  # fome/sede: sem animação de golpe
+	if is_local() and source is Zombie:
+		progression.gain("toughness", amount * 0.25)
 	model.play_action(&"Hit_Chest")
 
 
@@ -413,11 +434,12 @@ func _wants_sprint(crouching: bool) -> bool:
 
 
 func _current_speed(crouching: bool) -> float:
-	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor()
+	var bonus := progression.mult("move_speed")
+	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor() * bonus
 	if crouching:
 		return crouch_speed * factor
 	if _wants_sprint(crouching) and is_on_floor():
-		return sprint_speed * death_penalty.speed_factor()
+		return sprint_speed * death_penalty.speed_factor() * bonus
 	return walk_speed * factor
 
 

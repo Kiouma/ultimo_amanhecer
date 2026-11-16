@@ -22,6 +22,8 @@ const MAX_HEAL_PER_USE := 100.0
 @export var ignore_group := &""
 
 var current: float
+## Multiplicador do dano recebido (Resistência). O dono pede; o servidor guarda.
+var damage_taken_multiplier := 1.0
 var is_dead := false
 
 
@@ -33,6 +35,7 @@ func take_damage(amount: float, source: Node = null) -> void:
 	if is_dead or amount <= 0.0 or _ignores(source):
 		return
 	if multiplayer.is_server():
+		amount *= _taken_factor(source)
 		_apply(maxf(current - amount, 0.0), amount, source)
 	elif Network.is_online():
 		_request_damage.rpc_id(1, amount, source.get_path() if source else NodePath())
@@ -76,6 +79,24 @@ static func find_in(node: Node) -> Health:
 
 # --- Interno ---------------------------------------------------------------------
 
+## Fome/sede (fonte = o próprio dono) não são reduzidas pela Resistência.
+func _taken_factor(source: Node) -> float:
+	return 1.0 if source == get_parent() else damage_taken_multiplier
+
+
+## Chamado pelo dono (Progression). Num cliente, avisa o servidor.
+func set_damage_taken_multiplier(value: float) -> void:
+	damage_taken_multiplier = clampf(value, 0.25, 1.0)
+	if not multiplayer.is_server() and Network.is_online():
+		_request_taken_multiplier.rpc_id(1, damage_taken_multiplier)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_taken_multiplier(value: float) -> void:
+	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
+		damage_taken_multiplier = clampf(value, 0.25, 1.0)
+
+
 func _ignores(source: Node) -> bool:
 	return ignore_group != &"" and source != null and source.is_in_group(ignore_group)
 
@@ -113,7 +134,8 @@ func _request_damage(amount: float, source_path: NodePath) -> void:
 		return
 	if _ignores(source):
 		return
-	_apply(maxf(current - clampf(amount, 0.0, MAX_DAMAGE_PER_HIT), 0.0), amount, source)
+	amount = clampf(amount, 0.0, MAX_DAMAGE_PER_HIT) * _taken_factor(source)
+	_apply(maxf(current - amount, 0.0), amount, source)
 
 
 @rpc("any_peer", "call_remote", "reliable")

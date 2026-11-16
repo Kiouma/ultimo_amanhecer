@@ -93,10 +93,36 @@ func on_unequip() -> void:
 func stat(key: String, default: float) -> float:
 	var value := float(data.get(key, default))
 	if key == "damage":
-		return value * power_multiplier()
-	if key == "stamina_cost":
-		return value / quality_multiplier()
+		value *= power_multiplier()
+	elif key == "stamina_cost":
+		value /= quality_multiplier()
+	# Proficiências e habilidades: "melee.damage", "ranged.draw_time", "magic.mana"...
+	var prog := user.progression if user else null
+	if prog:
+		value = prog.apply(category() + "." + key, value)
+		if key == "damage":
+			value *= prog.mastery_mult(weapon_type())
 	return value
+
+
+## "bow", "firearm", "melee", "spell" (maestria).
+func weapon_type() -> String:
+	return str(data.get("type", "melee"))
+
+
+## Grupo dos modificadores: "ranged" (arco e arma de fogo), "melee" ou "magic".
+func category() -> String:
+	match weapon_type():
+		"bow", "firearm": return "ranged"
+		"spell": return "magic"
+	return "melee"
+
+
+## Usou a arma (disparo, golpe, feitiço): maestria e um pouco de XP.
+func count_use() -> void:
+	if user and user.progression:
+		user.progression.use_weapon(weapon_type())
+		user.progression.gain({"ranged": "firearms", "melee": "melee", "magic": "magic"}[category()], 0.3)
 
 
 func quality_multiplier() -> float:
@@ -113,7 +139,8 @@ func power_multiplier() -> float:
 # --- Utilitários para as armas ---------------------------------------------------
 
 func make_noise(factor: float) -> void:
-	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS, user)
+	var stealth := user.progression.mult("noise") if user.progression else 1.0
+	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS * stealth, user)
 
 
 ## Raio a partir do centro da tela (mira). Ignora o próprio jogador.
@@ -140,6 +167,7 @@ func deal_damage(target: Object, amount: float) -> bool:
 	var health := Health.find_in(target)
 	if health == null or health.is_dead:
 		return false
+	amount = Progression.on_hit(user, target, amount, weapon_type())
 	health.take_damage(amount * user.death_penalty.damage_factor(), user)
 	return true
 

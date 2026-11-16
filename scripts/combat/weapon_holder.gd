@@ -165,14 +165,16 @@ func use_selected() -> void:
 		return
 	if data.get("type", "") != "consumable":
 		return
-	var heals := float(data.get("heals", 0.0))
+	var prog := user.progression
+	var heals := float(data.get("heals", 0.0)) * prog.mult("heal")
 	var can_heal := heals > 0.0 and user.health.current < user.health.max_health
-	var fed := user.survival.consume(float(data.get("food", 0.0)), float(data.get("water", 0.0)))
+	var fed := user.survival.consume(float(data.get("food", 0.0)) * prog.mult("food"), float(data.get("water", 0.0)) * prog.mult("food"))
 	if not can_heal and not fed:
 		return  # nada a ganhar: não desperdiça
 	if can_heal:
 		user.health.heal(heals)
 	inventory.take_from_slot(selected, 1)
+	prog.gain("survival", 1.0)
 	# Garrafa: beber devolve a garrafa vazia.
 	if data.has("returns"):
 		Crafting.give_result(inventory, {"result": data.returns, "amount": 1}, 1)

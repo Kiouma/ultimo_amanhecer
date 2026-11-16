@@ -59,6 +59,8 @@ func _launch() -> void:
 	bolt.direction = (aim_point - from).normalized()
 	user.broadcast_fx(&"bolt", from, aim_point, bolt.color)
 	make_noise(stat("noise", 0.6))
+	count_use()
+	user.progression.gain("magic", 1.5)
 	kick(Vector3(0, 0, 0.08), Vector3(0.3, 0, 0), 0.2)
 
 

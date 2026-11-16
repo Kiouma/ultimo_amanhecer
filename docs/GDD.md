@@ -53,9 +53,13 @@ O jogo não tem atributos. O personagem evolui pelo uso: cada proficiência sobe
 
 **Regras gerais (propostas):** cada proficiência vai do nível 1 ao 100 (valor provisório) e pede mais experiência a cada nível. Ações repetidas sem risco, como pular em loop, dão ganho decrescente para evitar abuso. Resistência só sobe com dano real recebido em jogo.
 
+**Como está implementado (Fase 6):** XP para subir do nível N = 10·N^1,4. Acima de 60 XP por minuto numa proficiência, o ganho cai para 20% (anti-abuso). Cada nível dá um bônus pequeno (ex.: Melee +0,5% de dano e −0,4% de stamina por nível; Resistência −0,25% de dano recebido por nível, até −25% no 100; Atletismo +0,2% de velocidade). Pontaria (nome no jogo de "Armas de fogo") cobre arcos e armas de fogo. Metade da XP de proficiência vai para o nível do personagem; abates dão vida máxima do inimigo ÷ 5 (andarilho 20, Colosso 500). A morte tira 10% da XP acumulada rumo aos próximos níveis (sem perder nível). **Maestria de arma:** cada tipo (arco, arma de fogo, armas brancas, feitiços) sobe com o uso, até +10% de dano. Painel na tecla **P**.
+
 ### 4.2 Trilhas de habilidades
 
 O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada habilidade exige um nível mínimo da proficiência ligada a ela (por exemplo, golpe giratório pede Melee nível 5). Especializar-se dá bônus fortes; misturar dá flexibilidade.
+
+**Implementado:** 20 habilidades passivas em 4 trilhas (Atirador, Guerreiro, Arcano, Sobrevivente), de 1 ou 2 pontos, com nível mínimo de proficiência. Dados em `data/skills/skills.json`; os efeitos são modificadores (ex.: `ranged.draw_time`, `melee.damage`, `max_mana_add`). Ganha-se 1 ponto por nível do personagem.
 
 **Trilha do Atirador (arcos e armas de fogo)**
 

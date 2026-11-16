@@ -119,6 +119,8 @@ func place() -> bool:
 		return false
 	_pay(Structures.cost(piece_id(), tier()))
 	Structures.build(piece_id(), tier(), _slot_key, _rot)
+	user.progression.gain("crafting", 3.0)
+	user.progression.gain_character(2.0)
 	Network.emit_noise(BuildPiece.slot_transform(_slot_key, _rot).origin, BUILD_NOISE, user)
 	_cooldown = 0.25
 	return true
@@ -182,6 +184,7 @@ func hammer_repair(slot_index: int) -> bool:
 		return false
 	_pay(price)
 	Structures.repair(piece, user, price)
+	user.progression.gain("crafting", 1.0)
 	user.inventory.wear(user.inventory.get_slot(slot_index), 1.0)
 	Network.emit_noise(piece.global_position, BUILD_NOISE * 0.6, user)
 	return true
@@ -202,6 +205,7 @@ func hammer_upgrade(slot_index: int) -> bool:
 		return false
 	_pay(price)
 	Structures.upgrade(piece, user, price)
+	user.progression.gain("crafting", 4.0)
 	user.inventory.wear(user.inventory.get_slot(slot_index), 2.0)
 	Network.emit_noise(piece.global_position, BUILD_NOISE, user)
 	return true

@@ -491,7 +491,9 @@ static func explosion_fx(parent: Node, pos: Vector3) -> void:
 	tw.chain().tween_callback(fx.queue_free)
 
 
-func _on_died(_source: Node) -> void:
+func _on_died(source: Node) -> void:
+	if multiplayer.is_server() and source is Player:
+		source.progression.send_kill_xp(maxf(health.max_health / 5.0, 5.0))
 	# Explosivo morto antes de chegar perto também explode (pune quem luta colado).
 	if stats.get("explodes", false) and not _exploded and multiplayer.is_server():
 		_explode.call_deferred()

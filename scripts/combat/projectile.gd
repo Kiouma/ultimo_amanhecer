@@ -63,7 +63,7 @@ func _explode(target: Object, at: Vector3) -> void:
 	if target is Node and not visual_only:
 		var health := Health.find_in(target)
 		if health and not health.is_dead:
-			health.take_damage(damage, caster)
+			health.take_damage(Progression.on_hit(caster, target, damage, "spell"), caster)
 	var burst := Weapon.sphere(0.2, color, Vector3.ZERO, true)
 	get_tree().current_scene.add_child(burst)
 	burst.global_position = at

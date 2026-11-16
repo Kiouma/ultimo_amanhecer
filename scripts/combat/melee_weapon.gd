@@ -40,6 +40,7 @@ func handle_attack(held: bool, _just_pressed: bool) -> void:
 	play_body_anim(anim)
 	_swing(direction)
 	make_noise(stat("noise", 0.2))
+	count_use()
 	get_tree().create_timer(stat("hit_delay", 0.25)).timeout.connect(_hit)
 
 
@@ -79,7 +80,7 @@ func _hit_resource(reach: float) -> bool:
 	var target: Object = hit.get("collider")
 	if target is ResourceNode and not target.data.get("by_hand", false):
 		if target.global_position.distance_to(user.global_position) <= reach + 1.5:
-			target.request_gather(user, data, power_multiplier())
+			target.request_gather(user, data, power_multiplier() * user.progression.mult("gather_yield"))
 			return true
 	return false
 
