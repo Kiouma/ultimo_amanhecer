@@ -92,6 +92,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(progression_ui)
 	progression_ui.bind(player)
 
+	var map_ui := MapUI.new()
+	add_child(map_ui)
+	map_ui.bind(player)
+
 
 ## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
 func _bind_survival(player: Player) -> void:

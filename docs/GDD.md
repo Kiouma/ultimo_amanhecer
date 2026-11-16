@@ -334,6 +334,8 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Feitiço rápido | Q / F (configurável) |
 | Câmera 1ª / 3ª pessoa | V |
 | Modo construção | B (roda = peça, T = material, R = girar, clique = construir, botão direito = desmontar) |
+| Personagem (proficiências e habilidades) | P |
+| Mapa | M |
 
 Suporte a controle (gamepad) planejado para depois.
 
