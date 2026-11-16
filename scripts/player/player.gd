@@ -296,6 +296,7 @@ func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> voi
 		return
 	_noise_timer = noise_interval
 	var loudness := crouch_noise if crouching else (sprint_noise if sprinting else walk_noise)
+	Sfx.play("step", global_position, -14.0 if crouching else (-4.0 if sprinting else -9.0), 0.2)
 	Network.emit_noise(global_position, loudness * progression.mult("noise"), self)
 	if crouching and _zombie_nearby(12.0):
 		progression.gain("stealth", 0.25)
@@ -341,9 +342,11 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 	match kind:
 		&"tracer":
 			Weapon.spawn_tracer(self, from, to)
+			Sfx.play("gunshot", from, 2.0)
 		&"ring":
 			SpellCaster._ring_fx(self, from, from.distance_to(to), color)
 		&"arrow":
+			Sfx.play("bow", from)
 			var arrow: Node3D = Bow.ARROW.new()
 			arrow.visual_only = true
 			arrow.caster = self
@@ -351,6 +354,7 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 			get_tree().current_scene.add_child(arrow)
 			arrow.global_position = from
 		&"bolt":
+			Sfx.play("spell", from, -3.0)
 			var bolt: Area3D = SpellCaster.PROJECTILE.new()
 			bolt.visual_only = true
 			bolt.color = color

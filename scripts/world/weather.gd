@@ -162,6 +162,9 @@ func _apply() -> void:
 
 
 func _lightning() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam:
+		Sfx.play("thunder", cam.global_position + Vector3(randf_range(-30, 30), 20, randf_range(-30, 30)), 4.0)
 	var tw := create_tween()
 	tw.tween_property(_flash, "light_energy", 2.5, 0.05)
 	tw.tween_property(_flash, "light_energy", 0.0, 0.1)

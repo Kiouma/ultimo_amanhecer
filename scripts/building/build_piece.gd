@@ -137,6 +137,8 @@ func _sync_open(value: bool) -> void:
 
 
 func _set_open(value: bool) -> void:
+	if value != open:
+		Sfx.play("door", global_position + Vector3.UP, -4.0)
 	open = value
 	if _hinge:
 		var tw := create_tween()

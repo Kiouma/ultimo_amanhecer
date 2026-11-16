@@ -77,6 +77,7 @@ func _release() -> void:
 
 	user.broadcast_fx(&"arrow", from, from + direction * speed)
 	make_noise(stat("noise", 0.08))
+	Sfx.play("bow", user.global_position + Vector3.UP * 1.4)
 	count_use()
 	wear(1.0)
 	kick(Vector3(0, 0, 0.04), Vector3(0, 0, 0), 0.15)

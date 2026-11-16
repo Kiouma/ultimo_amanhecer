@@ -124,6 +124,7 @@ func place() -> bool:
 	user.progression.gain("crafting", 3.0)
 	user.progression.gain_character(2.0)
 	Network.emit_noise(BuildPiece.slot_transform(_slot_key, _rot).origin, BUILD_NOISE, user)
+	Sfx.play("build", BuildPiece.slot_transform(_slot_key, _rot).origin)
 	_cooldown = 0.25
 	return true
 

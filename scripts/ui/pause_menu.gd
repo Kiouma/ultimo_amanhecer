@@ -8,6 +8,7 @@ const SETTINGS_PATH := "user://settings.cfg"
 var player: Player
 var _sensitivity: HSlider
 var _status: Label
+var _volume: HSlider
 
 
 func _ready() -> void:
@@ -47,11 +48,18 @@ func _ready() -> void:
 	_sensitivity.value_changed.connect(func(v: float) -> void:
 		if player:
 			player.mouse_sensitivity = v
-		var cfg := ConfigFile.new()
-		cfg.load(SETTINGS_PATH)
-		cfg.set_value("controls", "mouse_sensitivity", v)
-		cfg.save(SETTINGS_PATH))
+		_save_setting("controls", "mouse_sensitivity", v))
 	box.add_child(_sensitivity)
+	var vol_label := Label.new()
+	vol_label.text = "Volume"
+	box.add_child(vol_label)
+	_volume = HSlider.new()
+	_volume.max_value = 1.0
+	_volume.step = 0.05
+	_volume.value_changed.connect(func(v: float) -> void:
+		Sfx.volume = v
+		_save_setting("audio", "volume", v))
+	box.add_child(_volume)
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.modulate = Color(0.7, 1.0, 0.7)
@@ -71,6 +79,15 @@ func bind(p: Player) -> void:
 	if cfg.load(SETTINGS_PATH) == OK:
 		p.mouse_sensitivity = float(cfg.get_value("controls", "mouse_sensitivity", p.mouse_sensitivity))
 	_sensitivity.set_value_no_signal(p.mouse_sensitivity)
+	Sfx.volume = float(cfg.get_value("audio", "volume", 0.8)) if cfg.load(SETTINGS_PATH) == OK else 0.8
+	_volume.set_value_no_signal(Sfx.volume)
+
+
+func _save_setting(section: String, key: String, value: Variant) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)
+	cfg.set_value(section, key, value)
+	cfg.save(SETTINGS_PATH)
 
 
 func _button(parent: Control, text: String, action: Callable) -> void:

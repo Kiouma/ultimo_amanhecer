@@ -40,6 +40,7 @@ func handle_attack(held: bool, _just_pressed: bool) -> void:
 	play_body_anim(anim)
 	_swing(direction)
 	make_noise(stat("noise", 0.2))
+	Sfx.play("swing", user.global_position + Vector3.UP * 1.4, -6.0)
 	count_use()
 	get_tree().create_timer(stat("hit_delay", 0.25)).timeout.connect(_hit)
 

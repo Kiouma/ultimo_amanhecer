@@ -428,7 +428,7 @@ Cada fase termina com algo **jogável**. Não avance para a próxima sem testar 
 
 **Produto mínimo viável (MVP):** fases 0 a 5. Se chegar nisso, já existe um jogo de sobrevivência com os três estilos de combate, crafting, construção e hordas.
 
-**Fase 8 (em andamento):** salvamento implementado. O host salva o mundo em `user://save/world.json` (semente, dia/hora, clima, peças com vida e portas, estações, armadilhas, itens e bags no chão); cada jogador salva o próprio personagem em `user://save/character.json` (inventário, vida, fome/sede, Fraqueza, proficiências, habilidades, maestria e posição, se for o mesmo mundo). Salva a cada 2 min, ao fechar a janela e pelo menu de pausa (Esc), que também tem sair para o menu e sensibilidade do mouse.
+**Fase 8 (em andamento):** salvamento implementado. O host salva o mundo em `user://save/world.json` (semente, dia/hora, clima, peças com vida e portas, estações, armadilhas, itens e bags no chão); cada jogador salva o próprio personagem em `user://save/character.json` (inventário, vida, fome/sede, Fraqueza, proficiências, habilidades, maestria e posição, se for o mesmo mundo). Salva a cada 2 min, ao fechar a janela e pelo menu de pausa (Esc), que também tem sair para o menu, sensibilidade do mouse e volume. **Som provisório** sintetizado por código (autoload `Sfx`): arco, tiro, golpe, acerto, gemido de zumbi, explosão, feitiço, trovão, passos, construção, porta. Para trocar por áudio de verdade, basta apontar o nome do som para o arquivo em `Sfx.SOUND_FILES`.
 
 ## 18. Riscos e como reduzi-los
 

@@ -72,6 +72,7 @@ func _fire() -> void:
 	_flash.visible = true
 	get_tree().create_timer(0.05).timeout.connect(func() -> void: _flash.visible = false)
 	make_noise(stat("noise", 0.8))
+	Sfx.play("gunshot", user.global_position + Vector3.UP * 1.4, 2.0)
 	count_use()
 	wear(1.0)
 	head.rotation.x += deg_to_rad(1.2)  # recuo da câmera

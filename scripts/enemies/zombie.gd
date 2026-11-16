@@ -65,6 +65,7 @@ var _slow_factor := 1.0
 ## Faz parte de uma horda (Horde manda ele caçar os jogadores).
 var horde := false
 var _exploded := false
+var _groan_timer := randf_range(3.0, 10.0)
 var _slow_time := 0.0
 
 @onready var model: CharacterModel = $Model
@@ -94,6 +95,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
+	# Gemido de vez em quando (mais frequente caçando). Em todas as máquinas.
+	_groan_timer -= delta
+	if _groan_timer <= 0.0 and state != State.DEAD:
+		_groan_timer = randf_range(4.0, 9.0) if state in [State.CHASE, State.SIEGE] else randf_range(9.0, 20.0)
+		Sfx.play("groan", global_position + Vector3.UP * 1.5, -4.0, 0.15 if _stat("scale", 1.0) < 1.5 else 0.02)
 	if not multiplayer.is_server():
 		_client_animate()
 		return
@@ -366,6 +372,7 @@ func _set_state(new_state: State) -> void:
 
 func _on_damaged(_amount: float, source: Node) -> void:
 	model.play_action(&"Hit_Chest")
+	Sfx.play("hit", global_position + Vector3.UP * 1.2, -2.0)
 	if not multiplayer.is_server():
 		return
 	if source is Node3D:
@@ -476,6 +483,7 @@ func _fx_explosion(center: Vector3) -> void:
 
 ## Clarão laranja que cresce e some.
 static func explosion_fx(parent: Node, pos: Vector3) -> void:
+	Sfx.play("explosion", pos, 6.0)
 	var fx := Node3D.new()
 	parent.add_child(fx)
 	fx.global_position = pos
