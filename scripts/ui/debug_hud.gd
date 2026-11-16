@@ -71,6 +71,9 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_notifications(player)
+	var channel := ChannelBar.new()
+	channel.player = player
+	add_child(channel)
 	var wheel := SkillWheel.new()
 	wheel.player = player
 	add_child(wheel)
@@ -212,7 +215,7 @@ func _on_weakness_changed(level: int, time_left: float, penalty: DeathPenalty) -
 ## Avisos curtos (player.notify) e linha da fila de fabricação, acima da hotbar.
 func _bind_notifications(player: Player) -> void:
 	var toast := Label.new()
-	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 150)
 	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.6))
@@ -223,7 +226,7 @@ func _bind_notifications(player: Player) -> void:
 	player.notified.connect(_on_notified.bind(toast))
 
 	_queue_label = Label.new()
-	_queue_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 86)
+	_queue_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 130)
 	_queue_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_queue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_queue_label.add_theme_font_size_override("font_size", 13)

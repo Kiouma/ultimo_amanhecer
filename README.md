@@ -22,6 +22,8 @@ Construção: **B** liga o modo construção (prévia verde/vermelha na grade). 
 
 Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Atirador, Guerreiro, Arcano, Sobrevivente).
 
+Carga (segurar o botão esquerdo): **melee** carrega o golpe gastando stamina (até 2,5× de dano); o **cajado** canaliza a habilidade gastando mana (até 6× o custo, até 3× de dano/alcance); a **faca de arremesso** ganha força e a **adaga** dá muito mais dano em ataque surpresa. A barra de carga aparece acima da hotbar (inclusive puxando o arco).
+
 Equipamento (**P**): capacete, armadura, calça, botas, luvas, 2 anéis e colar. Quatro conjuntos, um por estilo: **Caçador** (atirador), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade). Vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras. Fabricados na bancada ou achados (casas, posto militar, ruínas). Clique numa peça na hotbar para vestir.
 
 Magia: **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5; mais mana, mais dano e alcance). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. **Q** tocado conjura a última; **Q segurado** abre a roda de habilidades (mova o mouse e solte). O ícone à esquerda da hotbar mostra a última. Com o **cajado** na mão, o clique também conjura. A bancada copia grimórios com cristal arcano.

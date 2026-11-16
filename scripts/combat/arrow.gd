@@ -15,6 +15,9 @@ var velocity := Vector3.ZERO
 var caster: Node
 var recover_chance := 0.6
 var item_id := "arrow"
+## Para XP e ataque surpresa ("bow" ou "thrown") e bônus de surpresa da arma.
+var weapon_type := "bow"
+var sneak_mult := 1.0
 var visual_only := false
 var max_lifetime := 6.0
 
@@ -23,8 +26,12 @@ var _stuck := false
 
 
 func _ready() -> void:
-	add_child(Weapon.box(Vector3(0.015, 0.015, 0.7), Color(0.6, 0.5, 0.35), Vector3(0, 0, 0.1)))
-	add_child(Weapon.box(Vector3(0.05, 0.005, 0.1), Color(0.9, 0.9, 0.9), Vector3(0, 0, 0.4)))  # penas
+	if item_id == "throwing_knife":
+		add_child(Weapon.box(Vector3(0.02, 0.01, 0.18), Color(0.75, 0.75, 0.78), Vector3(0, 0, -0.05)))
+		add_child(Weapon.box(Vector3(0.025, 0.02, 0.08), Color(0.25, 0.2, 0.15), Vector3(0, 0, 0.07)))
+	else:
+		add_child(Weapon.box(Vector3(0.015, 0.015, 0.7), Color(0.6, 0.5, 0.35), Vector3(0, 0, 0.1)))
+		add_child(Weapon.box(Vector3(0.05, 0.005, 0.1), Color(0.9, 0.9, 0.9), Vector3(0, 0, 0.4)))  # penas
 	_orient()
 
 
@@ -56,7 +63,7 @@ func _on_hit(target: Object, at: Vector3) -> void:
 			var amount := damage
 			if target is Node3D and at.y - target.global_position.y > HEADSHOT_HEIGHT:
 				amount *= HEADSHOT_MULTIPLIER * (caster.progression.mult("headshot_damage") if caster is Player else 1.0)
-			amount = Progression.on_hit(caster, target, amount, "bow")
+			amount = Progression.on_hit(caster, target, amount, weapon_type, sneak_mult)
 			health.take_damage(amount, caster)
 		queue_free()
 		return

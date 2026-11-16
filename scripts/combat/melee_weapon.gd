@@ -12,6 +12,13 @@ const DEFAULT_COMBO := [&"Sword_Regular_A", &"Sword_Regular_B", &"Sword_Regular_
 
 var _combo_index := 0
 var _combo_timer := 0.0
+## Golpe carregado: segurando o botão.
+const CHARGE_START := 0.22
+const CHARGE_FULL := 1.5
+const CHARGE_MAX_BONUS := 1.5  # +150% no máximo (2,5×)
+var _pressing := false
+var _press_time := 0.0
+var _power := 1.0
 
 
 func _process(delta: float) -> void:
@@ -21,12 +28,57 @@ func _process(delta: float) -> void:
 		_combo_index = 0
 
 
-func handle_attack(held: bool, _just_pressed: bool) -> void:
-	if not held or cooldown > 0.0:
+## Toque = golpe normal. Segurar = carregar: gasta stamina enquanto segura e o golpe
+## sai mais forte ao soltar (até 2,5×). Sem stamina, o golpe sai sozinho.
+func handle_attack(held: bool, just_pressed: bool) -> void:
+	if just_pressed and not _pressing and cooldown <= 0.0:
+		if is_broken():
+			warn_broken()
+			return
+		_pressing = true
+		_press_time = 0.0
+	if not _pressing:
 		return
-	if is_broken():
-		warn_broken()
+	var stamina: StatPool = user.get(&"stamina")
+	if held:
+		var dt := get_process_delta_time()
+		_press_time += dt
+		if _press_time > CHARGE_START and _press_time < CHARGE_FULL and stamina:
+			if stamina.current <= 0.5:
+				_release_charge()
+				return
+			stamina.drain(stat("stamina_cost", 12.0) * 0.9 * dt)
+		if _press_time > CHARGE_START:
+			hud_changed.emit()
 		return
+	_release_charge()
+
+
+func channel_fraction() -> float:
+	if not _pressing or _press_time <= CHARGE_START:
+		return -1.0
+	return clampf((_press_time - CHARGE_START) / (CHARGE_FULL - CHARGE_START), 0.0, 1.0)
+
+
+func channel_label() -> String:
+	return "Golpe carregado"
+
+
+func on_unequip() -> void:
+	_pressing = false
+	_press_time = 0.0
+
+
+func _release_charge() -> void:
+	var f := maxf(channel_fraction(), 0.0)
+	_pressing = false
+	_press_time = 0.0
+	_power = 1.0 + CHARGE_MAX_BONUS * f * user.progression.mult("melee.channel")
+	hud_changed.emit()
+	_attack()
+
+
+func _attack() -> void:
 	var stamina: StatPool = user.get(&"stamina")
 	if stamina and not stamina.spend(stat("stamina_cost", 12.0)):
 		return
@@ -62,7 +114,7 @@ func _hit() -> void:
 	for r in results:
 		if hits >= max_targets:
 			break
-		if deal_damage(r.collider, stat("damage", 35.0)):
+		if deal_damage(r.collider, stat("damage", 35.0) * _power):
 			hits += 1
 	if _hit_resource(reach):
 		hits += 1

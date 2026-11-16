@@ -105,6 +105,15 @@ func stat(key: String, default: float) -> float:
 	return value
 
 
+## Barra de carga (acima da hotbar): 0 a 1 carregando, -1 escondida.
+func channel_fraction() -> float:
+	return -1.0
+
+
+func channel_label() -> String:
+	return ""
+
+
 ## "bow", "firearm", "melee", "spell" (maestria).
 func weapon_type() -> String:
 	return str(data.get("type", "melee"))
@@ -114,7 +123,8 @@ func weapon_type() -> String:
 func category() -> String:
 	match weapon_type():
 		"bow", "firearm": return "ranged"
-		"spell": return "magic"
+		"spell", "focus": return "magic"
+		"thrown": return "thrown"
 	return "melee"
 
 
@@ -122,7 +132,7 @@ func category() -> String:
 func count_use() -> void:
 	if user and user.progression:
 		user.progression.use_weapon(weapon_type())
-		user.progression.gain({"ranged": "firearms", "melee": "melee", "magic": "magic"}[category()], 0.3)
+		user.progression.gain({"ranged": "firearms", "thrown": "firearms", "melee": "melee", "magic": "magic"}[category()], 0.3)
 
 
 func quality_multiplier() -> float:
@@ -167,7 +177,7 @@ func deal_damage(target: Object, amount: float) -> bool:
 	var health := Health.find_in(target)
 	if health == null or health.is_dead:
 		return false
-	amount = Progression.on_hit(user, target, amount, weapon_type())
+	amount = Progression.on_hit(user, target, amount, weapon_type(), float(data.get("sneak_mult", 1.0)))
 	health.take_damage(amount * user.death_penalty.damage_factor(), user)
 	return true
 

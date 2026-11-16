@@ -6,6 +6,8 @@
   { "id": "axe_iron", "name": "Machado de ferro", "type": "melee", "category": "medium", "weight": 2.5, "damage": 35, "stamina_cost": 12, "noise": 0.2, "durability": 250, "range": 2.2, "attack_time": 0.65, "hit_delay": 0.25, "gather": { "tree": 1.0, "rock": 0.35 } },
   { "id": "spear_wood", "name": "Lança de madeira", "type": "melee", "category": "reach", "weight": 1.5, "damage": 18, "stamina_cost": 8, "noise": 0.1, "durability": 80, "range": 2.8, "attack_time": 0.55, "hit_delay": 0.2, "gather": { "tree": 0.3 } },
   { "id": "pickaxe_stone", "name": "Picareta de pedra", "type": "melee", "category": "medium", "weight": 2.2, "damage": 18, "stamina_cost": 10, "noise": 0.25, "durability": 120, "range": 2.1, "attack_time": 0.7, "hit_delay": 0.3, "gather": { "rock": 1.0, "tree": 0.35 } },
+  { "id": "dagger", "name": "Adaga", "type": "melee", "category": "light", "weight": 0.6, "damage": 22, "stamina_cost": 6, "noise": 0.05, "durability": 160, "range": 1.8, "attack_time": 0.35, "hit_delay": 0.12, "sneak_mult": 2.0, "gather": { "tree": 0.2 }, "combo": ["Punch_Jab", "Punch_Cross"] },
+  { "id": "throwing_knife", "name": "Faca de arremesso", "type": "thrown", "weight": 0.2, "stack": 20, "damage": 28, "stamina_cost": 6, "noise": 0.05, "attack_time": 0.45, "throw_speed": 30, "recover_chance": 0.75, "sneak_mult": 1.6 },
   { "id": "staff_wood", "name": "Cajado de madeira", "type": "focus", "weight": 1.5, "durability": 250, "noise": 0.1 },
   { "id": "hammer", "name": "Martelo", "type": "tool", "use": "hammer", "weight": 1.2, "durability": 200 },
   { "id": "torch", "name": "Tocha", "type": "tool", "weight": 0.5, "durability": 300 },

@@ -83,6 +83,14 @@ func _release() -> void:
 	kick(Vector3(0, 0, 0.04), Vector3(0, 0, 0), 0.15)
 
 
+func channel_fraction() -> float:
+	return draw if drawing else -1.0
+
+
+func channel_label() -> String:
+	return "Puxando o arco"
+
+
 func on_unequip() -> void:
 	drawing = false
 	draw = 0.0

@@ -33,7 +33,13 @@ func stat(key: String, default: float) -> float:
 		"radius", "range", "chain_range": value *= 1.0 + 0.12 * up
 		"duration": value *= 1.0 + 0.15 * up
 		"chains": value += floorf(up / 2.0)
+	# Canalização (cajado): mais efeito, mesmo custo base.
+	if _power > 1.0 and key in ["damage", "heal", "radius", "range", "chain_range", "duration"]:
+		value *= _power
 	return value
+
+
+var _power := 1.0
 
 
 func spell_level() -> int:
@@ -46,9 +52,10 @@ func handle_attack(_held: bool, just_pressed: bool) -> void:
 
 
 ## Também usado pelo atalho Q (feitiço rápido), mesmo com outra arma na mão.
-func cast() -> bool:
+func cast(power := 1.0) -> bool:
 	if casting or cooldown > 0.0:
 		return false
+	_power = power
 	var block := _cast_block_reason()
 	if block != "":
 		user.notify(block)
@@ -65,6 +72,7 @@ func cast() -> bool:
 	if not is_instance_valid(user):
 		return false
 	_launch()
+	_power = 1.0
 	hud_changed.emit()
 	return true
 

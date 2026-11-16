@@ -22,6 +22,8 @@ const VIEW_OFFSETS := {
 	"firearm": Vector3(0.2, -0.2, -0.55),
 	"melee": Vector3(0.42, -0.52, -0.62),
 	"spell": Vector3(0.26, -0.24, -0.6),
+	"focus": Vector3(0.3, -0.4, -0.55),
+	"thrown": Vector3(0.28, -0.25, -0.45),
 }
 
 var selected := 0
@@ -324,6 +326,8 @@ func _weapon_for(id: String) -> Weapon:
 		"firearm": weapon = Firearm.new()
 		"melee": weapon = MeleeWeapon.new()
 		"spell": weapon = SpellCaster.new()
+		"focus": weapon = FocusWeapon.new()
+		"thrown": weapon = ThrownWeapon.new()
 		_: return null
 	weapon.position = VIEW_OFFSETS.get(kind, Vector3(0.25, -0.25, -0.45))
 	add_child(weapon)

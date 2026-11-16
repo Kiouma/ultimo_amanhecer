@@ -200,7 +200,7 @@ func spell_level(spell_id: String) -> int:
 
 
 static func mastery_name(weapon_type: String) -> String:
-	return {"bow": "arco", "firearm": "armas de fogo", "melee": "armas brancas", "spell": "feitiços"}.get(weapon_type, weapon_type)
+	return {"bow": "arco", "firearm": "armas de fogo", "melee": "armas brancas", "spell": "feitiços", "thrown": "arremesso"}.get(weapon_type, weapon_type)
 
 
 ## Abate (vem do servidor): XP do personagem.
@@ -245,15 +245,15 @@ func _soft_cap(prof: String, amount: float) -> float:
 ## Antes de aplicar dano de um ataque do jogador: ataque surpresa (alvo que não está
 ## caçando ninguém) dá bônus; dá XP. weapon_type: "bow", "firearm", "melee", "spell".
 ## Retorna o dano final.
-static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: String) -> float:
+static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: String, sneak_mult := 1.0) -> float:
 	var prog := of(attacker)
 	if prog == null or not prog.is_multiplayer_authority():
 		return amount
-	var prof: String = {"bow": "firearms", "firearm": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
+	var prof: String = {"bow": "firearms", "firearm": "firearms", "thrown": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
 	if target is Zombie and not target.is_dead():
 		var surprise: bool = target.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]
 		if surprise:
-			amount *= 1.5 * prog.mult("sneak_damage")
+			amount *= 1.5 * prog.mult("sneak_damage") * sneak_mult  # adaga/faca: mais ainda
 			prog.gain("stealth", 3.0)
 		prog.gain(prof, 2.0)
 		prog.hit_confirmed.emit(surprise)

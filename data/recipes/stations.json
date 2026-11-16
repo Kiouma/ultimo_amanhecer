@@ -8,5 +8,7 @@
   { "id": "copy_grimoire_frost", "result": "grimoire_frost", "amount": 1, "station": "workbench", "time": 12, "ingredients": { "arcane_crystal": 1, "cloth": 2, "stone": 2 } },
   { "id": "copy_grimoire_earth", "result": "grimoire_earth", "amount": 1, "station": "workbench", "time": 15, "ingredients": { "arcane_crystal": 2, "cloth": 2, "stone": 4 } },
   { "id": "copy_grimoire_storm", "result": "grimoire_storm", "amount": 1, "station": "workbench", "time": 15, "ingredients": { "arcane_crystal": 2, "cloth": 2, "scrap_metal": 2 } },
+  { "id": "craft_dagger", "result": "dagger", "amount": 1, "station": "workbench", "time": 6, "ingredients": { "scrap_metal": 2, "wood": 1 } },
+  { "id": "craft_throwing_knife", "result": "throwing_knife", "amount": 4, "station": "workbench", "time": 6, "ingredients": { "scrap_metal": 2 } },
   { "id": "craft_arrow_bundle", "result": "arrow", "amount": 6, "station": "workbench", "time": 5, "ingredients": { "feather": 5, "stick": 5 } }
 ]

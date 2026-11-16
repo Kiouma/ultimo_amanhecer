@@ -139,6 +139,10 @@ O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus in
 - Mecânicas: ataque rápido e ataque carregado, bloqueio/aparar, stamina por golpe, durabilidade, sangramento em lâminas, atordoamento em armas pesadas.
 - Armas melee podem ser melhoradas na bancada (afiar, reforçar, encantar).
 
+### 5.3.1 Carga e canalização (implementado)
+
+Segurar o botão esquerdo: melee carrega o golpe (gasta stamina enquanto segura; até 2,5× de dano em 1,5 s); o cajado canaliza a última habilidade (gasta mana enquanto segura, até 6× o custo; até 3× de dano, cura, alcance e raio em 2 s); a faca de arremesso ganha força (até 2× de dano e mais alcance). Adaga (rápida, 2× de bônus em ataque surpresa) e faca de arremesso (recuperável, 1,6×) servem à furtividade. Barra de carga acima da hotbar.
+
 ### 5.4 Magia
 
 - A magia é rara: grimórios e cristais são difíceis de achar. Feitiços são aprendidos com **grimórios** encontrados ou fabricados. O jogador equipa um número limitado de feitiços (3 a 5 slots).
