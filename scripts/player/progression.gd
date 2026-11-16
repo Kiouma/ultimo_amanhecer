@@ -35,6 +35,10 @@ var skill_points := 0
 var skills := {}
 ## Usos por tipo de arma ("bow", "firearm", "melee", "spell").
 var mastery_uses := {}
+## Habilidades mágicas aprendidas (grimórios): id → nível (1 a MAX_SPELL_LEVEL).
+var spells := {"firebolt": 1}
+## Última habilidade conjurada (Q rápido conjura ela).
+var last_spell := "firebolt"
 
 var _mods := {}
 var _recent := {}  # proficiência → [início da janela (s), XP na janela]
@@ -172,6 +176,27 @@ func apply_background(background_id: String) -> void:
 			levels[prof] = clampi(get_level(prof) + int(bonus[prof]), 1, MAX_LEVEL)
 	_rebuild()
 	changed.emit()
+
+
+# --- Habilidades mágicas (grimórios) --------------------------------------------------
+
+const MAX_SPELL_LEVEL := 5
+
+
+## Ler um grimório: aprende (nível 1) ou sobe um nível. Retorna o novo nível (0 = já no máximo).
+func learn_spell(spell_id: String) -> int:
+	var level := int(spells.get(spell_id, 0))
+	if level >= MAX_SPELL_LEVEL:
+		return 0
+	spells[spell_id] = level + 1
+	if last_spell == "":
+		last_spell = spell_id
+	changed.emit()
+	return level + 1
+
+
+func spell_level(spell_id: String) -> int:
+	return int(spells.get(spell_id, 0))
 
 
 static func mastery_name(weapon_type: String) -> String:

@@ -23,6 +23,23 @@ func _process(delta: float) -> void:
 		_light.light_energy = 1.2 * pulse
 
 
+## Nível da habilidade (grimórios repetidos): mais mana, mais efeito.
+func stat(key: String, default: float) -> float:
+	var value := super(key, default)
+	var up := maxi(spell_level() - 1, 0)
+	match key:
+		"mana": value *= 1.0 + 0.2 * up
+		"damage", "heal": value *= 1.0 + 0.2 * up
+		"radius", "range", "chain_range": value *= 1.0 + 0.12 * up
+		"duration": value *= 1.0 + 0.15 * up
+		"chains": value += floorf(up / 2.0)
+	return value
+
+
+func spell_level() -> int:
+	return maxi(user.progression.spell_level(str(data.get("id", ""))), 1) if user and user.progression else 1
+
+
 func handle_attack(_held: bool, just_pressed: bool) -> void:
 	if just_pressed:
 		cast()

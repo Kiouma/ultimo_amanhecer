@@ -36,6 +36,10 @@ var _current: Weapon
 var _use_cooldown := 0.0
 var _torch_burn := 0.0
 var _hud_timer := 0.0
+## Q: hora em que foi apertado (para saber se foi toque ou segurar).
+var _q_down := -1
+var _wheel_open := false
+const WHEEL_HOLD_MS := 250
 
 
 func setup(player: Player, camera: Camera3D, head: Node3D, inv: Inventory) -> void:
@@ -86,6 +90,9 @@ func hud_text() -> String:
 		return "clique para ler"
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "armor":
 		return "clique para vestir"
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "focus":
+		var spell := user.progression.last_spell
+		return "clique: %s (Nv %d)" % [GameData.get_item(spell).get("name", "—"), user.progression.spell_level(spell)] if spell != "" else "sem habilidade"
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") in Structures.PLACEABLE_TYPES:
 		return "clique para colocar à frente"
 	return ""
@@ -97,7 +104,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap", "grimoire", "armor"]):
+	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap", "grimoire", "armor", "focus"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -117,6 +124,7 @@ func _refresh() -> void:
 
 func _process(delta: float) -> void:
 	_use_cooldown = maxf(_use_cooldown - delta, 0.0)
+	_update_q()
 	_burn_torch(delta)
 	# Martelo: o texto do HUD depende da peça na mira.
 	if is_hammer(selected_item()):
@@ -149,7 +157,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("reload") and _current:
 		_current.reload()
 	elif event.is_action_pressed("spell_1"):
-		_quick_cast()
+		_q_down = Time.get_ticks_msec()
 
 
 ## Usa o item selecionado (consumíveis): cura ("heals"), comida ("food"), água ("water").
@@ -162,6 +170,13 @@ func use_selected() -> void:
 	if is_hammer(s):
 		if user.build and user.build.hammer_repair(selected):
 			_use_cooldown = 0.6
+		return
+	if data.get("type", "") == "focus":
+		if Inventory.is_broken(s):
+			user.notify("Cajado quebrado: repare na bancada")
+			return
+		if await cast_spell(user.progression.last_spell):
+			inventory.wear(inventory.get_slot(selected), 1.0)
 		return
 	if data.get("type", "") == "armor":
 		if user.equipment.equip_from_inventory(selected):
@@ -225,14 +240,16 @@ func _read_grimoire(data: Dictionary) -> bool:
 			return false
 	var learned: PackedStringArray = []
 	for spell_id: String in data.get("teaches", []):
-		if inventory.count_of(spell_id) > 0:
-			continue
-		if inventory.add_item(spell_id, 1) == 0:
-			learned.append(str(GameData.get_item(spell_id).get("name", spell_id)))
+		var level := user.progression.learn_spell(spell_id)
+		if level == 1:
+			learned.append("aprendeu %s (roda do Q)" % GameData.get_item(spell_id).get("name", spell_id))
+		elif level > 1:
+			learned.append("%s subiu para o nível %d" % [GameData.get_item(spell_id).get("name", spell_id), level])
 	if learned.is_empty():
-		user.notify("Você já conhece o que este grimório ensina")
+		user.notify("Você já domina o que este grimório ensina (nível máximo)")
 		return false
-	user.notify("Aprendeu: %s" % ", ".join(learned))
+	user.notify(", ".join(learned))
+	user.progression.last_spell = str(data.get("teaches", [""])[0])
 	user.progression.gain("magic", 10.0)
 	user.play_action_synced(&"Consume")
 	return true
@@ -242,13 +259,40 @@ static func is_hammer(s: Dictionary) -> bool:
 	return not s.is_empty() and GameData.get_item(s.id).get("use", "") == "hammer"
 
 
-func _quick_cast() -> void:
-	var index := inventory.find_in_hotbar("spell")
-	if index < 0:
+## Q: tocar conjura a última habilidade; segurar abre a roda e soltar conjura a escolhida.
+func _update_q() -> void:
+	if _q_down < 0 or user == null:
 		return
-	var caster := _weapon_for(inventory.get_slot(index).id) as SpellCaster
-	if caster:
-		caster.cast()
+	var held := Time.get_ticks_msec() - _q_down
+	if Input.is_action_pressed("spell_1"):
+		if not _wheel_open and held >= WHEEL_HOLD_MS and user.skill_wheel and user.progression.spells.size() > 0:
+			_wheel_open = true
+			user.skill_wheel.open(user.progression.spells.keys())
+		return
+	# Soltou.
+	_q_down = -1
+	var spell := user.progression.last_spell
+	if _wheel_open:
+		_wheel_open = false
+		spell = user.skill_wheel.close()
+		if spell == "":
+			return  # cancelou
+		user.progression.last_spell = spell
+	cast_spell(spell)
+
+
+## Conjura uma habilidade aprendida (pelo Q ou pelo cajado).
+func cast_spell(spell_id: String) -> bool:
+	if spell_id == "" or user.progression.spell_level(spell_id) <= 0:
+		user.notify("Nenhuma habilidade aprendida (leia um grimório)")
+		return false
+	var caster := caster_for(spell_id)
+	return caster != null and await caster.cast()
+
+
+## Objeto que conjura a habilidade (criado uma vez, invisível).
+func caster_for(spell_id: String) -> SpellCaster:
+	return _weapon_for(spell_id) as SpellCaster
 
 
 func _accepts_input() -> bool:

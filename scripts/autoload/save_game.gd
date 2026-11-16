@@ -160,7 +160,8 @@ func _capture_character(p: Player, level: Node) -> Dictionary:
 		"health": p.health.current, "hunger": p.survival.hunger, "thirst": p.survival.thirst,
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
 		"progression": {"levels": prog.levels, "xp": prog.xp, "char_level": prog.char_level, "char_xp": prog.char_xp,
-			"skill_points": prog.skill_points, "skills": prog.skills, "mastery_uses": prog.mastery_uses},
+			"skill_points": prog.skill_points, "skills": prog.skills, "mastery_uses": prog.mastery_uses,
+			"spells": prog.spells, "last_spell": prog.last_spell},
 	}
 
 
@@ -177,6 +178,9 @@ func apply_character(p: Player) -> bool:
 		var s: Dictionary = slots[i] if slots[i] is Dictionary else {}
 		if not s.is_empty() and GameData.get_item(str(s.get("id", ""))).is_empty():
 			s = {}  # item que não existe mais
+		elif not s.is_empty() and GameData.get_item(str(s.id)).get("type", "") == "spell":
+			p.progression.spells[str(s.id)] = maxi(int(p.progression.spells.get(str(s.id), 0)), 1)
+			s = {}  # feitiço como item (versão antiga): vira habilidade aprendida
 		if s.has("count"):
 			s.count = int(s.count)
 		p.inventory.slots[i] = s
@@ -191,6 +195,9 @@ func apply_character(p: Player) -> bool:
 	prog.char_xp = float(pd.get("char_xp", 0.0))
 	prog.skill_points = int(pd.get("skill_points", 0))
 	prog.skills = pd.get("skills", {})
+	for key: String in pd.get("spells", {}):
+		prog.spells[key] = int(pd.spells[key])
+	prog.last_spell = str(pd.get("last_spell", prog.last_spell))
 	for key: String in pd.get("mastery_uses", {}):
 		prog.mastery_uses[key] = int(pd.mastery_uses[key])
 	prog._rebuild()

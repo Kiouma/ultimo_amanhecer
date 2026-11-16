@@ -15,7 +15,7 @@ signal notified(text: String)
 ## Kit inicial provisório (até existir criação de personagem, GDD 4.4).
 ## Cada entrada: [id, quantidade, slot da hotbar ou -1].
 const STARTER_KIT := [
-	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3],
+	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["staff_wood", 1, 2], ["bandage", 2, 3],
 	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
 	["berries", 6, 4], ["water_bottle", 1, 5], ["torch", 1, 6], ["hammer", 1, 7],
 ]
@@ -92,6 +92,8 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var progression: Progression
 ## Capacete, armadura, calça, botas, luvas, anéis e colar.
 var equipment: Equipment
+## Roda de habilidades do HUD (Q segurado); o HUD preenche.
+var skill_wheel: SkillWheel
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode

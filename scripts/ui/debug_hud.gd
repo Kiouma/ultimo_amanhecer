@@ -71,6 +71,10 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_notifications(player)
+	var wheel := SkillWheel.new()
+	wheel.player = player
+	add_child(wheel)
+	player.skill_wheel = wheel
 	var compass := CompassBar.new()
 	compass.player = player
 	add_child(compass)
@@ -94,6 +98,13 @@ func _bind_inventory(player: Player) -> void:
 	strip.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(strip)
+	# Ícone da última habilidade (Q), à esquerda das teclas.
+	var spell_icon := SpellIcon.new()
+	spell_icon.player = player
+	strip.add_child(spell_icon)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(10, 0)
+	strip.add_child(gap)
 	for i in Inventory.HOTBAR_SIZE:
 		var slot := InventorySlotUI.new()
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
