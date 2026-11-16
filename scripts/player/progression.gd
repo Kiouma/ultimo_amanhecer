@@ -162,6 +162,16 @@ func learn(skill_id: String) -> bool:
 	return true
 
 
+## Passado (GDD 4.4): níveis iniciais mais altos. Os itens o Player entrega.
+func apply_background(background_id: String) -> void:
+	var bonus: Dictionary = GameData.get_entry("backgrounds", background_id).get("bonus", {})
+	for prof: String in bonus:
+		if levels.has(prof):
+			levels[prof] = clampi(get_level(prof) + int(bonus[prof]), 1, MAX_LEVEL)
+	_rebuild()
+	changed.emit()
+
+
 static func mastery_name(weapon_type: String) -> String:
 	return {"bow": "arco", "firearm": "armas de fogo", "melee": "armas brancas", "spell": "feitiços"}.get(weapon_type, weapon_type)
 

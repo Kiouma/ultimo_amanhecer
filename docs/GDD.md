@@ -103,6 +103,8 @@ O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada hab
 
 O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus iniciais) e começa com todas as proficiências no nível 1. Exemplos de passado: Ex-militar (Armas de fogo mais alta, começa com arco e flechas extras; arma de fogo só achando ou fabricando), Lenhador (Melee mais alta, começa com machado), Estudante de ocultismo (Magia mais alta, começa com um grimório simples), Enfermeiro (Resistência mais alta, kit médico).
 
+**Implementado:** o passado é escolhido no menu inicial e dá +3 níveis na proficiência dele e itens extras: Sobrevivente comum (nada), Ex-militar (Pontaria; flechas e bandagens), Lenhador (Melee; picareta e madeira), Estudante de ocultismo (Magia; Grimório da vida), Enfermeiro (Resistência; kit médico e bandagens) e Carpinteiro (Crafting e construção; madeira e pedra). Aparência ainda não é escolhível. Dados em `data/backgrounds/backgrounds.json`.
+
 ## 5. Sistema de combate
 
 ### 5.1 Princípios

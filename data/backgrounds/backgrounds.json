@@ -1,6 +1,8 @@
 [
-  { "id": "ex_military", "name": "Ex-militar", "bonus": { "firearms": 3 }, "starting_items": ["bow_wood", "arrow"] },
-  { "id": "lumberjack", "name": "Lenhador", "bonus": { "melee": 3 }, "starting_items": ["axe_iron"] },
-  { "id": "occult_student", "name": "Estudante de ocultismo", "bonus": { "magic": 3 }, "starting_items": ["grimoire_basic"] },
-  { "id": "nurse", "name": "Enfermeiro", "bonus": { "toughness": 3 }, "starting_items": ["medkit_basic"] }
+  { "id": "survivor", "name": "Sobrevivente comum", "desc": "Sem bônus: só o kit básico.", "bonus": {}, "starting_items": {} },
+  { "id": "ex_military", "name": "Ex-militar", "desc": "Pontaria 4 · +20 flechas e 2 bandagens", "bonus": { "firearms": 3 }, "starting_items": { "arrow": 20, "bandage": 2 } },
+  { "id": "lumberjack", "name": "Lenhador", "desc": "Melee 4 · picareta e 10 de madeira", "bonus": { "melee": 3 }, "starting_items": { "pickaxe_stone": 1, "wood": 10 } },
+  { "id": "occult_student", "name": "Estudante de ocultismo", "desc": "Magia 4 · Grimório da vida", "bonus": { "magic": 3 }, "starting_items": { "grimoire_life": 1 } },
+  { "id": "nurse", "name": "Enfermeiro", "desc": "Resistência 4 · kit médico e 3 bandagens", "bonus": { "toughness": 3 }, "starting_items": { "medkit_basic": 1, "bandage": 3 } },
+  { "id": "carpenter", "name": "Carpinteiro", "desc": "Crafting e construção 4 · 20 de madeira e 10 de pedra", "bonus": { "crafting": 3 }, "starting_items": { "wood": 20, "stone": 10 } }
 ]

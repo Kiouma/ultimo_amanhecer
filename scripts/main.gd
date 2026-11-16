@@ -26,7 +26,36 @@ func _ready() -> void:
 		if multiplayer.is_server():
 			print("Jogador %d saiu." % id))
 	status_label.text = ""
+	_build_background_picker()
 	_parse_command_line()
+
+
+## Escolha do passado (GDD 4.4), acima dos botões do menu.
+func _build_background_picker() -> void:
+	var vbox := (%SoloButton as Control).get_parent()
+	var label := Label.new()
+	label.text = "Passado do personagem"
+	var picker := OptionButton.new()
+	var desc := Label.new()
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.modulate = Color(0.8, 0.8, 0.75)
+	var ids: Array = GameData.get_all("backgrounds").keys()
+	for id: String in ids:
+		picker.add_item(str(GameData.get_entry("backgrounds", id).get("name", id)))
+	var select := func(index: int) -> void:
+		Network.background = ids[index]
+		desc.text = str(GameData.get_entry("backgrounds", ids[index]).get("desc", ""))
+	picker.item_selected.connect(select)
+	var start := maxi(ids.find(Network.background), 0)
+	picker.select(start)
+	select.call(start)
+	var at := (%SoloButton as Control).get_index()
+	vbox.add_child(label)
+	vbox.move_child(label, at)
+	vbox.add_child(picker)
+	vbox.move_child(picker, at + 1)
+	vbox.add_child(desc)
+	vbox.move_child(desc, at + 2)
 
 
 func _on_solo() -> void:
@@ -82,6 +111,9 @@ func _set_buttons_enabled(enabled: bool) -> void:
 ## Atalhos para testar sem clicar: --host, --join=IP ou --solo depois de "--".
 ## Ex.: godot -- --host    |    godot -- --join=127.0.0.1
 func _parse_command_line() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--background="):
+			Network.background = arg.get_slice("=", 1)
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--host":
 			_on_host.call_deferred()

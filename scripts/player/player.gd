@@ -134,6 +134,7 @@ func _ready() -> void:
 		build.setup(self)
 		camera.current = true
 		_give_starter_kit()
+		_apply_background(Network.background)
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_apply_camera_mode()
 	else:
@@ -274,6 +275,19 @@ func _give_starter_kit() -> void:
 		else:
 			inventory.add_item(entry[0], entry[1])
 	inventory.changed.emit()
+
+
+## Passado escolhido no menu: proficiência inicial e itens extras.
+func _apply_background(background_id: String) -> void:
+	var data := GameData.get_entry("backgrounds", background_id)
+	if data.is_empty():
+		return
+	progression.apply_background(background_id)
+	var items: Dictionary = data.get("starting_items", {})
+	for id: String in items:
+		var left := inventory.add_item(id, int(items[id]))
+		if left > 0:
+			WorldItems.drop(id, left, global_position + Vector3.UP * 0.3, null)
 
 
 func _emit_footstep_noise(delta: float, crouching: bool, sprinting: bool) -> void:

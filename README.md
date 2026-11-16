@@ -8,7 +8,7 @@ Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arma
 
 1. Abra o Godot 4.6.
 2. Clique em **Importar**, escolha a pasta deste projeto (`project.godot`) e abra.
-3. Aperte **F5**. Abre o menu: **Jogar sozinho**, **Hospedar partida** ou **Entrar** (IP do host).
+3. Aperte **F5**. Abre o menu (escolha o **passado** do personagem): **Jogar sozinho**, **Hospedar partida** ou **Entrar** (IP do host).
 
 Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
 
@@ -75,4 +75,4 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 
 ## Roadmap
 
-Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12 com pedras que caem de inimigos). Concluídas também: **4. Construção** e **5. Hordas** (horda a cada 7 dias em ondas, cuspidor, explosivo, bruto, infectado noturno e o chefe Colosso). Próxima: **6. Progressão**. Feito: modo construção (B) com grade e prévia, fundação/parede/porta/piso/escada em madeira ou pedra, e zumbis que atacam a peça mais fraca quando a base os bloqueia. Também: martelo para consertar e melhorar peças. Integridade: peças sem apoio até o chão desabam em cadeia (piso pode avançar até 2 células sem parede embaixo). Armadilhas (bancada): **espetos** ferem e deixam lento, **mandíbula** prende; **E** recolhe. Detalhes no GDD, seção 17.
+Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza) e **3. Crafting** (estações fogueira e bancada, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12 com pedras que caem de inimigos). Concluídas também: **4. Construção**, **5. Hordas** (horda a cada 7 dias em ondas, cuspidor, explosivo, bruto, infectado noturno e o chefe Colosso) e **6. Progressão** (proficiências, nível, trilhas de habilidades, maestria, grimórios e passado). Próxima: **7. Mundo**. Feito: modo construção (B) com grade e prévia, fundação/parede/porta/piso/escada em madeira ou pedra, e zumbis que atacam a peça mais fraca quando a base os bloqueia. Também: martelo para consertar e melhorar peças. Integridade: peças sem apoio até o chão desabam em cadeia (piso pode avançar até 2 células sem parede embaixo). Armadilhas (bancada): **espetos** ferem e deixam lento, **mandíbula** prende; **E** recolhe. Detalhes no GDD, seção 17.

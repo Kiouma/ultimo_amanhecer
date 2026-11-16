@@ -70,7 +70,7 @@ horizontal_alignment = 1
 [node name="Subtitle" type="Label" parent="UI/Menu/Center/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.72, 0.68, 1)
-text = "protótipo · fase 1"
+text = "protótipo · fase 6"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="UI/Menu/Center/Panel/VBox"]

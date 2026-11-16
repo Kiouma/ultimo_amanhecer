@@ -13,6 +13,9 @@ signal server_closed
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 5
 
+## Passado escolhido no menu (GDD 4.4), aplicado ao personagem desta máquina.
+var background := "survivor"
+
 
 ## Verdadeiro quando há conexão de verdade (host ou cliente). Falso no modo solo.
 func is_online() -> bool:
