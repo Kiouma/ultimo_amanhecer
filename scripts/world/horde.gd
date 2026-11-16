@@ -162,6 +162,11 @@ func _spawn_wave(ids: Array) -> void:
 		pos.y = 0.1
 		var z: Zombie = arena.spawn_zombie(ids[k], pos)
 		z.horde = true
+		if z.is_in_group("boss"):
+			# Chefe: vida conforme jogadores e horda (solo, horda 1 ≈ 55%).
+			var players := maxi(get_tree().get_nodes_in_group("player").size(), 1)
+			var factor := (0.4 + 0.15 * players) * (0.6 + 0.4 * number)
+			z.health.reset(z.health.max_health * clampf(factor, 0.4, 3.0))
 		z.health.died.connect(_on_member_died.bind(z), CONNECT_ONE_SHOT)
 		_members.append(z)
 	_broadcast()

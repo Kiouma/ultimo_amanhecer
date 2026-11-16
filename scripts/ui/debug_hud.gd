@@ -69,6 +69,17 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_notifications(player)
+	# Marca de acerto: a mira pisca (amarela em ataque surpresa).
+	var crosshair := get_node_or_null(^"Crosshair") as Label
+	if crosshair:
+		player.progression.hit_confirmed.connect(func(surprise: bool) -> void:
+			crosshair.text = "×"
+			crosshair.modulate = Color(1.0, 0.85, 0.2) if surprise else Color(1.0, 0.35, 0.3)
+			var tw := crosshair.create_tween()
+			tw.tween_interval(0.12)
+			tw.tween_callback(func() -> void:
+				crosshair.text = "+"
+				crosshair.modulate = Color.WHITE))
 
 
 func _bind_inventory(player: Player) -> void:

@@ -14,6 +14,8 @@ extends Node
 signal changed
 ## Aviso de subida de nível ("Melee subiu para o nível 5").
 signal leveled(text: String)
+## Um ataque deste jogador acertou um inimigo (marca de acerto na mira). surprise: ataque surpresa.
+signal hit_confirmed(surprise: bool)
 
 const MAX_LEVEL := 100
 const MAX_MASTERY := 10
@@ -224,10 +226,12 @@ static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: Str
 		return amount
 	var prof: String = {"bow": "firearms", "firearm": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
 	if target is Zombie and not target.is_dead():
-		if target.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]:
+		var surprise: bool = target.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]
+		if surprise:
 			amount *= 1.5 * prog.mult("sneak_damage")
 			prog.gain("stealth", 3.0)
 		prog.gain(prof, 2.0)
+		prog.hit_confirmed.emit(surprise)
 	return amount
 
 
