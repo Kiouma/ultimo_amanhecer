@@ -16,6 +16,9 @@ var _inventory_ui: InventoryUI
 var _weakness_label: Label
 var _queue_label: Label
 var _build_label: Label
+var _boss_bar: ProgressBar
+var _boss_label: Label
+var _boss_timer := 0.0
 
 
 func _ready() -> void:
@@ -25,6 +28,7 @@ func _ready() -> void:
 		if p.is_multiplayer_authority():
 			death_label.visible = true)
 	_build_clock()
+	_build_boss_bar()
 	# O player pode ter nascido antes do HUD.
 	for player in get_tree().get_nodes_in_group("player"):
 		_on_player_spawned(player)
@@ -281,10 +285,58 @@ func _bind_pool(pool: StatPool, bar: ProgressBar) -> void:
 	update.call(pool.current, pool.max_value)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Recarga de feitiço muda a cada frame; o resto atualiza por sinal.
 	if _weapons and _weapons.current() is SpellCaster:
 		_update_weapon()
+	_boss_timer -= delta
+	if _boss_timer <= 0.0:
+		_boss_timer = 0.25
+		_update_boss_bar()
+
+
+## Barra do chefe (Colosso...) no topo, quando algum está vivo a até 60 m.
+func _build_boss_bar() -> void:
+	var box := VBoxContainer.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 18)
+	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	_boss_label = Label.new()
+	_boss_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_label.add_theme_font_size_override("font_size", 18)
+	_boss_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.6))
+	_boss_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_boss_label.add_theme_constant_override("outline_size", 5)
+	box.add_child(_boss_label)
+	_boss_bar = ProgressBar.new()
+	_boss_bar.custom_minimum_size = Vector2(420, 14)
+	_boss_bar.show_percentage = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.75, 0.15, 0.12)
+	_boss_bar.add_theme_stylebox_override("fill", fill)
+	box.add_child(_boss_bar)
+	box.visible = false
+
+
+func _update_boss_bar() -> void:
+	var box := _boss_bar.get_parent() as Control
+	var me: Node3D = null
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		if p.is_multiplayer_authority():
+			me = p
+	var boss: Node3D = null
+	if me:
+		for z: Node3D in get_tree().get_nodes_in_group("boss"):
+			var h := Health.find_in(z)
+			if h and not h.is_dead and z.global_position.distance_to(me.global_position) < 60.0:
+				boss = z
+	box.visible = boss != null
+	if boss:
+		var h := Health.find_in(boss)
+		_boss_label.text = str(boss.stats.get("name", "Chefe"))
+		_boss_bar.max_value = h.max_health
+		_boss_bar.value = h.current
 
 
 func _update_weapon() -> void:

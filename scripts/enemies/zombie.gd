@@ -18,6 +18,14 @@ const STUCK_TIME := 1.0
 const SIEGE_REACH := 1.3
 ## Até onde procura a peça que está no caminho.
 const SIEGE_SEARCH := 3.2
+## Cuspidor: cospe de SPIT_MIN a SPIT_RANGE metros; mais perto, arranha.
+const SPIT_RANGE := 14.0
+const SPIT_MIN := 4.0
+const SPIT_COOLDOWN := 2.8
+const SPIT_SPEED := 12.0
+const ACID := preload("res://scripts/enemies/acid_blob.gd")
+## Explosivo: raio da explosão (dano cai com a distância).
+const EXPLOSION_RADIUS := 4.0
 
 @export var zombie_id := "walker"
 
@@ -56,6 +64,7 @@ var _wants_move := false
 var _slow_factor := 1.0
 ## Faz parte de uma horda (Horde manda ele caçar os jogadores).
 var horde := false
+var _exploded := false
 var _slow_time := 0.0
 
 @onready var model: CharacterModel = $Model
@@ -74,6 +83,9 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 	if multiplayer.is_server():
 		EventBus.noise_emitted.connect(_on_noise)
+	_apply_type_look()
+	if stats.get("boss", false):
+		add_to_group("boss")
 	_home = global_position
 	_wander_wait = randf_range(0.5, 3.0)
 	model.play(&"Zombie_Idle")
@@ -215,6 +227,13 @@ func _process_chase(delta: float) -> void:
 		return
 	var goal := target.global_position if _time_since_seen < 0.2 else _last_known_position
 	var dist := global_position.distance_to(target.global_position)
+	# Cuspidor: de longe, para e cospe.
+	if stats.get("ranged", false) and _time_since_seen < 0.2 and dist >= SPIT_MIN and dist <= SPIT_RANGE:
+		_stop(delta)
+		_face(target.global_position, delta)
+		if _attack_timer <= 0.0:
+			_spit(target)
+		return
 	if dist <= attack_range and _time_since_seen < 0.2:
 		if _attack_timer <= 0.0:
 			_start_attack()
@@ -287,6 +306,9 @@ func _process_siege(delta: float) -> void:
 
 
 func _start_siege_hit() -> void:
+	if stats.get("explodes", false):
+		_explode()
+		return
 	_set_state(State.ATTACK)
 	_attack_timer = attack_cooldown
 	model.play_action(&"Zombie_Scratch")
@@ -311,6 +333,9 @@ func _update_stuck(delta: float) -> void:
 
 
 func _start_attack() -> void:
+	if stats.get("explodes", false):
+		_explode()
+		return
 	_set_state(State.ATTACK)
 	_attack_timer = attack_cooldown
 	model.play_action(&"Zombie_Scratch")
@@ -363,7 +388,113 @@ func is_dead() -> bool:
 	return state == State.DEAD
 
 
+# --- Tipos especiais (GDD 6.1) -----------------------------------------------------
+
+## Tamanho e cor do tipo ("scale", "tint" em zombies.json). Igual em todas as máquinas.
+func _apply_type_look() -> void:
+	var s := _stat("scale", 1.0)
+	if not is_equal_approx(s, 1.0):
+		model.scale = Vector3.ONE * s
+		var col := get_node(^"CollisionShape3D") as CollisionShape3D
+		var cap := (col.shape as CapsuleShape3D).duplicate() as CapsuleShape3D
+		cap.radius *= minf(s, 1.5)  # largo demais não passa entre obstáculos
+		cap.height *= s
+		col.shape = cap
+		col.position.y = cap.height * 0.5
+		eyes.position.y *= s
+		attack_range *= minf(s, 1.6)
+	if stats.has("tint"):
+		var t: Array = stats.tint
+		model.set_skin_tint(Color(float(t[0]), float(t[1]), float(t[2])))
+
+
+## Cuspidor: bola de ácido em arco até o alvo.
+func _spit(victim: Node3D) -> void:
+	_set_state(State.ATTACK)
+	_attack_timer = SPIT_COOLDOWN
+	model.play_action(&"Zombie_Scratch")
+	get_tree().create_timer(attack_hit_delay, false).timeout.connect(func() -> void:
+		if state == State.DEAD or not is_instance_valid(victim):
+			return
+		var from := eyes.global_position + (-global_basis.z) * 0.5
+		var to := victim.global_position + Vector3.UP * 1.0
+		var flight := maxf(from.distance_to(to) / SPIT_SPEED, 0.2)
+		var vel := (to - from) / flight + Vector3.UP * 0.5 * ACID.GRAVITY * flight
+		_launch_acid(from, vel, false)
+		if Network.is_online():
+			_fx_acid.rpc(from, vel)
+	)
+
+
+@rpc("authority", "call_remote", "unreliable")
+func _fx_acid(from: Vector3, vel: Vector3) -> void:
+	_launch_acid(from, vel, true)
+
+
+func _launch_acid(from: Vector3, vel: Vector3, visual_only: bool) -> void:
+	var blob: Node3D = ACID.new()
+	blob.velocity = vel
+	blob.caster = self
+	blob.visual_only = visual_only
+	blob.damage = _stat("spit_damage", 12.0)
+	blob.structure_multiplier = _stat("structure_damage", 1.0)
+	get_tree().current_scene.add_child(blob)
+	blob.global_position = from
+
+
+## Explosivo: fere tudo em volta (jogadores, zumbis, construções) e morre.
+func _explode() -> void:
+	if _exploded or not multiplayer.is_server():
+		return
+	_exploded = true
+	var center := global_position + Vector3.UP * 0.8
+	var damage := _stat("damage", 60.0)
+	for body: Node3D in get_tree().get_nodes_in_group("player") + get_tree().get_nodes_in_group("zombies"):
+		if body == self:
+			continue
+		var d := body.global_position.distance_to(global_position)
+		var h := Health.find_in(body)
+		if h and not h.is_dead and d <= EXPLOSION_RADIUS:
+			h.take_damage(damage * (1.0 - 0.6 * d / EXPLOSION_RADIUS), self)
+	for piece in Structures.pieces():
+		var d := piece.nearest_point(center).distance_to(center)
+		if d <= EXPLOSION_RADIUS:
+			piece.health.take_damage(damage * _stat("structure_damage", 1.0) * (1.0 - 0.5 * d / EXPLOSION_RADIUS), self)
+	Network.emit_noise(global_position, 30.0, self)
+	explosion_fx(get_tree().current_scene, center)
+	if Network.is_online():
+		_fx_explosion.rpc(center)
+	if not health.is_dead:
+		health.take_damage(health.current + 1.0, null)
+
+
+@rpc("authority", "call_remote", "unreliable")
+func _fx_explosion(center: Vector3) -> void:
+	explosion_fx(get_tree().current_scene, center)
+
+
+## Clarão laranja que cresce e some.
+static func explosion_fx(parent: Node, pos: Vector3) -> void:
+	var fx := Node3D.new()
+	parent.add_child(fx)
+	fx.global_position = pos
+	var ball := Weapon.sphere(0.6, Color(1.0, 0.55, 0.15), Vector3.ZERO, true)
+	fx.add_child(ball)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1.0, 0.6, 0.3)
+	light.light_energy = 6.0
+	light.omni_range = 10.0
+	fx.add_child(light)
+	var tw := fx.create_tween().set_parallel()
+	tw.tween_property(ball, "scale", Vector3.ONE * 5.0, 0.35)
+	tw.tween_property(light, "light_energy", 0.0, 0.5)
+	tw.chain().tween_callback(fx.queue_free)
+
+
 func _on_died(_source: Node) -> void:
+	# Explosivo morto antes de chegar perto também explode (pune quem luta colado).
+	if stats.get("explodes", false) and not _exploded and multiplayer.is_server():
+		_explode.call_deferred()
 	state = State.DEAD
 	collision_layer = 0
 	collision_mask = 1
@@ -377,9 +508,12 @@ func _on_died(_source: Node) -> void:
 ## Servidor: sorteia os "drops" do tipo (ex.: Pedra de refino, que só vem de inimigos).
 func _drop_loot() -> void:
 	var drops: Dictionary = stats.get("drops", {})
+	# Valor < 1 = chance de 1; >= 1 = quantidade garantida (+ chance da fração).
 	for id: String in drops:
-		if randf() < float(drops[id]):
-			WorldItems.spawn(id, 1, global_position + Vector3.UP * 0.5)
+		var value := float(drops[id])
+		var amount := int(value) + (1 if randf() < value - int(value) else 0)
+		if amount > 0:
+			WorldItems.spawn(id, amount, global_position + Vector3.UP * 0.5)
 
 
 # --- Movimento -------------------------------------------------------------------

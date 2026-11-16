@@ -1,8 +1,9 @@
 [
   { "id": "walker", "name": "Andarilho", "health": 100, "speed": 1.2, "damage": 10, "sight_range": 15, "hearing": 1, "drops": { "refine_stone": 0.15 } },
-  { "id": "runner", "name": "Corredor", "health": 60, "speed": 5.5, "damage": 8, "sight_range": 20, "hearing": 1.2, "drops": { "refine_stone": 0.2 } },
-  { "id": "brute", "name": "Bruto", "health": 500, "speed": 1, "damage": 40, "structure_damage": 3, "sight_range": 12, "hearing": 0.8, "drops": { "refine_stone": 0.6 } },
-  { "id": "spitter", "name": "Cuspidor", "health": 80, "speed": 1.5, "damage": 15, "ranged": true, "sight_range": 25, "hearing": 1, "drops": { "refine_stone": 0.25 } },
-  { "id": "night_infected", "name": "Infectado noturno", "health": 120, "speed": 2, "night_speed": 6, "damage": 15, "sight_range": 18, "hearing": 1.5, "drops": { "refine_stone": 0.3 } },
-  { "id": "exploder", "name": "Explosivo", "health": 50, "speed": 2.5, "damage": 60, "explodes": true, "sight_range": 15, "hearing": 1, "drops": { "refine_stone": 0.2 } }
+  { "id": "runner", "name": "Corredor", "health": 60, "speed": 5.5, "damage": 8, "sight_range": 20, "hearing": 1.2, "scale": 0.95, "tint": [0.62, 0.62, 0.48], "drops": { "refine_stone": 0.2 } },
+  { "id": "brute", "name": "Bruto", "health": 500, "speed": 1, "damage": 40, "structure_damage": 3, "sight_range": 12, "hearing": 0.8, "scale": 1.3, "tint": [0.45, 0.52, 0.42], "drops": { "refine_stone": 0.6 } },
+  { "id": "spitter", "name": "Cuspidor", "health": 80, "speed": 1.5, "damage": 15, "ranged": true, "spit_damage": 12, "structure_damage": 2.5, "sight_range": 25, "hearing": 1, "tint": [0.55, 0.72, 0.3], "drops": { "refine_stone": 0.25 } },
+  { "id": "night_infected", "name": "Infectado noturno", "health": 120, "speed": 2, "night_speed": 6, "damage": 15, "sight_range": 18, "hearing": 1.5, "tint": [0.33, 0.36, 0.45], "drops": { "refine_stone": 0.3 } },
+  { "id": "exploder", "name": "Explosivo", "health": 50, "speed": 2.5, "damage": 60, "explodes": true, "structure_damage": 2, "sight_range": 15, "hearing": 1, "scale": 1.1, "tint": [0.78, 0.45, 0.33], "drops": { "refine_stone": 0.2 } },
+  { "id": "colossus", "name": "Colosso", "health": 2500, "speed": 1.4, "damage": 55, "structure_damage": 6, "sight_range": 25, "hearing": 1.5, "scale": 2.2, "tint": [0.42, 0.38, 0.36], "boss": true, "drops": { "refine_stone": 6, "arcane_crystal": 2 } }
 ]

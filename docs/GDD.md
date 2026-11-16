@@ -162,6 +162,8 @@ Todos os números são provisórios e serão ajustados com testes (seção 16).
 | **Necromante** (chefe) | Levanta zumbis, resiste a magia comum | Exige estratégia |
 | **Colosso** (chefe de horda) | Gigante, destrói muros | Evento especial |
 
+**Implementados:** Andarilho, Corredor, Bruto (1,3× maior, 3× dano em construções), Cuspidor (cospe ácido em arco de 4 a 14 m; o ácido respinga e corrói construções 2,5×), Infectado noturno (escuro, muito rápido à noite), Explosivo (explode ao chegar perto ou ao morrer: até 60 de dano num raio de 4 m, também em zumbis e construções) e o chefe **Colosso** (2,2× maior, 2500 de vida, 6× dano em construções, vem na última onda de cada horda, barra de vida no topo da tela, deixa 6 pedras de refino e 2 cristais). Tamanho e cor de cada tipo vêm de `scale` e `tint` em zombies.json. Em `drops`, valor menor que 1 é chance; 1 ou mais é quantidade garantida.
+
 ### 6.2 Inteligência artificial
 
 - **Percepção:** visão (cone e distância), audição (barulho de tiros, passos, construção) e olfato (sangue, comida).
