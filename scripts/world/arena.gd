@@ -51,7 +51,8 @@ var _rebake_queued := false
 
 
 func _ready() -> void:
-	nav_region.bake_navigation_mesh(false)
+	_setup_level()
+	_bake_navigation()
 	# Todos (servidor e clientes) montam o personagem do mesmo jeito a partir de {id, pos}.
 	player_spawner.spawn_function = _create_player
 	WorldItems.register(items_root, item_spawner)
@@ -61,13 +62,9 @@ func _ready() -> void:
 	var horde := Horde.new()
 	horde.name = "Horde"
 	add_child(horde)
-	var pond := WaterSource.new()
-	pond.name = "Pond"
-	pond.position = POND_POSITION
-	add_child(pond)
 	if not multiplayer.is_server():
 		return
-	Structures.layout_changed.connect(_queue_rebake)
+	Structures.layout_changed.connect(func() -> void: _queue_rebake(Structures.last_change))
 	multiplayer.peer_connected.connect(_add_player)
 	multiplayer.peer_disconnected.connect(_remove_player)
 	_add_player(1)
@@ -76,6 +73,23 @@ func _ready() -> void:
 	_spawn_zombies()
 	_scatter_resources()
 	_scatter_loot.call_deferred()  # depois da física do chão estar pronta
+
+
+## Monta o cenário (todas as máquinas). Arena: o lago fixo. O mundo sobrescreve.
+func _setup_level() -> void:
+	var pond := WaterSource.new()
+	pond.name = "Pond"
+	pond.position = POND_POSITION
+	add_child(pond)
+
+
+func _bake_navigation() -> void:
+	nav_region.bake_navigation_mesh(false)
+
+
+## Altura do chão em (x, z). Arena: plana.
+func ground_height(_x: float, _z: float) -> float:
+	return 0.0
 
 
 func _add_player(id: int) -> void:
@@ -143,17 +157,18 @@ func _create_resource(data: Dictionary) -> Node:
 func _on_resource_depleted(node_id: String, pos: Vector3, rot: float) -> void:
 	var data := GameData.get_entry("nodes", node_id)
 	if data.get("obstacle", false):
-		_queue_rebake.call_deferred()
+		_queue_rebake.call_deferred(pos)
 	await get_tree().create_timer(float(data.get("respawn", 300.0)), false).timeout
 	if not is_inside_tree():
 		return
 	resource_spawner.spawn({"id": node_id, "pos": pos, "rot": rot})
 	if data.get("obstacle", false):
-		_queue_rebake()
+		_queue_rebake(pos)
 
 
 ## Refaz a malha de navegação dos zumbis (só o servidor usa) quando árvores/rochas mudam.
-func _queue_rebake() -> void:
+## at: onde mudou (o mundo usa para refazer só aquele pedaço; a arena refaz tudo).
+func _queue_rebake(_at := Vector3.INF) -> void:
 	if _rebake_queued:
 		return
 	_rebake_queued = true
@@ -185,7 +200,7 @@ func _spawn_zombies() -> void:
 func spawn_zombie(zombie_id: String, pos: Vector3) -> Zombie:
 	var z: Zombie = ZOMBIE_SCENE.instantiate()
 	z.zombie_id = zombie_id
-	z.position = pos
+	z.position = Vector3(pos.x, ground_height(pos.x, pos.z) + 0.1, pos.z)
 	z.rotation.y = randf() * TAU
 	zombies_root.add_child(z, true)
 	return z

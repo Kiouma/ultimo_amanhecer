@@ -9,6 +9,9 @@ extends Node
 ## Servidor: algo foi construído ou removido (a arena refaz a malha de navegação).
 signal layout_changed
 
+## Onde foi a última mudança (para refazer só o pedaço da malha de navegação).
+var last_change := Vector3.INF
+
 const STATION_SCRIPT := preload("res://scripts/crafting/station.gd")
 const PIECE_SCRIPT := preload("res://scripts/building/build_piece.gd")
 const TRAP_SCRIPT := preload("res://scripts/building/trap.gd")
@@ -79,6 +82,7 @@ func _spawn(item_id: String, position: Vector3, rotation_y: float, durability :=
 	if _spawner == null or not can_place_at(position):
 		return
 	_spawner.spawn({"kind": "station", "id": item_id, "pos": position, "rot": rotation_y, "dur": durability})
+	last_change = position
 	layout_changed.emit()
 
 
@@ -336,6 +340,7 @@ func build(piece_id: String, tier: String, key: String, rot: int) -> void:
 
 func _spawn_piece(piece_id: String, tier: String, key: String, rot: int) -> void:
 	_spawner.spawn({"kind": "piece", "id": piece_id, "tier": tier, "slot": key, "rot": rot})
+	last_change = BuildPiece.slot_transform(key, rot).origin
 	layout_changed.emit()
 
 
@@ -403,6 +408,7 @@ func piece_destroyed(piece: BuildPiece) -> void:
 func _remove(piece: BuildPiece, check_integrity := true) -> void:
 	unregister_piece(piece)
 	piece.queue_free()
+	last_change = piece.global_position
 	if check_integrity:
 		_collapse_unsupported()
 	layout_changed.emit()

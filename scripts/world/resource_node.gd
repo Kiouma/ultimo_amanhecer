@@ -120,7 +120,7 @@ func _gather(player: Node3D, tool_id: String, quality := 1.0) -> void:
 func _tool_factor(tool_id: String) -> float:
 	var gather: Dictionary = GameData.get_item(tool_id).get("gather", {}) if tool_id != "" \
 		else WeaponHolder.FISTS.get("gather", {})
-	return float(gather.get(str(data.get("kind", "")), 0.0))
+	return float(gather.get(str(data.get("gather_as", data.get("kind", ""))), 0.0))
 
 
 ## 0,35 madeira = 0 ou 1 (35% de chance); 1,4 = 1 ou 2.
@@ -196,6 +196,32 @@ func _build() -> void:
 			box.size = Vector3(0.6, 0.3, 0.6)
 			shape.shape = box
 			shape.position.y = 0.15
+		"herb":
+			for i in 7:
+				var leaf := Weapon.box(Vector3(0.05, 0.35, 0.12), Color(0.3, 0.55, 0.25), Vector3(cos(i * 0.9) * 0.15, 0.17, sin(i * 0.9) * 0.15))
+				leaf.rotation = Vector3(0.3 * cos(i * 0.9), i * 0.9, 0.3 * sin(i * 0.9))
+				_visual.add_child(leaf)
+			_visual.add_child(Weapon.sphere(0.05, Color(0.85, 0.85, 0.4), Vector3(0, 0.38, 0), true))
+			var box := BoxShape3D.new()
+			box.size = Vector3(0.6, 0.4, 0.6)
+			shape.shape = box
+			shape.position.y = 0.2
+		"crystal":
+			_visual.add_child(Weapon.sphere(0.7, Color(0.35, 0.33, 0.38), Vector3(0, 0.3, 0)))
+			for i in 5:
+				var shard := Weapon.box(Vector3(0.18, 0.9 - i * 0.1, 0.18), Color(0.6, 0.35, 0.95), Vector3(cos(i * 1.3) * 0.3, 0.7, sin(i * 1.3) * 0.3), true)
+				shard.rotation = Vector3(0.35 * cos(i * 1.3), i, 0.35 * sin(i * 1.3))
+				_visual.add_child(shard)
+			var light := OmniLight3D.new()
+			light.light_color = Color(0.7, 0.4, 1.0)
+			light.light_energy = 0.8
+			light.omni_range = 4.0
+			light.position.y = 1.0
+			_visual.add_child(light)
+			var box := BoxShape3D.new()
+			box.size = Vector3(1.4, 1.4, 1.4)
+			shape.shape = box
+			shape.position.y = 0.6
 		_:  # galhos caídos
 			for i in 4:
 				var branch := Weapon.box(Vector3(0.05, 0.05, 0.7), Color(0.4, 0.28, 0.16), Vector3(0, 0.05, 0))

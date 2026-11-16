@@ -275,6 +275,8 @@ Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminaç
 - **Pontos de interesse:** vilarejos e casas abandonadas, cabanas, fazendas, minas, postos militares antigos e ruínas arcanas (onde se encontra magia).
 - O terreno **não precisa ser voxel destrutível** (isso é tecnicamente difícil). A destruição fica concentrada em construções e algumas estruturas do cenário.
 
+**Como está implementado (Fase 7):** mapa de 320 × 320 m gerado por semente (o host sorteia; os clientes recebem com a cena). Biomas: planície (centro, nascimento), floresta, pântano (touceiras de ervas), 5 lagos com margem (encher garrafa/beber), montanhas na borda (relevo de até ~20 m) e uma zona contaminada (cristais arcanos, que se minera com picareta). O chão fora das montanhas e do fundo dos lagos fica em y = 0, para a construção funcionar igual. A malha de navegação dos zumbis é dividida em blocos de 64 m; construir ou derrubar algo refaz só o bloco do lugar. A arena antiga continua disponível com `-- --arena`.
+
 ### 10.2 Saque e dificuldade por região
 
 Regiões mais perigosas têm mais zumbis fortes e melhor saque. Casas e vilarejos dão mantimentos e ervas, postos militares antigos dão armas de fogo, ruínas dão grimórios e cristais.

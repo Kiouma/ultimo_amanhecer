@@ -9,6 +9,8 @@ extends StaticBody3D
 @export var drink_water := 10.0
 @export var drink_sick_chance := 0.4
 @export var drink_sick_damage := 8.0
+## false: só a área de uso (lagos do mundo já têm água desenhada).
+@export var show_visual := true
 
 
 func _ready() -> void:
@@ -21,6 +23,8 @@ func _ready() -> void:
 	shape.shape = cyl
 	shape.position.y = 0.1
 	add_child(shape)
+	if not show_visual:
+		return
 
 	var water := Weapon.cylinder(radius, 0.04, Color(0.18, 0.32, 0.38), Vector3(0, 0.03, 0))
 	var mat := water.mesh.material as StandardMaterial3D

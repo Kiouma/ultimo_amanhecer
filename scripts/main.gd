@@ -3,7 +3,11 @@ extends Node
 ## O nível é criado pelo servidor dentro de "Level"; o LevelSpawner replica para os
 ## clientes, que recebem depois os jogadores e zumbis (ordem garantida pela replicação).
 
-const LEVEL := preload("res://scenes/levels/test_arena.tscn")
+## Mundo aberto (Fase 7). --arena usa a arena de teste antiga.
+const WORLD := preload("res://scenes/levels/world.tscn")
+const ARENA := preload("res://scenes/levels/test_arena.tscn")
+
+var _use_arena := false
 
 @onready var level_root: Node = $Level
 @onready var menu: Control = %Menu
@@ -91,7 +95,7 @@ func _on_connection_failed(reason: String) -> void:
 
 func _start_level() -> void:
 	menu.visible = false
-	level_root.add_child(LEVEL.instantiate(), true)
+	level_root.add_child((ARENA if _use_arena else WORLD).instantiate(), true)
 
 
 func _back_to_menu(message: String) -> void:
@@ -112,6 +116,8 @@ func _set_buttons_enabled(enabled: bool) -> void:
 ## Ex.: godot -- --host    |    godot -- --join=127.0.0.1
 func _parse_command_line() -> void:
 	for arg in OS.get_cmdline_user_args():
+		if arg == "--arena":
+			_use_arena = true
 		if arg.begins_with("--background="):
 			Network.background = arg.get_slice("=", 1)
 	for arg in OS.get_cmdline_user_args():
