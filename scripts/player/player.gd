@@ -29,6 +29,8 @@ const STARTER_KIT := [
 @export var overloaded_speed_factor := 0.55
 ## Alcance para interagir (pegar itens, portas...).
 @export var interact_range := 2.8
+## Raio da coleta automática de itens no chão (0 desliga).
+@export var auto_pickup_radius := 1.3
 
 @export_group("Barulho")
 ## Raio (em metros) em que zumbis ouvem os passos (GDD 5.1). Multiplicado pela audição do zumbi.
@@ -72,6 +74,9 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var inventory: Inventory = $Inventory
 
 var _focused: Node = null
+var _pickup_timer := 0.0
+## Itens já pedidos ao servidor (nome -> hora), para não repetir o pedido enquanto ele responde.
+var _pickup_pending := {}
 
 
 func _enter_tree() -> void:
@@ -167,6 +172,27 @@ func _physics_process(delta: float) -> void:
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
 	_emit_footstep_noise(delta, crouching, sprinting)
 	_update_focus()
+	_auto_pickup(delta)
+
+
+## Pega sozinho itens bem perto (se couberem). A regra da espera de quem soltou
+## é conferida aqui (para não pedir à toa) e de novo no servidor.
+func _auto_pickup(delta: float) -> void:
+	_pickup_timer -= delta
+	if auto_pickup_radius <= 0.0 or _pickup_timer > 0.0:
+		return
+	_pickup_timer = 0.2
+	var now := Time.get_ticks_msec()
+	var me := get_multiplayer_authority()
+	for item in WorldItems.all_items():
+		if item.is_queued_for_deletion() or global_position.distance_to(item.global_position) > auto_pickup_radius:
+			continue
+		if now - int(_pickup_pending.get(item.name, -100000)) < 1000:
+			continue
+		if not WorldItems.can_auto_pickup(item, me) or inventory.room_for(item.item_id) <= 0:
+			continue
+		_pickup_pending[item.name] = now
+		WorldItems.request_pickup(item, self, true)
 
 
 ## O que está na mira e pode ser usado com E (itens no chão etc.).

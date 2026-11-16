@@ -14,6 +14,10 @@ const TYPE_COLORS := {
 
 var item_id := ""
 var count := 1
+## Peer id de quem soltou (0 = o mundo). Ver WorldItems.DROP_COOLDOWN.
+var dropped_by := 0
+
+var _born_msec := Time.get_ticks_msec()
 
 var _label: Label3D
 var _time := randf() * TAU
@@ -50,6 +54,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	_label.position.y = 0.5 + sin(_time * 2.0) * 0.03
+
+
+## Segundos desde que o item apareceu nesta máquina.
+func age() -> float:
+	return (Time.get_ticks_msec() - _born_msec) / 1000.0
 
 
 func display_text() -> String:

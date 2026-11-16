@@ -62,7 +62,7 @@ func _on_hit(target: Object, at: Vector3) -> void:
 	# Cravou no cenário: fica um tempo e talvez dê para recuperar.
 	_stuck = true
 	if not visual_only and randf() < recover_chance:
-		WorldItems.drop(item_id, 1, at, caster)
+		WorldItems.drop(item_id, 1, at, null)  # flecha recuperada: qualquer um pega na hora
 		queue_free()
 		return
 	get_tree().create_timer(10.0, false).timeout.connect(queue_free)

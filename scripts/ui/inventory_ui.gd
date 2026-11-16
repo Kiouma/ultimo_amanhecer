@@ -58,7 +58,7 @@ func _drop_data(_at: Vector2, data: Variant) -> void:
 	if s.is_empty():
 		return
 	var taken := player.inventory.take_from_slot(from, int(s.count))
-	var ahead := -player.global_basis.z * 1.2 + Vector3.UP * 0.3
+	var ahead := -player.global_basis.z * 1.8 + Vector3.UP * 0.3  # fora do raio da coleta automática
 	WorldItems.drop(taken.id, taken.count, player.global_position + ahead, player)
 
 

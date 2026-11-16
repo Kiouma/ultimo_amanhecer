@@ -46,6 +46,18 @@ func total_weight() -> float:
 	return total
 
 
+## Quantos desse item ainda cabem (completando pilhas e usando slots vazios).
+func room_for(id: String) -> int:
+	var limit := GameData.max_stack(id)
+	var room := 0
+	for s in slots:
+		if s.is_empty():
+			room += limit
+		elif s.id == id:
+			room += maxi(limit - int(s.count), 0)
+	return room
+
+
 func is_overloaded() -> bool:
 	return total_weight() > max_weight
 
