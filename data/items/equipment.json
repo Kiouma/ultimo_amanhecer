@@ -10,5 +10,9 @@
   { "id": "torch", "name": "Tocha", "type": "tool", "weight": 0.5, "durability": 300 },
   { "id": "bandage", "name": "Bandagem simples", "type": "consumable", "weight": 0.05, "stack": 20, "heals": 10, "cures": ["bleeding"] },
   { "id": "medkit_basic", "name": "Kit médico", "type": "consumable", "weight": 0.5, "stack": 5, "heals": 50 },
-  { "id": "grimoire_basic", "name": "Grimório simples", "type": "grimoire", "weight": 1.0, "teaches": ["firebolt"] }
+  { "id": "grimoire_basic", "name": "Grimório simples", "type": "grimoire", "weight": 1.0, "teaches": ["firebolt"], "requires": { "magic": 1 } },
+  { "id": "grimoire_life", "name": "Grimório da vida", "type": "grimoire", "weight": 1.0, "teaches": ["mend"], "requires": { "magic": 2 } },
+  { "id": "grimoire_frost", "name": "Grimório do gelo", "type": "grimoire", "weight": 1.0, "teaches": ["frost_nova"], "requires": { "magic": 3 } },
+  { "id": "grimoire_earth", "name": "Grimório da terra", "type": "grimoire", "weight": 1.0, "teaches": ["earth_wall"], "requires": { "magic": 5 } },
+  { "id": "grimoire_storm", "name": "Grimório da tempestade", "type": "grimoire", "weight": 1.0, "teaches": ["chain_lightning"], "requires": { "magic": 6 } }
 ]

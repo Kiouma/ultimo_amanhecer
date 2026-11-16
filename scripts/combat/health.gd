@@ -51,6 +51,27 @@ func heal(amount: float) -> void:
 		_request_heal.rpc_id(1, amount)
 
 
+## Cura vinda de outro jogador (feitiço Remendar). O servidor confere a distância.
+func heal_by(amount: float, healer: Node3D) -> void:
+	if is_dead or amount <= 0.0:
+		return
+	if multiplayer.is_server():
+		heal(amount)
+	elif Network.is_online():
+		_request_heal_by.rpc_id(1, amount, healer.get_path())
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_heal_by(amount: float, healer_path: NodePath) -> void:
+	var healer := get_node_or_null(healer_path) as Node3D
+	var me := get_parent() as Node3D
+	if not multiplayer.is_server() or healer == null or me == null \
+			or healer.get_multiplayer_authority() != multiplayer.get_remote_sender_id() \
+			or healer.global_position.distance_to(me.global_position) > 10.0:
+		return
+	heal(clampf(amount, 0.0, MAX_HEAL_PER_USE))
+
+
 ## Volta à vida cheia. Num cliente, pede ao servidor (ex.: ao renascer).
 func reset(new_max := -1.0) -> void:
 	if new_max > 0.0:

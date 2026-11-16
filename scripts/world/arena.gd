@@ -23,6 +23,8 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 	["pistol_9mm", 1], ["ammo_9mm", 12],
 	["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
 	["spear_wood", 1], ["torch", 1],
+	# Grimórios (GDD 12: descoberta). Outros saem na bancada com cristal arcano.
+	["grimoire_life", 1], ["grimoire_frost", 1],
 ]
 @export var loot_radius := 14.0
 ## Recursos coletáveis (id em data/nodes/nodes.json) → quantidade.

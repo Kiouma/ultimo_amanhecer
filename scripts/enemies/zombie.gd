@@ -560,6 +560,25 @@ func _speed() -> float:
 	return base * _slow_factor
 
 
+## Lentidão vinda de um jogador (feitiço). Num cliente, pede ao servidor.
+func request_slow(factor: float, duration: float) -> void:
+	if multiplayer.is_server():
+		apply_slow(factor, duration)
+	elif Network.is_online():
+		_request_slow.rpc_id(1, factor, duration)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_slow(factor: float, duration: float) -> void:
+	if not multiplayer.is_server():
+		return
+	for p: Node3D in get_tree().get_nodes_in_group("player"):
+		if p.get_multiplayer_authority() == multiplayer.get_remote_sender_id() \
+				and p.global_position.distance_to(global_position) < 40.0:
+			apply_slow(clampf(factor, 0.0, 1.0), clampf(duration, 0.0, 8.0))
+			return
+
+
 ## Armadilha: deixa mais lento (factor < 1) ou prende (0) por `duration` segundos.
 func apply_slow(factor: float, duration: float) -> void:
 	_slow_factor = minf(_slow_factor, factor) if _slow_time > 0.0 else factor

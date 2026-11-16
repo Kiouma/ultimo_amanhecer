@@ -82,6 +82,8 @@ func hud_text() -> String:
 		return "×%d" % int(s.count)
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "consumable":
 		return "clique para usar"
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "grimoire":
+		return "clique para ler"
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") in Structures.PLACEABLE_TYPES:
 		return "clique para colocar à frente"
 	return ""
@@ -93,7 +95,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap"]):
+	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap", "grimoire"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -159,6 +161,11 @@ func use_selected() -> void:
 		if user.build and user.build.hammer_repair(selected):
 			_use_cooldown = 0.6
 		return
+	if data.get("type", "") == "grimoire":
+		if _read_grimoire(data):
+			inventory.take_from_slot(selected, 1)
+			_use_cooldown = 1.0
+		return
 	if data.get("type", "") in Structures.PLACEABLE_TYPES:
 		if user.place_station(selected):
 			_use_cooldown = 0.5
@@ -199,6 +206,29 @@ func _burn_torch(delta: float) -> void:
 	if inventory.wear(s, 1.0) <= 0.0:
 		user.net_torch = false
 		user.notify("A tocha apagou: repare na bancada")
+
+
+## Grimório (GDD 12): ensina os feitiços que ainda não estão no inventário.
+## Pede um nível mínimo de Magia. Some ao ser lido (se ensinou algo).
+func _read_grimoire(data: Dictionary) -> bool:
+	var req: Dictionary = data.get("requires", {})
+	for prof: String in req:
+		if user.progression.get_level(prof) < int(req[prof]):
+			user.notify("Difícil demais: precisa de %s nível %d" % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])])
+			return false
+	var learned: PackedStringArray = []
+	for spell_id: String in data.get("teaches", []):
+		if inventory.count_of(spell_id) > 0:
+			continue
+		if inventory.add_item(spell_id, 1) == 0:
+			learned.append(str(GameData.get_item(spell_id).get("name", spell_id)))
+	if learned.is_empty():
+		user.notify("Você já conhece o que este grimório ensina")
+		return false
+	user.notify("Aprendeu: %s" % ", ".join(learned))
+	user.progression.gain("magic", 10.0)
+	user.play_action_synced(&"Consume")
+	return true
 
 
 static func is_hammer(s: Dictionary) -> bool:

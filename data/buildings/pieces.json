@@ -7,6 +7,8 @@
     "tiers": { "wood": { "cost": { "wood": 5, "stick": 2 }, "health": 220 }, "stone": { "cost": { "stone": 5, "wood": 3 }, "health": 650 } } },
   { "id": "floor", "name": "Piso / teto", "slot": "center", "min_level": 1, "blocking": false,
     "tiers": { "wood": { "cost": { "wood": 4 }, "health": 300 }, "stone": { "cost": { "stone": 6, "wood": 1 }, "health": 900 } } },
+  { "id": "earth_wall", "name": "Muro de terra", "slot": "edge", "blocking": true, "hidden": true, "shape": "wall",
+    "tiers": { "earth": { "cost": {}, "health": 400 } } },
   { "id": "stairs", "name": "Escada", "slot": "ramp", "blocking": false,
     "tiers": { "wood": { "cost": { "wood": 6 }, "health": 300 }, "stone": { "cost": { "stone": 8, "wood": 2 }, "health": 900 } } }
 ]

@@ -327,6 +327,8 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 	match kind:
 		&"tracer":
 			Weapon.spawn_tracer(self, from, to)
+		&"ring":
+			SpellCaster._ring_fx(self, from, from.distance_to(to), color)
 		&"arrow":
 			var arrow: Node3D = Bow.ARROW.new()
 			arrow.visual_only = true

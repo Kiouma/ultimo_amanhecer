@@ -140,6 +140,8 @@ O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus in
 - **Interações elementais:** zumbi molhado + raio = dano extra; gelo + marreta = estilhaçar; fogo em prédio de madeira = risco de incêndio (para o jogador também).
 - Regeneração de mana é lenta. Itens (poções, cristais) ajudam, o que mantém a magia equilibrada.
 
+**Feitiços implementados:** Dardo de fogo (projétil), Nova de gelo (dano e lentidão de 65% por 4 s num raio de 5 m em volta), Raio em cadeia (acerta o zumbi mirado e pula para até 3 vizinhos a 6 m, perdendo 20% por pulo), Remendar (cura você e os aliados a até 5 m) e Muro de terra (parede de terra com 400 de vida à frente, por 20 s). **Grimórios** ensinam feitiços ao serem lidos (clique com ele na mão) e pedem um nível mínimo de Magia (vida 2, gelo 3, terra 5, tempestade 6). Os da vida e do gelo aparecem no mapa; a bancada copia qualquer um com cristal arcano (que vem das hordas e do Colosso).
+
 ### 5.5 Equilíbrio entre estilos
 
 | Estilo | Dano | Alcance | Custo recorrente | Barulho | Risco |

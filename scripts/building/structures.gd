@@ -288,6 +288,44 @@ func _is_obstructed(piece_id: String, xform: Transform3D) -> bool:
 	return false
 
 
+# --- Muro de terra (feitiço) ---------------------------------------------------------
+
+## Encaixe de parede à frente de quem conjura: [chave, rot].
+func wall_slot_in_front(player: Node3D) -> Array:
+	var forward := -player.global_basis.z
+	var point := player.global_position + Vector3(forward.x, 0, forward.z).normalized() * 2.5
+	var cell := BuildPiece.CELL
+	var level := maxi(roundi(player.global_position.y / BuildPiece.HEIGHT), 0)
+	if absf(forward.x) > absf(forward.z):
+		return ["x:%d:%d:%d" % [roundi(point.x / cell), floori(point.z / cell), level], 1]
+	return ["z:%d:%d:%d" % [floori(point.x / cell), roundi(point.z / cell), level], 0]
+
+
+func cast_earth_wall(player: Node3D, duration: float) -> void:
+	if multiplayer.is_server():
+		_earth_wall(player, duration)
+	elif Network.is_online():
+		_request_earth_wall.rpc_id(1, duration)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_earth_wall(duration: float) -> void:
+	var player := _sender_player()
+	if player:
+		_earth_wall(player, clampf(duration, 1.0, 60.0))
+
+
+func _earth_wall(player: Node3D, duration: float) -> void:
+	var slot := wall_slot_in_front(player)
+	if check_build("earth_wall", slot[0], slot[1], player.global_position) != "":
+		return
+	_spawn_piece("earth_wall", "earth", slot[0], slot[1])
+	var piece := piece_at(slot[0])
+	get_tree().create_timer(duration, false).timeout.connect(func() -> void:
+		if is_instance_valid(piece) and not piece.is_queued_for_deletion():
+			_remove(piece))
+
+
 ## Quem chama já tirou o custo do inventário.
 func build(piece_id: String, tier: String, key: String, rot: int) -> void:
 	if multiplayer.is_server():

@@ -40,8 +40,10 @@ func setup(player: Player) -> void:
 	_mat_bad = _ghost_material(Color(1.0, 0.25, 0.2, 0.38))
 
 
+## Peças do menu (sem as "hidden", como o muro de terra do feitiço).
 func piece_ids() -> Array:
-	return GameData.get_all("buildings").keys()
+	return GameData.get_all("buildings").keys().filter(func(id: String) -> bool:
+		return not GameData.get_entry("buildings", id).get("hidden", false))
 
 
 func piece_id() -> String:

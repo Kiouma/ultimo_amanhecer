@@ -25,8 +25,8 @@ const DOOR_HEIGHT := 2.1
 const DOOR_LAYER := 64
 const MAX_LEVEL := 3
 
-const TIER_NAMES := {"wood": "madeira", "stone": "pedra"}
-const TIER_COLORS := {"wood": Color(0.56, 0.39, 0.23), "stone": Color(0.56, 0.56, 0.54)}
+const TIER_NAMES := {"wood": "madeira", "stone": "pedra", "earth": "terra"}
+const TIER_COLORS := {"wood": Color(0.56, 0.39, 0.23), "stone": Color(0.56, 0.56, 0.54), "earth": Color(0.4, 0.31, 0.22)}
 
 var piece_id := "wall"
 var tier := "wood"
@@ -174,6 +174,7 @@ static func slot_transform(key: String, rot_steps: int) -> Transform3D:
 
 ## Partes sólidas da peça (sem a folha da porta): [tamanho, posição, inclinação em x].
 static func parts(id: String) -> Array:
+	id = str(GameData.get_entry("buildings", id).get("shape", id))
 	match id:
 		"foundation":
 			return [[Vector3(CELL, 0.6, CELL), Vector3(0, -0.25, 0), 0.0]]  # topo a 5 cm do chão
@@ -205,6 +206,7 @@ static func part_transform(part: Array) -> Transform3D:
 static func build_visual(id: String, tier_id: String, parent: Node3D, with_door := false) -> void:
 	var color: Color = TIER_COLORS.get(tier_id, Color.GRAY)
 	var dark := color.darkened(0.3)
+	id = str(GameData.get_entry("buildings", id).get("shape", id))
 	if id == "stairs":
 		var steps := 8
 		for k in steps:

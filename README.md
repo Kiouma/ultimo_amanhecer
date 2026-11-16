@@ -22,6 +22,8 @@ Construção: **B** liga o modo construção (prévia verde/vermelha na grade). 
 
 Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Atirador, Guerreiro, Arcano, Sobrevivente).
 
+Magia: **grimórios** ensinam feitiços (clique para ler; pedem nível de Magia): Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. A bancada copia grimórios com cristal arcano.
+
 Hordas: a cada **7 dias**, ao anoitecer, uma horda ataca em ondas (o relógio mostra quantos dias faltam; o céu fica vermelho na tarde da horda). Sobreviver dá recompensa. **F9** (host) chama uma horda agora, para testar.
 
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
