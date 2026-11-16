@@ -138,8 +138,10 @@ func composition(n: int, players: int) -> Array:
 	for i in all.size():
 		out[i % waves].append(all[i])
 	# Chefe da horda vem na última onda.
-	if not GameData.get_entry("zombies", "colossus").is_empty():
-		out[waves - 1].append("colossus")
+	# Hordas pares: Necromante; ímpares: Colosso.
+	var boss := "necromancer" if n % 2 == 0 else "colossus"
+	if not GameData.get_entry("zombies", boss).is_empty():
+		out[waves - 1].append(boss)
 	return out
 
 

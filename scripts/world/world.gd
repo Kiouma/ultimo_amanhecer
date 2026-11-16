@@ -26,10 +26,12 @@ const BIOME_COLORS := {
 	"plains": Color(0.36, 0.45, 0.27), "forest": Color(0.22, 0.34, 0.19),
 	"swamp": Color(0.27, 0.3, 0.2), "lake": Color(0.3, 0.28, 0.2), "lakeside": Color(0.5, 0.47, 0.33),
 	"mountain": Color(0.42, 0.41, 0.4), "contaminated": Color(0.33, 0.27, 0.36),
+	"tundra": Color(0.84, 0.86, 0.9),
 }
 const BIOME_NAMES := {
 	"plains": "Planície", "forest": "Floresta", "swamp": "Pântano", "lake": "Lago",
 	"lakeside": "Margem do lago", "mountain": "Montanhas", "contaminated": "Zona contaminada",
+	"tundra": "Tundra nevada",
 }
 ## Chance por célula de 8 m de cada recurso, por bioma.
 const DENSITY := {
@@ -39,8 +41,11 @@ const DENSITY := {
 	"lakeside": {"tree": 0.07, "berry_bush": 0.05, "rock": 0.03, "nest": 0.03},
 	"mountain": {"rock": 0.15, "tree": 0.04},
 	"contaminated": {"crystal": 0.2, "rock": 0.05, "tree": 0.02},
+	"tundra": {"pine": 0.33, "rock": 0.06, "branches": 0.04},
 }
 const CELL_SIZE := 8.0
+## Profundidade da faixa de tundra (a partir das montanhas do norte).
+const TUNDRA_DEPTH := 70.0
 
 ## População de zumbis por região (GDD 10.2): quantos manter perto de cada jogador e
 ## de que tipos (peso), conforme o bioma onde ele está.
@@ -51,6 +56,7 @@ const POPULATION := {
 	"lake": {"target": 4, "types": {"walker": 1}},
 	"swamp": {"target": 8, "types": {"walker": 5, "spitter": 2, "runner": 1}},
 	"mountain": {"target": 5, "types": {"walker": 4, "brute": 1, "runner": 1}},
+	"tundra": {"target": 6, "types": {"frozen": 4, "walker": 2}},
 	"contaminated": {"target": 11, "types": {"night_infected": 4, "exploder": 2, "spitter": 2, "brute": 1, "walker": 2}},
 }
 const POP_INTERVAL := 3.0
@@ -75,6 +81,7 @@ var _forest_noise := FastNoiseLite.new()
 var _swamp_noise := FastNoiseLite.new()
 var _hill_noise := FastNoiseLite.new()
 var _pop_timer := 2.0
+var _necro_night := false
 var _tiles: Array[NavigationRegion3D] = []
 var _dirty_tiles := {}
 
@@ -140,6 +147,9 @@ func biome_at(x: float, z: float) -> String:
 			return "lake"
 		if d < float(lake[1]) + 12.0:
 			return "lakeside"
+	# Faixa norte (fim do mapa em -Z): tundra nevada (expansão).
+	if z < -HALF + MOUNTAIN_BAND + TUNDRA_DEPTH:
+		return "tundra"
 	if _swamp_noise.get_noise_2d(x, z) > 0.32:
 		return "swamp"
 	if _forest_noise.get_noise_2d(x, z) > -0.05:
@@ -503,6 +513,7 @@ func _update_population() -> void:
 	if free_zombies.size() >= POP_CAP:
 		return
 	var night := DayNight.find(get_tree()) != null and DayNight.find(get_tree()).is_night()
+	_maybe_necromancer(players, night)
 	var spawned := 0
 	for p: Node3D in players:
 		if spawned >= 2:
@@ -526,6 +537,22 @@ func _update_population() -> void:
 		var z := spawn_zombie(_pick_weighted(spawn_rule.types), pos)
 		free_zombies.append(z)
 		spawned += 1
+
+
+## Uma vez por noite, se alguém está na zona contaminada, o Necromante surge nas ruínas.
+func _maybe_necromancer(players: Array, night: bool) -> void:
+	if not night:
+		_necro_night = false
+		return
+	if _necro_night:
+		return
+	for p: Node3D in players:
+		if biome_at(p.global_position.x, p.global_position.z) == "contaminated":
+			_necro_night = true
+			for poi: Dictionary in pois:
+				if poi.type == "ruins":
+					spawn_zombie("necromancer", Vector3(poi.pos.x, 0.0, poi.pos.y + 4.0))
+			return
 
 
 func _spawn_spot_near(center: Vector3) -> Vector3:

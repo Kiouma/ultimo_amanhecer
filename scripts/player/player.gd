@@ -59,6 +59,9 @@ var first_person := true
 var net_crouching := false
 ## Agachar é alternado (Ctrl liga/desliga). Correr ou pular levanta.
 var _crouch_on := false
+## Frio do Congelado: fator de velocidade e tempo restante.
+var _chill_factor := 1.0
+var _chill_time := 0.0
 var net_sprinting := false
 var net_on_floor := true
 ## Segurando uma tocha acesa (luz visível para todos).
@@ -416,6 +419,27 @@ func set_torch_power(multiplier: float) -> void:
 		_torch_light.light_energy = 2.6 * minf(multiplier, 1.3)
 
 
+## Golpe gelado: lento por um tempo. Vem do servidor; vale na máquina do dono.
+func apply_chill(factor: float, duration: float) -> void:
+	if is_local():
+		_chill(factor, duration)
+	elif Network.is_online():
+		_remote_chill.rpc_id(get_multiplayer_authority(), factor, duration)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _remote_chill(factor: float, duration: float) -> void:
+	if multiplayer.get_remote_sender_id() == 1:
+		_chill(factor, duration)
+
+
+func _chill(factor: float, duration: float) -> void:
+	if _chill_time <= 0.0:
+		notify("Congelando: você está mais lento")
+	_chill_factor = clampf(factor, 0.2, 1.0)
+	_chill_time = maxf(_chill_time, duration)
+
+
 ## Mostra um aviso curto no HUD (só faz sentido no jogador local).
 func notify(text: String) -> void:
 	notified.emit(text)
@@ -471,7 +495,11 @@ func _wants_sprint(crouching: bool) -> bool:
 
 
 func _current_speed(crouching: bool) -> float:
-	var bonus := progression.mult("move_speed")
+	if _chill_time > 0.0:
+		_chill_time -= get_physics_process_delta_time()
+		if _chill_time <= 0.0:
+			_chill_factor = 1.0
+	var bonus := progression.mult("move_speed") * _chill_factor
 	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor() * bonus
 	if crouching:
 		return crouch_speed * factor

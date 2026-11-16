@@ -153,6 +153,25 @@ func _build() -> void:
 	add_child(_visual)
 	var shape := CollisionShape3D.new()
 	match str(data.get("kind", "")):
+		"tree" when str(data.get("look", "")) == "pine":
+			_visual.add_child(Weapon.cylinder(0.18, 2.4, Color(0.32, 0.22, 0.14), Vector3(0, 1.2, 0)))
+			for k in 3:
+				var cone := MeshInstance3D.new()
+				var mesh := CylinderMesh.new()
+				mesh.top_radius = 0.0
+				mesh.bottom_radius = 1.5 - k * 0.38
+				mesh.height = 1.8
+				var mat := StandardMaterial3D.new()
+				mat.albedo_color = Color(0.16, 0.3, 0.22).lerp(Color(0.85, 0.88, 0.92), 0.25 if k == 2 else 0.1)
+				mesh.material = mat
+				cone.mesh = mesh
+				cone.position.y = 2.0 + k * 1.0
+				_visual.add_child(cone)
+			var cyl := CylinderShape3D.new()
+			cyl.radius = 0.25
+			cyl.height = 3.0
+			shape.shape = cyl
+			shape.position.y = 1.5
 		"tree":
 			var trunk := Weapon.cylinder(0.22, 3.2, Color(0.36, 0.25, 0.15), Vector3(0, 1.6, 0))
 			_visual.add_child(trunk)

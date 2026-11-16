@@ -250,6 +250,8 @@ static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: Str
 	if prog == null or not prog.is_multiplayer_authority():
 		return amount
 	var prof: String = {"bow": "firearms", "firearm": "firearms", "thrown": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
+	if weapon_type == "spell" and target is Zombie:
+		amount *= 1.0 - clampf(float(target.stats.get("magic_resist", 0.0)), 0.0, 0.9)
 	if target is Zombie and not target.is_dead():
 		var surprise: bool = target.state in [Zombie.State.WANDER, Zombie.State.INVESTIGATE]
 		if surprise:

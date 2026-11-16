@@ -30,6 +30,9 @@ var _base_fog_enabled := false
 var _particles: GPUParticles3D
 var _flash: DirectionalLight3D
 var _flash_timer := 8.0
+## A câmera desta máquina está na tundra (neve mesmo com céu limpo).
+var _in_tundra := false
+var _biome_timer := 0.0
 
 
 static func find(tree: SceneTree) -> Weather:
@@ -55,7 +58,9 @@ static func lightning_factor(tree: SceneTree) -> float:
 ## Fome mais rápida no frio, a não ser perto de uma fogueira.
 static func hunger_factor(tree: SceneTree, position: Vector3) -> float:
 	var w := find(tree)
-	if w == null or w.state != "cold":
+	var world := tree.get_first_node_in_group("world")
+	var tundra: bool = world != null and world.biome_at(position.x, position.z) == "tundra"
+	if not tundra and (w == null or w.state != "cold"):
 		return 1.0
 	if not Structures.stations_near("campfire", position, CAMPFIRE_WARMTH).is_empty():
 		return 1.0
@@ -86,6 +91,15 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_follow_camera()
+	_biome_timer -= delta
+	if _biome_timer <= 0.0:
+		_biome_timer = 1.0
+		var cam := get_viewport().get_camera_3d()
+		var world := get_tree().get_first_node_in_group("world")
+		var now: bool = cam != null and world != null and world.biome_at(cam.global_position.x, cam.global_position.z) == "tundra"
+		if now != _in_tundra:
+			_in_tundra = now
+			_apply()
 	if state == "storm":
 		_flash_timer -= delta
 		if _flash_timer <= 0.0:
@@ -141,7 +155,10 @@ func _apply() -> void:
 		_env.fog_density = _base_fog_density * factor
 	if _particles:
 		var mat := _particles.process_material as ParticleProcessMaterial
-		match state:
+		var mode := state
+		if _in_tundra and state in ["clear", "fog"]:
+			mode = "cold"  # tundra: neve
+		match mode:
 			"rain", "storm":
 				_particles.emitting = true
 				_particles.amount_ratio = 1.0 if state == "storm" else 0.6

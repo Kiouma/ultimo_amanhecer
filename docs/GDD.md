@@ -184,6 +184,8 @@ Todos os números são provisórios e serão ajustados com testes (seção 16).
 
 **Implementados:** Andarilho, Corredor, Bruto (1,3× maior, 3× dano em construções), Cuspidor (cospe ácido em arco de 4 a 14 m; o ácido respinga e corrói construções 2,5×), Infectado noturno (escuro, muito rápido à noite), Explosivo (explode ao chegar perto ou ao morrer: até 60 de dano num raio de 4 m, também em zumbis e construções) e o chefe **Colosso** (2,2× maior, 2500 de vida, 6× dano em construções, vem na última onda de cada horda, barra de vida no topo da tela, deixa 6 pedras de refino e 2 cristais). Tamanho e cor de cada tipo vêm de `scale` e `tint` em zombies.json. Em `drops`, valor menor que 1 é chance; 1 ou mais é quantidade garantida.
 
+**Expansão (Fase 9):** **Congelado** (tundra; o golpe deixa você 45% mais lento por 2,5 s) e o chefe **Necromante** (900 de vida, resiste a 50% do dano mágico, levanta 3 andarilhos a cada 12 s, até 8; surge uma vez por noite nas ruínas quando alguém está na zona contaminada e é o chefe das hordas pares; o Colosso fica com as ímpares).
+
 ### 6.2 Inteligência artificial
 
 - **Percepção:** visão (cone e distância), audição (barulho de tiros, passos, construção) e olfato (sangue, comida).
@@ -288,6 +290,8 @@ Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminaç
 - O terreno **não precisa ser voxel destrutível** (isso é tecnicamente difícil). A destruição fica concentrada em construções e algumas estruturas do cenário.
 
 **Como está implementado (Fase 7):** mapa de 320 × 320 m gerado por semente (o host sorteia; os clientes recebem com a cena). Biomas: planície (centro, nascimento), floresta, pântano (touceiras de ervas), 5 lagos com margem (encher garrafa/beber), montanhas na borda (relevo de até ~20 m) e uma zona contaminada (cristais arcanos, que se minera com picareta). O chão fora das montanhas e do fundo dos lagos fica em y = 0, para a construção funcionar igual. A malha de navegação dos zumbis é dividida em blocos de 64 m; construir ou derrubar algo refaz só o bloco do lugar. A arena antiga continua disponível com `-- --arena`.
+
+**Bioma da expansão:** **Tundra nevada**, na faixa norte do mapa (70 m depois das montanhas): chão de neve, pinheiros, neve caindo e frio permanente (fome 60% mais rápida longe de fogueira), com Congelados.
 
 ### 10.2 Saque e dificuldade por região
 

@@ -65,6 +65,8 @@ var _slow_factor := 1.0
 ## Faz parte de uma horda (Horde manda ele caçar os jogadores).
 var horde := false
 var _exploded := false
+var _summon_timer := 5.0
+var _minions: Array = []
 var _skip := 0
 var _far_check := 0.0
 var _is_far := false
@@ -119,6 +121,7 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_update_summon(delta)
 	if _slow_time > 0.0:
 		_slow_time -= delta
 		if _slow_time <= 0.0:
@@ -363,6 +366,9 @@ func _start_attack() -> void:
 			var h := Health.find_in(victim)
 			if h:
 				h.take_damage(_stat("damage", 10.0), self)
+				# Congelado: o golpe deixa a vítima lenta.
+				if stats.has("chill") and victim.has_method(&"apply_chill"):
+					victim.apply_chill(_stat("chill", 0.6), _stat("chill_time", 2.0))
 	)
 
 
@@ -589,6 +595,40 @@ func _speed() -> float:
 	if _is_night():
 		base = _stat("night_speed", base * NIGHT_SPEED_MULTIPLIER)
 	return base * _slow_factor
+
+
+## Necromante: de tempos em tempos levanta andarilhos em volta (com teto).
+func _update_summon(delta: float) -> void:
+	if not stats.get("summoner", false) or state in [State.WANDER, State.DEAD]:
+		return
+	_summon_timer -= delta
+	if _summon_timer > 0.0:
+		return
+	_summon_timer = _stat("summon_interval", 12.0)
+	_minions = _minions.filter(func(m: Variant) -> bool: return is_instance_valid(m) and not m.is_dead())
+	var level := get_parent().get_parent() if get_parent() else null
+	if level == null or not level.has_method(&"spawn_zombie"):
+		return
+	var count := mini(int(_stat("summon_count", 3.0)), int(_stat("max_minions", 8.0)) - _minions.size())
+	for i in count:
+		var pos := global_position + Vector3(randf_range(-4.0, 4.0), 0.0, randf_range(-4.0, 4.0))
+		var m: Zombie = level.spawn_zombie("walker", pos)
+		m.horde = horde
+		m.target = target
+		m._last_known_position = _last_known_position
+		m._time_since_seen = _time_since_seen
+		m._set_state(State.CHASE if target else State.INVESTIGATE)
+		_minions.append(m)
+	if count > 0:
+		_fx_summon()
+		if Network.is_online():
+			_fx_summon.rpc()
+
+
+@rpc("authority", "call_remote", "unreliable")
+func _fx_summon() -> void:
+	SpellCaster._ring_fx(self, global_position, 5.0, Color(0.6, 0.3, 0.9))
+	Sfx.play("spell", global_position + Vector3.UP, 2.0, 0.0)
 
 
 ## Lentidão vinda de um jogador (feitiço). Num cliente, pede ao servidor.
