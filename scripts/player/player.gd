@@ -76,6 +76,8 @@ var _torch_light: OmniLight3D
 var _noise_timer := 0.0
 var _spawn_point := Vector3.ZERO
 var _spawn_point_set := false
+## Dormiu numa cama: renasce nela.
+var has_bed := false
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var head: Node3D = $Head
@@ -417,6 +419,14 @@ func set_torch_power(multiplier: float) -> void:
 	if _torch_light:
 		_torch_light.omni_range = 10.0 * multiplier
 		_torch_light.light_energy = 2.6 * minf(multiplier, 1.3)
+
+
+## Cama: passa a renascer aqui.
+func set_respawn_point(at: Vector3) -> void:
+	_spawn_point = at
+	_spawn_point_set = true
+	has_bed = true
+	notify("Você vai renascer nesta cama")
 
 
 ## Golpe gelado: lento por um tempo. Vem do servidor; vale na máquina do dono.

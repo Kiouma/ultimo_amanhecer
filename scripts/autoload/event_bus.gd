@@ -25,6 +25,9 @@ signal structure_placed(structure: Node)
 signal structure_destroyed(structure: Node)
 ## Um jogador apertou E numa estação (fogueira, bancada). A tela de inventário abre nela.
 signal station_opened(station: Node, player: Node)
+## Baú (GDD 9.3): aberto por um jogador / conteúdo mudou.
+signal chest_opened(chest: Node, player: Node)
+signal chest_changed(chest: Node)
 
 # Barulho (GDD 5.1): zumbis escutam isto para investigar
 signal noise_emitted(position: Vector3, loudness: float, source: Node)

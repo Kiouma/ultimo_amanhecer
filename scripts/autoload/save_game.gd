@@ -99,7 +99,10 @@ func _capture_world(level: Node) -> Dictionary:
 	data.pieces = pieces
 	var placed: Array = []
 	for s in level.get_node("Structures").get_children():
-		if s is CraftingStation:
+		if s is BaseUtility:
+			placed.append({"id": s.item_id, "pos": _v(s.global_position), "rot": s.rotation.y, "dur": -1.0,
+				"contents": s.contents, "water": s.water})
+		elif s is CraftingStation:
 			placed.append({"id": s.item_id, "pos": _v(s.global_position), "rot": s.rotation.y, "dur": -1.0})
 		elif s is Trap:
 			placed.append({"id": s.item_id, "pos": _v(s.global_position), "rot": s.rotation.y, "dur": s.uses})
@@ -138,7 +141,13 @@ func apply_world(level: Node) -> void:
 			if p.get("open", false):
 				piece._set_open(true)
 	for s: Dictionary in data.get("placed", []):
-		Structures._spawn(str(s.id), _vec(s.pos), float(s.rot), float(s.get("dur", -1.0)))
+		var node := Structures._spawn(str(s.id), _vec(s.pos), float(s.rot), float(s.get("dur", -1.0)))
+		if node is BaseUtility:
+			for stack: Dictionary in s.get("contents", []):
+				if not GameData.get_item(str(stack.get("id", ""))).is_empty():
+					stack.count = int(stack.count)
+					node.contents.append(stack)
+			node.water = int(s.get("water", 0))
 	for it: Dictionary in data.get("items", []):
 		if it.get("bag", false):
 			WorldItems.drop_bag(it.contents, _vec(it.pos), str(it.owner))
@@ -154,6 +163,7 @@ func _capture_character(p: Player, level: Node) -> Dictionary:
 		"version": VERSION, "background": Network.background,
 		"seed": int(level.get("world_seed")) if "world_seed" in level else 0,
 		"pos": _v(p.global_position), "rot": p.rotation.y,
+		"bed": _v(p._spawn_point) if p.has_bed else [],
 		"inventory": p.inventory.slots,
 		"equipment": p.equipment.to_save(),
 		"exploration": (p.get_node(^"Exploration") as Exploration).to_save() if p.has_node(^"Exploration") else {},
@@ -214,6 +224,10 @@ func apply_character(p: Player) -> bool:
 	if level and "world_seed" in level and int(data.get("seed", -1)) == int(level.world_seed):
 		p.global_position = _vec(data.pos) + Vector3.UP * 0.3
 		p.rotation.y = float(data.get("rot", 0.0))
+		if data.get("bed", []).size() == 3:
+			p._spawn_point = _vec(data.bed)
+			p._spawn_point_set = true
+			p.has_bed = true
 	# Vida: o servidor manda; pede um ajuste depois que tudo estiver de pé.
 	var hp := float(data.get("health", 100.0))
 	if hp < p.health.max_health and hp > 0.0:

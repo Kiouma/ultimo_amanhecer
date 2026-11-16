@@ -15,6 +15,9 @@ var last_change := Vector3.INF
 const STATION_SCRIPT := preload("res://scripts/crafting/station.gd")
 const PIECE_SCRIPT := preload("res://scripts/building/build_piece.gd")
 const TRAP_SCRIPT := preload("res://scripts/building/trap.gd")
+const UTILITY_SCRIPT := preload("res://scripts/building/utility.gd")
+## Estações que são utilidades da base (baú, cama, coletor).
+const UTILITY_STATIONS := ["chest", "bed", "collector"]
 ## Tipos de item colocados no chão pelo item (estação, armadilha).
 const PLACEABLE_TYPES := ["station", "trap"]
 ## Distância máxima entre o jogador e o ponto onde a estação vai.
@@ -78,12 +81,13 @@ func stations_near(station: String, position: Vector3, radius: float) -> Array[N
 	return out
 
 
-func _spawn(item_id: String, position: Vector3, rotation_y: float, durability := -1.0) -> void:
+func _spawn(item_id: String, position: Vector3, rotation_y: float, durability := -1.0) -> Node:
 	if _spawner == null or not can_place_at(position):
-		return
-	_spawner.spawn({"kind": "station", "id": item_id, "pos": position, "rot": rotation_y, "dur": durability})
+		return null
+	var node := _spawner.spawn({"kind": "station", "id": item_id, "pos": position, "rot": rotation_y, "dur": durability})
 	last_change = position
 	layout_changed.emit()
+	return node
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -554,7 +558,8 @@ func _create(data: Dictionary) -> Node:
 		trap.position = data.pos
 		trap.rotation.y = data.rot
 		return trap
-	var node: StaticBody3D = STATION_SCRIPT.new()
+	var script: Script = UTILITY_SCRIPT if str(GameData.get_item(data.id).get("station", "")) in UTILITY_STATIONS else STATION_SCRIPT
+	var node: StaticBody3D = script.new()
 	node.item_id = data.id
 	node.position = data.pos
 	node.rotation.y = data.rot

@@ -279,7 +279,9 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 
 ### 9.3 Utilidades da base
 
-Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminação. A base também pode ser **ocupada em pontos pré-existentes** do mapa (um posto de gasolina, uma casa), poupando tempo no início.
+Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminação.
+
+**Implementado:** **Baú** (30 pilhas, compartilhado, servidor manda; clique para guardar/pegar), **Cama** (E: passa a renascer nela; vai no save) e **Coletor de água** (junta 1 garrafa de água limpa a cada 90 s, ou 20 s na chuva, até 10; E enche as garrafas vazias). Baú e coletor nas mãos; cama na bancada. A base também pode ser **ocupada em pontos pré-existentes** do mapa (um posto de gasolina, uma casa), poupando tempo no início.
 
 ## 10. Mundo e exploração
 

@@ -143,6 +143,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_map_ui)
 	_map_ui.bind(player)
 
+	var chest_ui := ChestUI.new()
+	add_child(chest_ui)
+	chest_ui.bind(player)
+
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.bind(player)
