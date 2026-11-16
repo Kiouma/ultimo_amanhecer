@@ -21,6 +21,7 @@ func _ready() -> void:
 	EventBus.player_died.connect(func(p: Node) -> void:
 		if p.is_multiplayer_authority():
 			death_label.visible = true)
+	_build_clock()
 	# O player pode ter nascido antes do HUD.
 	for player in get_tree().get_nodes_in_group("player"):
 		_on_player_spawned(player)
@@ -117,6 +118,47 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## Relógio (canto superior direito) e aviso grande quando a noite/o dia começa.
+func _build_clock() -> void:
+	var clock := Label.new()
+	clock.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 20)
+	clock.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	clock.add_theme_font_size_override("font_size", 20)
+	clock.add_theme_color_override("font_outline_color", Color.BLACK)
+	clock.add_theme_constant_override("outline_size", 5)
+	add_child(clock)
+
+	var banner := Label.new()
+	banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 90)
+	banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	banner.add_theme_font_size_override("font_size", 34)
+	banner.add_theme_color_override("font_outline_color", Color.BLACK)
+	banner.add_theme_constant_override("outline_size", 8)
+	banner.modulate.a = 0.0
+	add_child(banner)
+	var show_banner := func(text: String, color: Color) -> void:
+		banner.text = text
+		banner.add_theme_color_override("font_color", color)
+		var tw := banner.create_tween()
+		tw.tween_property(banner, "modulate:a", 1.0, 0.6)
+		tw.tween_interval(3.0)
+		tw.tween_property(banner, "modulate:a", 0.0, 1.2)
+	EventBus.night_started.connect(func(d: int) -> void: show_banner.call("Noite %d
+os mortos estão mais rápidos" % d, Color(0.75, 0.8, 1.0)))
+	EventBus.day_started.connect(func(d: int) -> void: show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
+
+	var day_night := DayNight.find(get_tree())
+	if day_night == null:
+		return
+	var update := func(d: int, _h: float) -> void:
+		clock.text = "%s %d · %s" % ["Noite" if day_night.is_night() else "Dia", d, day_night.clock_text()]
+		clock.add_theme_color_override("font_color", Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85))
+	day_night.time_changed.connect(update)
+	update.call(day_night.day, day_night.hour)
 
 
 func _update_hotbar() -> void:

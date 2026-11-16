@@ -15,7 +15,7 @@ signal interaction_prompt_changed(text: String)
 const STARTER_KIT := [
 	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["firebolt", 1, 2], ["bandage", 2, 3],
 	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
-	["berries", 6, 4], ["water_bottle", 1, 5],
+	["berries", 6, 4], ["water_bottle", 1, 5], ["torch", 1, 6],
 ]
 
 @export_group("Movimento")
@@ -57,6 +57,14 @@ var first_person := true
 var net_crouching := false
 var net_sprinting := false
 var net_on_floor := true
+## Segurando uma tocha acesa (luz visível para todos).
+var net_torch := false:
+	set(value):
+		net_torch = value
+		if _torch_light:
+			_torch_light.visible = value
+
+var _torch_light: OmniLight3D
 
 var _noise_timer := 0.0
 var _spawn_point := Vector3.ZERO
@@ -93,6 +101,14 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 	health.died.connect(_on_died)
 	health.revived.connect(_on_revived)
+	_torch_light = OmniLight3D.new()
+	_torch_light.light_color = Color(1.0, 0.7, 0.4)
+	_torch_light.light_energy = 2.6
+	_torch_light.omni_range = 10.0
+	_torch_light.shadow_enabled = true
+	_torch_light.position = Vector3(0.35, -0.25, -0.3)
+	_torch_light.visible = net_torch
+	head.add_child(_torch_light)
 	weapons.setup(self, camera, head, inventory)
 	# Fome e sede só correm na máquina do dono (ver Survival).
 	survival.set_process(is_local())

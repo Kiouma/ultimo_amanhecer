@@ -14,7 +14,9 @@ Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha, Espaço pula, **
 
 Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira, **R** recarrega, **Q** lança o 1º feitiço da hotbar.
 
-Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida). O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida).
+
+Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os zumbis ficam mais rápidos e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
 
 ## Testar o co-op no mesmo PC
 

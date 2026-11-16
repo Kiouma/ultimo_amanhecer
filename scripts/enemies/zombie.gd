@@ -9,6 +9,9 @@ extends CharacterBody3D
 
 enum State { WANDER, INVESTIGATE, CHASE, ATTACK, DEAD }
 
+const NIGHT_SPEED_MULTIPLIER := 1.35
+const NIGHT_HEARING_MULTIPLIER := 1.3
+
 @export var zombie_id := "walker"
 
 @export_group("Percepção")
@@ -145,7 +148,7 @@ func _has_line_of_sight(p: Node3D) -> bool:
 func _on_noise(noise_position: Vector3, loudness: float, source: Node) -> void:
 	if state == State.DEAD or source == self:
 		return
-	var heard_range := loudness * _stat("hearing", 1.0)
+	var heard_range := loudness * _stat("hearing", 1.0) * (NIGHT_HEARING_MULTIPLIER if _is_night() else 1.0)
 	if global_position.distance_to(noise_position) > heard_range:
 		return
 	_last_known_position = noise_position
@@ -277,8 +280,17 @@ func _face(point: Vector3, delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, target_yaw, minf(turn_speed * delta, 1.0))
 
 
+## À noite (GDD 11): mais rápido. Tipos com "night_speed" (infectado noturno) usam o próprio valor.
 func _speed() -> float:
-	return _stat("speed", 1.2)
+	var base := _stat("speed", 1.2)
+	if _is_night():
+		return _stat("night_speed", base * NIGHT_SPEED_MULTIPLIER)
+	return base
+
+
+func _is_night() -> bool:
+	var dn := DayNight.find(get_tree())
+	return dn != null and dn.is_night()
 
 
 func _stat(key: String, default: float) -> float:

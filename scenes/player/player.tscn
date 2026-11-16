@@ -34,6 +34,9 @@ properties/5/replication_mode = 2
 properties/6/path = NodePath(".:net_on_floor")
 properties/6/spawn = false
 properties/6/replication_mode = 2
+properties/7/path = NodePath(".:net_torch")
+properties/7/spawn = false
+properties/7/replication_mode = 2
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2

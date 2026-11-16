@@ -97,6 +97,8 @@ func _refresh() -> void:
 			_current.on_equip()
 	if _current:
 		_current.slot = s
+	# Tocha na mão = luz (GDD 11: a noite é escura).
+	user.net_torch = s.get("id", "") == "torch"
 	changed.emit()
 
 
