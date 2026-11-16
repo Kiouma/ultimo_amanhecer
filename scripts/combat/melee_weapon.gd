@@ -2,8 +2,10 @@ class_name MeleeWeapon
 extends Weapon
 ## Arma corpo a corpo: golpe em arco na frente do jogador, acerta vários zumbis.
 ## Gasta stamina por golpe e faz pouco barulho (GDD 5.3). Segurar o botão encadeia o combo.
+## Também coleta: o golpe atinge o recurso na mira (árvore, rocha), conforme o
+## fator "gather" do item (ver ResourceNode).
 
-const COMBO := [&"Sword_Regular_A", &"Sword_Regular_B", &"Sword_Regular_C"]
+const DEFAULT_COMBO := [&"Sword_Regular_A", &"Sword_Regular_B", &"Sword_Regular_C"]
 
 ## Quantos inimigos um golpe pode acertar de uma vez.
 @export var max_targets := 3
@@ -27,9 +29,10 @@ func handle_attack(held: bool, _just_pressed: bool) -> void:
 		return
 	cooldown = stat("attack_time", 0.65)
 	_combo_timer = cooldown + 0.6
-	var anim: StringName = COMBO[_combo_index]
+	var combo: Array = data.get("combo", DEFAULT_COMBO)
+	var anim := StringName(combo[_combo_index % combo.size()])
 	var direction := 1.0 if _combo_index % 2 == 0 else -1.0
-	_combo_index = (_combo_index + 1) % COMBO.size()
+	_combo_index = (_combo_index + 1) % combo.size()
 
 	play_body_anim(anim)
 	_swing(direction)
@@ -56,8 +59,25 @@ func _hit() -> void:
 			break
 		if deal_damage(r.collider, stat("damage", 35.0)):
 			hits += 1
+	if _hit_resource(reach):
+		hits += 1
 	if hits > 0:
 		kick(Vector3(0, 0, 0.03), Vector3(0, 0, 0), 0.08)  # tranco do impacto
+
+
+## Recurso na mira (árvore, rocha): pede a coleta. Retorna true se acertou um.
+func _hit_resource(reach: float) -> bool:
+	var from := camera.global_position
+	var length := reach + from.distance_to(head.global_position)  # 3ª pessoa: câmera atrás
+	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * length, 1)
+	query.exclude = [user.get_rid()]
+	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
+	var target: Object = hit.get("collider")
+	if target is ResourceNode and not target.data.get("by_hand", false):
+		if target.global_position.distance_to(user.global_position) <= reach + 1.5:
+			target.request_gather(user, data)
+			return true
+	return false
 
 
 func hud_text() -> String:
@@ -65,6 +85,8 @@ func hud_text() -> String:
 
 
 func _swing(direction: float) -> void:
+	if data.get("no_viewmodel", false):
+		return
 	var t := stat("attack_time", 0.65)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# Levanta, desce cortando na diagonal, volta.
@@ -76,6 +98,8 @@ func _swing(direction: float) -> void:
 
 
 func _build_viewmodel() -> void:
+	if data.get("no_viewmodel", false):
+		return  # mãos livres (soco)
 	var handle := cylinder(0.018, 0.45, Color(0.4, 0.28, 0.16), Vector3(0, 0.12, 0))
 	add_child(handle)
 	add_child(box(Vector3(0.02, 0.13, 0.16), Color(0.55, 0.57, 0.6), Vector3(0, 0.33, -0.07)))  # lâmina

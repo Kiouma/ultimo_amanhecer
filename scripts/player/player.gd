@@ -76,6 +76,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var survival: Survival = $Survival
 
 var _focused: Node = null
+var _has_focus := false
 var _pickup_timer := 0.0
 ## Itens já pedidos ao servidor (nome -> hora), para não repetir o pedido enquanto ele responde.
 var _pickup_pending := {}
@@ -202,6 +203,12 @@ func _auto_pickup(delta: float) -> void:
 
 ## O que está na mira e pode ser usado com E (itens no chão etc.).
 func _update_focus() -> void:
+	if _has_focus and not is_instance_valid(_focused):
+		# O que estava na mira sumiu (colhido, pego por outro jogador...). Objeto liberado
+		# compara igual a null, por isso a flag _has_focus.
+		_focused = null
+		_has_focus = false
+		interaction_prompt_changed.emit("")
 	var reach := interact_range + spring_arm.get_hit_length()
 	var from := camera.global_position
 	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * reach, 1 | 8 | 32)
@@ -210,10 +217,13 @@ func _update_focus() -> void:
 	var target: Node = hit.get("collider")
 	if target and not target.has_method(&"interact"):
 		target = null
+	if target and target.has_method(&"has_prompt") and not target.has_prompt():
+		target = null  # ex.: árvore (coleta é por golpe, não por E)
 	if target and target.global_position.distance_to(global_position) > interact_range + 1.0:
 		target = null
 	if target != _focused:
 		_focused = target
+		_has_focus = target != null
 		interaction_prompt_changed.emit(_focused.get_prompt() if _focused else "")
 
 

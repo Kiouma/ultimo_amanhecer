@@ -117,6 +117,11 @@ mesh = SubResource("BoxMesh_wall")
 
 [node name="Zombies" type="Node3D" parent="."]
 
+[node name="Resources" type="Node3D" parent="."]
+
+[node name="ResourceSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../Resources")
+
 [node name="Items" type="Node3D" parent="."]
 
 [node name="ItemSpawner" type="MultiplayerSpawner" parent="."]

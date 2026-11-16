@@ -1,6 +1,6 @@
 extends Node3D
-## Arena de teste da Fase 1: gera a malha de navegação, cria um personagem para cada
-## jogador conectado e espalha zumbis.
+## Arena de teste: gera a malha de navegação, cria um personagem para cada jogador
+## conectado, espalha zumbis, itens e recursos coletáveis (árvores, rochas...).
 ## Rede: só o servidor cria e remove jogadores e zumbis; os MultiplayerSpawner da
 ## cena replicam isso para os clientes (inclusive quem entra no meio da partida).
 ## Tudo que estiver no grupo "navmesh_source" (chão, caixotes, futuras construções)
@@ -18,13 +18,19 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 ## Itens espalhados para testar a coleta: [id, quantidade]. Saque de verdade: Fase 7.
 @export var loot := [
 	["canned_food", 2], ["water_bottle", 2], ["berries", 8],
-	["arrow", 8], ["feather", 6], ["stick", 10], ["stick", 6], ["bandage", 2], ["medkit_basic", 1],
+	["arrow", 8], ["bandage", 2], ["medkit_basic", 1],
 	# Arma de fogo é achado raro (GDD 5.2): uma pistola vazia e um pouco de munição.
 	["pistol_9mm", 1], ["ammo_9mm", 12],
-	["wood", 10], ["wood", 10], ["stone", 8], ["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
+	["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
 	["spear_wood", 1], ["torch", 1],
 ]
 @export var loot_radius := 14.0
+## Recursos coletáveis (id em data/nodes/nodes.json) → quantidade.
+@export var resources := {"tree": 25, "rock": 10, "berry_bush": 8, "nest": 6, "branches": 8}
+@export var resource_min_distance := 7.0
+@export var resource_max_distance := 45.0
+
+const RESOURCE_SCRIPT := preload("res://scripts/world/resource_node.gd")
 
 @onready var nav_region: NavigationRegion3D = $NavigationRegion3D
 @onready var players_root: Node3D = $Players
@@ -32,6 +38,10 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @onready var player_spawner: MultiplayerSpawner = $PlayerSpawner
 @onready var items_root: Node3D = $Items
 @onready var item_spawner: MultiplayerSpawner = $ItemSpawner
+@onready var resources_root: Node3D = $Resources
+@onready var resource_spawner: MultiplayerSpawner = $ResourceSpawner
+
+var _rebake_queued := false
 
 
 func _ready() -> void:
@@ -39,6 +49,7 @@ func _ready() -> void:
 	# Todos (servidor e clientes) montam o personagem do mesmo jeito a partir de {id, pos}.
 	player_spawner.spawn_function = _create_player
 	WorldItems.register(items_root, item_spawner)
+	resource_spawner.spawn_function = _create_resource
 	if not multiplayer.is_server():
 		return
 	multiplayer.peer_connected.connect(_add_player)
@@ -47,6 +58,7 @@ func _ready() -> void:
 	for id in multiplayer.get_peers():
 		_add_player(id)
 	_spawn_zombies()
+	_scatter_resources()
 	_scatter_loot.call_deferred()  # depois da física do chão estar pronta
 
 
@@ -70,6 +82,73 @@ func _remove_player(id: int) -> void:
 	if player:
 		player.queue_free()
 
+
+# --- Recursos coletáveis --------------------------------------------------------------
+
+func _scatter_resources() -> void:
+	var taken: Array[Vector3] = []
+	for node_id: String in resources:
+		for i in int(resources[node_id]):
+			var pos := _free_spot(taken)
+			taken.append(pos)
+			resource_spawner.spawn({"id": node_id, "pos": pos, "rot": randf() * TAU})
+	_queue_rebake()
+
+
+## Ponto longe do centro, das paredes/caixotes e de outros recursos.
+func _free_spot(taken: Array[Vector3]) -> Vector3:
+	var pos := Vector3.ZERO
+	for attempt in 30:
+		var angle := randf() * TAU
+		var dist := randf_range(resource_min_distance, resource_max_distance)
+		pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var clear := absf(pos.x) > 6.0 or absf(pos.z + 6.0) > 8.0  # área das paredes e caixotes
+		for other in taken:
+			if other.distance_to(pos) < 3.0:
+				clear = false
+				break
+		if clear:
+			return pos
+	return pos
+
+
+## Todas as máquinas montam o recurso a partir de {id, pos, rot}.
+func _create_resource(data: Dictionary) -> Node:
+	var node: ResourceNode = RESOURCE_SCRIPT.new()
+	node.node_id = data.id
+	node.position = data.pos
+	node.rotation.y = data.rot
+	if multiplayer.is_server():
+		node.depleted.connect(_on_resource_depleted)
+	return node
+
+
+## Servidor: o recurso volta depois de "respawn" segundos, no mesmo lugar.
+func _on_resource_depleted(node_id: String, pos: Vector3, rot: float) -> void:
+	var data := GameData.get_entry("nodes", node_id)
+	if data.get("obstacle", false):
+		_queue_rebake.call_deferred()
+	await get_tree().create_timer(float(data.get("respawn", 300.0)), false).timeout
+	if not is_inside_tree():
+		return
+	resource_spawner.spawn({"id": node_id, "pos": pos, "rot": rot})
+	if data.get("obstacle", false):
+		_queue_rebake()
+
+
+## Refaz a malha de navegação dos zumbis (só o servidor usa) quando árvores/rochas mudam.
+func _queue_rebake() -> void:
+	if _rebake_queued:
+		return
+	_rebake_queued = true
+	await get_tree().process_frame
+	while nav_region.is_baking():
+		await get_tree().process_frame
+	_rebake_queued = false
+	nav_region.bake_navigation_mesh(true)
+
+
+# --- Saque e zumbis ---------------------------------------------------------------------
 
 func _scatter_loot() -> void:
 	for entry in loot:

@@ -1,0 +1,7 @@
+[
+  { "id": "tree", "name": "Árvore", "kind": "tree", "health": 100, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 3, "stick": 2 }, "respawn": 300, "obstacle": true },
+  { "id": "rock", "name": "Rocha", "kind": "rock", "health": 120, "per_hit": { "stone": 1 }, "per_hit_chance": { "scrap_metal": 0.08 }, "on_depleted": { "stone": 3 }, "respawn": 420, "obstacle": true },
+  { "id": "berry_bush", "name": "Arbusto de frutas", "kind": "bush", "by_hand": true, "verb": "Colher", "yield": { "berries": [2, 4], "stick": [0, 1] }, "respawn": 180 },
+  { "id": "nest", "name": "Ninho", "kind": "nest", "by_hand": true, "verb": "Pegar penas do", "yield": { "feather": [2, 4] }, "respawn": 240 },
+  { "id": "branches", "name": "Galhos caídos", "kind": "branches", "by_hand": true, "verb": "Juntar", "yield": { "stick": [2, 3] }, "respawn": 150 }
+]

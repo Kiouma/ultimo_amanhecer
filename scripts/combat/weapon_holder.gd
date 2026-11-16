@@ -9,6 +9,13 @@ extends Node3D
 
 signal changed
 
+## Mãos livres: soco fraco que também coleta (mal) madeira.
+const FISTS := {
+	"id": "", "name": "Mãos livres", "type": "melee", "damage": 6, "stamina_cost": 5,
+	"range": 1.7, "attack_time": 0.45, "hit_delay": 0.18, "noise": 0.05,
+	"gather": {"tree": 0.3}, "combo": ["Punch_Jab", "Punch_Cross"], "no_viewmodel": true,
+}
+
 ## Posição de cada tipo de arma na tela (1ª pessoa).
 const VIEW_OFFSETS := {
 	"bow": Vector3(0.02, -0.1, -0.5),
@@ -61,6 +68,8 @@ func display_name() -> String:
 
 func hud_text() -> String:
 	var s := selected_item()
+	if _current and _current.data.get("no_viewmodel", false):
+		return "×%d" % int(s.count) if not s.is_empty() and int(s.count) > 1 else "soco"
 	if _current:
 		return _current.hud_text()
 	if not s.is_empty() and int(s.count) > 1:
@@ -75,6 +84,9 @@ func _refresh() -> void:
 	var weapon: Weapon = null
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
+	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
+	if weapon == null and (s.is_empty() or GameData.get_item(s.id).get("type", "") != "consumable"):
+		weapon = _fists()
 	if weapon != _current:
 		if _current:
 			_current.on_unequip()
@@ -149,6 +161,16 @@ func _accepts_input() -> bool:
 	if not user.is_multiplayer_authority() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return false
 	return not user.health.is_dead
+
+
+func _fists() -> Weapon:
+	if not _cache.has(""):
+		var fists := MeleeWeapon.new()
+		add_child(fists)
+		fists.setup(FISTS, user, _camera, _head)
+		fists.visible = false
+		_cache[""] = fists
+	return _cache[""]
 
 
 func _weapon_for(id: String) -> Weapon:
