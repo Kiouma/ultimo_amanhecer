@@ -1,0 +1,12 @@
+[
+  { "id": "foundation", "name": "Fundação", "slot": "center", "max_level": 0, "blocking": false,
+    "tiers": { "wood": { "cost": { "wood": 6 }, "health": 500 }, "stone": { "cost": { "stone": 8, "wood": 2 }, "health": 1400 } } },
+  { "id": "wall", "name": "Parede", "slot": "edge", "blocking": true,
+    "tiers": { "wood": { "cost": { "wood": 4 }, "health": 300 }, "stone": { "cost": { "stone": 6, "wood": 1 }, "health": 900 } } },
+  { "id": "doorway", "name": "Porta", "slot": "edge", "blocking": true, "door": true,
+    "tiers": { "wood": { "cost": { "wood": 5, "stick": 2 }, "health": 220 }, "stone": { "cost": { "stone": 5, "wood": 3 }, "health": 650 } } },
+  { "id": "floor", "name": "Piso / teto", "slot": "center", "min_level": 1, "blocking": false,
+    "tiers": { "wood": { "cost": { "wood": 4 }, "health": 300 }, "stone": { "cost": { "stone": 6, "wood": 1 }, "health": 900 } } },
+  { "id": "stairs", "name": "Escada", "slot": "ramp", "blocking": false,
+    "tiers": { "wood": { "cost": { "wood": 6 }, "health": 300 }, "stone": { "cost": { "stone": 8, "wood": 2 }, "health": 900 } } }
+]

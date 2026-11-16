@@ -28,7 +28,7 @@ properties/4/replication_mode = 0
 
 [node name="Zombie" type="CharacterBody3D" groups=["zombies"]]
 collision_layer = 4
-collision_mask = 15
+collision_mask = 79
 script = ExtResource("1_zombie")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

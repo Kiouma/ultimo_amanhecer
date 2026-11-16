@@ -18,6 +18,8 @@ const MAX_DAMAGE_PER_HIT := 500.0
 const MAX_HEAL_PER_USE := 100.0
 
 @export var max_health := 100.0
+## Dano vindo de nós deste grupo é ignorado (ex.: construções ignoram "player").
+@export var ignore_group := &""
 
 var current: float
 var is_dead := false
@@ -28,7 +30,7 @@ func _ready() -> void:
 
 
 func take_damage(amount: float, source: Node = null) -> void:
-	if is_dead or amount <= 0.0:
+	if is_dead or amount <= 0.0 or _ignores(source):
 		return
 	if multiplayer.is_server():
 		_apply(maxf(current - amount, 0.0), amount, source)
@@ -74,6 +76,10 @@ static func find_in(node: Node) -> Health:
 
 # --- Interno ---------------------------------------------------------------------
 
+func _ignores(source: Node) -> bool:
+	return ignore_group != &"" and source != null and source.is_in_group(ignore_group)
+
+
 func _apply(new_current: float, amount: float, source: Node, revive := false) -> void:
 	var source_path := source.get_path() if source else NodePath()
 	_set_state(new_current, revive, amount, source)
@@ -104,6 +110,8 @@ func _request_damage(amount: float, source_path: NodePath) -> void:
 	var source := get_node_or_null(source_path)
 	# O atacante tem que ser o personagem de quem mandou o pedido.
 	if source == null or source.get_multiplayer_authority() != multiplayer.get_remote_sender_id():
+		return
+	if _ignores(source):
 		return
 	_apply(maxf(current - clampf(amount, 0.0, MAX_DAMAGE_PER_HIT), 0.0), amount, source)
 

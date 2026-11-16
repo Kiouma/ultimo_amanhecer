@@ -195,6 +195,8 @@ func _quick_cast() -> void:
 func _accepts_input() -> bool:
 	if not user.is_multiplayer_authority() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return false
+	if user.build and user.build.active:
+		return false  # mouse e roda são do modo construção
 	return not user.health.is_dead
 
 

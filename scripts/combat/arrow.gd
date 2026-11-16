@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 		return
 	velocity.y -= GRAVITY * delta
 	var step := velocity * delta
-	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + step, 1 | 4 | 8)
+	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + step, 1 | 4 | 8 | 64)
 	if caster is CollisionObject3D:
 		query.exclude = [caster.get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)

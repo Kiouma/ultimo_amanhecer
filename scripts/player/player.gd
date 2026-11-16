@@ -87,6 +87,9 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var death_penalty: DeathPenalty = $DeathPenalty
 @onready var craft_queue: CraftQueue = $CraftQueue
 
+## Modo construção (tecla B). Só existe no jogador local.
+var build: BuildMode
+
 var _focused: Node = null
 var _has_focus := false
 var _pickup_timer := 0.0
@@ -119,6 +122,10 @@ func _ready() -> void:
 	death_penalty.set_process(is_local())
 	craft_queue.set_process(is_local())
 	if is_local():
+		build = BuildMode.new()
+		build.name = "BuildMode"
+		add_child(build)
+		build.setup(self)
 		camera.current = true
 		_give_starter_kit()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -235,7 +242,7 @@ func _update_focus() -> void:
 		interaction_prompt_changed.emit("")
 	var reach := interact_range + spring_arm.get_hit_length()
 	var from := camera.global_position
-	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * reach, 1 | 8 | 32)
+	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * reach, 1 | 8 | 32 | BuildPiece.DOOR_LAYER)
 	query.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	var target: Node = hit.get("collider")
@@ -364,7 +371,7 @@ func place_station(slot_index: int) -> bool:
 		return false
 	var forward := -global_basis.z
 	var from := global_position + forward * 2.0 + Vector3.UP * 1.5
-	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 4.0, 1)
+	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 4.0, 1 | 8)  # chão ou piso/fundação
 	query.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty() or hit.normal.y < 0.8 or not Structures.can_place_at(hit.position):
@@ -419,7 +426,7 @@ func _apply_camera_mode() -> void:
 	spring_arm.position = Vector3.ZERO if first_person else third_person_offset
 	# Na 1ª pessoa o corpo some da câmera, mas continua projetando sombra.
 	# As armas de 1ª pessoa (viewmodel) só aparecem nesse modo.
-	weapons.visible = first_person
+	weapons.visible = first_person and not (build and build.active)
 	var shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if first_person \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	for mesh: GeometryInstance3D in model.find_children("*", "GeometryInstance3D", true, false):

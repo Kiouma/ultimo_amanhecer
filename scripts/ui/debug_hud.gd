@@ -15,6 +15,7 @@ var _prompt: Label
 var _inventory_ui: InventoryUI
 var _weakness_label: Label
 var _queue_label: Label
+var _build_label: Label
 
 
 func _ready() -> void:
@@ -170,6 +171,18 @@ func _bind_notifications(player: Player) -> void:
 	_queue_label.add_theme_constant_override("outline_size", 4)
 	add_child(_queue_label)
 	player.craft_queue.changed.connect(_on_queue_changed.bind(player.craft_queue))
+
+	# Painel do modo construção (B), à esquerda da mira.
+	_build_label = Label.new()
+	_build_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE, 20)
+	_build_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_build_label.add_theme_font_size_override("font_size", 14)
+	_build_label.add_theme_color_override("font_color", Color(0.85, 0.95, 0.85))
+	_build_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_build_label.add_theme_constant_override("outline_size", 5)
+	add_child(_build_label)
+	if player.build:
+		player.build.changed.connect(func() -> void: _build_label.text = player.build.status_text())
 
 
 func _on_notified(text: String, toast: Label) -> void:

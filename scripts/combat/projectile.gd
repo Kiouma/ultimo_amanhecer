@@ -18,7 +18,7 @@ var _exploded := false
 
 func _ready() -> void:
 	collision_layer = 16  # projéteis
-	collision_mask = 1 | 4 | 8  # mundo, zumbis, construções
+	collision_mask = 1 | 4 | 8 | 64  # mundo, zumbis, construções, portas
 	monitoring = true
 	var shape := CollisionShape3D.new()
 	shape.shape = SphereShape3D.new()

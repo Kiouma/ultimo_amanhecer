@@ -7,10 +7,17 @@ extends CharacterBody3D
 ## Nos clientes, posição/rotação/velocidade/estado chegam pelo MultiplayerSynchronizer
 ## e o zumbi só anima.
 
-enum State { WANDER, INVESTIGATE, CHASE, ATTACK, DEAD }
+## SIEGE: preso atrás de uma construção, indo bater na peça que bloqueia (GDD 9.2).
+enum State { WANDER, INVESTIGATE, CHASE, ATTACK, DEAD, SIEGE }
 
 const NIGHT_SPEED_MULTIPLIER := 1.35
 const NIGHT_HEARING_MULTIPLIER := 1.3
+## Tempo travado (andando sem sair do lugar) até procurar uma construção para quebrar.
+const STUCK_TIME := 1.0
+## Distância (no plano) até a peça para conseguir bater nela.
+const SIEGE_REACH := 1.3
+## Até onde procura a peça que está no caminho.
+const SIEGE_SEARCH := 3.2
 
 @export var zombie_id := "walker"
 
@@ -41,6 +48,10 @@ var _wander_wait := 0.0
 var _wander_moving := false
 var _home := Vector3.ZERO
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+## Peça de construção sendo atacada (estado SIEGE).
+var _siege: BuildPiece
+var _stuck := 0.0
+var _wants_move := false
 
 @onready var model: CharacterModel = $Model
 @onready var health: Health = $Health
@@ -83,18 +94,25 @@ func _physics_process(delta: float) -> void:
 			_process_wander(delta)
 		State.INVESTIGATE:
 			_move_towards(_last_known_position, _speed(), delta)
-			if global_position.distance_to(_last_known_position) < 1.5 or agent.is_navigation_finished():
+			if _blocked_by_building(_last_known_position):
+				pass
+			elif global_position.distance_to(_last_known_position) < 1.5 or agent.is_navigation_finished():
 				_set_state(State.WANDER)
 		State.CHASE:
 			_process_chase(delta)
+		State.SIEGE:
+			_process_siege(delta)
 		State.ATTACK:
 			_stop(delta)
-			if target:
+			if is_instance_valid(_siege):
+				_face(_siege.nearest_point(global_position), delta)
+			elif target:
 				_face(target.global_position, delta)
 			if not model.is_in_action():
-				_set_state(State.CHASE)
+				_set_state(State.SIEGE if is_instance_valid(_siege) else State.CHASE)
 
 	move_and_slide()
+	_update_stuck(delta)
 	_update_animation()
 
 
@@ -106,7 +124,8 @@ func _update_perception(delta: float) -> void:
 		target = seen
 		_last_known_position = seen.global_position
 		_time_since_seen = 0.0
-		if state in [State.WANDER, State.INVESTIGATE]:
+		if state in [State.WANDER, State.INVESTIGATE, State.SIEGE]:
+			_siege = null
 			_set_state(State.CHASE)
 	else:
 		_time_since_seen += delta
@@ -140,7 +159,7 @@ func _find_visible_player() -> Node3D:
 func _has_line_of_sight(p: Node3D) -> bool:
 	var from := eyes.global_position
 	var to := p.global_position + Vector3.UP * 1.4
-	var query := PhysicsRayQueryParameters3D.create(from, to, 1 | 8)  # mundo + construções
+	var query := PhysicsRayQueryParameters3D.create(from, to, 1 | 8 | 64)  # mundo, construções, portas
 	query.exclude = [get_rid()]
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
@@ -195,6 +214,91 @@ func _process_chase(delta: float) -> void:
 			_face(target.global_position, delta)
 		return
 	_move_towards(goal, _speed() * chase_speed_multiplier, delta)
+	_blocked_by_building(goal)
+
+
+# --- Cerco: construção no caminho (GDD 9.2) ----------------------------------------
+
+## Travado (ou sem caminho até o alvo) com uma parede/porta à frente? Vai quebrar a
+## mais fraca delas. Retorna true se entrou em cerco.
+func _blocked_by_building(goal: Vector3) -> bool:
+	if global_position.distance_to(goal) < 2.0:
+		return false
+	var no_path := agent.is_navigation_finished() and not agent.is_target_reachable()
+	if _stuck < STUCK_TIME and not no_path:
+		return false
+	var piece := _find_blocking_piece(goal)
+	if piece == null:
+		return false
+	_siege = piece
+	_stuck = 0.0
+	_set_state(State.SIEGE)
+	return true
+
+
+## Entre as peças que bloqueiam por perto, na direção do alvo, a com menos vida.
+func _find_blocking_piece(goal: Vector3) -> BuildPiece:
+	var to_goal := goal - global_position
+	to_goal.y = 0.0
+	to_goal = to_goal.normalized()
+	var best: BuildPiece = null
+	for piece in Structures.pieces():
+		if not piece.is_blocking() or piece.health.is_dead:
+			continue
+		var offset := piece.nearest_point(global_position) - global_position
+		if absf(offset.y) > 1.5:
+			continue
+		offset.y = 0.0
+		if offset.length() > SIEGE_SEARCH:
+			continue
+		if offset.length() > 0.3 and offset.normalized().dot(to_goal) < 0.2:
+			continue
+		if best == null or piece.health.current < best.health.current:
+			best = piece
+	return best
+
+
+func _process_siege(delta: float) -> void:
+	if not is_instance_valid(_siege) or _siege.health.is_dead or not _siege.is_blocking():
+		_siege = null
+		_set_state(State.CHASE if target else State.INVESTIGATE)
+		return
+	var near := _siege.nearest_point(global_position)
+	var flat := Vector2(near.x - global_position.x, near.z - global_position.z).length()
+	if flat > SIEGE_REACH:
+		_move_towards(near, _speed(), delta)
+		if _stuck > 4.0:  # não consegue chegar: desiste
+			_siege = null
+			_set_state(State.WANDER)
+		return
+	_stop(delta)
+	_face(near, delta)
+	if _attack_timer <= 0.0:
+		_start_siege_hit()
+
+
+func _start_siege_hit() -> void:
+	_set_state(State.ATTACK)
+	_attack_timer = attack_cooldown
+	model.play_action(&"Zombie_Scratch")
+	var piece := _siege
+	get_tree().create_timer(attack_hit_delay, false).timeout.connect(func() -> void:
+		if state == State.DEAD or not is_instance_valid(piece) or piece.health.is_dead:
+			return
+		var near := piece.nearest_point(global_position)
+		if Vector2(near.x - global_position.x, near.z - global_position.z).length() <= SIEGE_REACH + 0.6:
+			# "structure_damage" = multiplicador contra construções (o Bruto derruba rápido).
+			piece.health.take_damage(_stat("damage", 10.0) * _stat("structure_damage", 1.0), self)
+	)
+
+
+## Conta quanto tempo está tentando andar sem sair do lugar.
+func _update_stuck(delta: float) -> void:
+	if _wants_move and Vector2(get_real_velocity().x, get_real_velocity().z).length() < 0.35:
+		_stuck += delta
+	else:
+		_stuck = maxf(_stuck - delta * 2.0, 0.0)
+	_wants_move = false
 
 
 func _start_attack() -> void:
@@ -230,6 +334,7 @@ func _on_damaged(_amount: float, source: Node) -> void:
 	if not multiplayer.is_server():
 		return
 	if source is Node3D:
+		_siege = null
 		target = source
 		_last_known_position = source.global_position
 		_time_since_seen = 0.0
@@ -272,6 +377,7 @@ func _move_towards(goal: Vector3, speed: float, delta: float) -> void:
 	dir = dir.normalized()
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
+	_wants_move = true
 	_face(global_position + dir, delta)
 
 

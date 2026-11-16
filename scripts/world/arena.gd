@@ -61,6 +61,7 @@ func _ready() -> void:
 	add_child(pond)
 	if not multiplayer.is_server():
 		return
+	Structures.layout_changed.connect(_queue_rebake)
 	multiplayer.peer_connected.connect(_add_player)
 	multiplayer.peer_disconnected.connect(_remove_player)
 	_add_player(1)

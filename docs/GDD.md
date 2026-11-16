@@ -235,6 +235,15 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 - **Integridade estrutural:** peças precisam de suporte. Remover pilares pode derrubar partes da construção, e zumbis fortes exploram isso.
 - **Reparo e melhoria:** peças danificadas podem ser reparadas ou melhoradas sem ser refeitas.
 
+**Como está implementado (Fase 4, etapa 1):**
+
+- Tecla **B** liga o modo construção. A prévia da peça fica verde (dá para construir) ou vermelha (o painel diz o motivo). Roda do mouse troca a peça, **T** troca o material, **R** gira (porta e escada), clique constrói e botão direito desmonta a peça na mira, devolvendo metade do custo proporcional à vida que sobra.
+- Grade fixa no mundo: células de 3 × 3 m e andares de 2,5 m. Peças: fundação (só no chão), parede, porta (abre com E), piso/teto (do 1º andar para cima) e escada (rampa de ~40° até o andar de cima).
+- Materiais: madeira e pedra (pedra custa mais e tem cerca de 3× a vida). Dados em `data/buildings/pieces.json`.
+- Apoio simples: no chão, sempre; acima, a peça precisa encostar em parede, piso ou fundação. O desabamento quando um apoio cai fica para a etapa de integridade.
+- Só inimigos danificam construções. Um zumbi que fica preso atrás de uma construção (ou sem caminho até o alvo) ataca a parede ou porta **mais fraca** na direção do alvo. O campo `structure_damage` em zombies.json é o multiplicador contra construções (o Bruto tem 3×).
+- A porta fica fora da malha de navegação: os zumbis traçam caminho por ela e, se estiver fechada, ela costuma ser o primeiro alvo.
+
 ### 9.2 Defesa
 
 - **Armadilhas:** espetos, fosso, cerca elétrica, mina, armadilha de fogo.
@@ -302,7 +311,7 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Recarregar | R |
 | Feitiço rápido | Q / F (configurável) |
 | Câmera 1ª / 3ª pessoa | V |
-| Modo construção | B |
+| Modo construção | B (roda = peça, T = material, R = girar, clique = construir, botão direito = desmontar) |
 
 Suporte a controle (gamepad) planejado para depois.
 
