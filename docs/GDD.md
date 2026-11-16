@@ -139,6 +139,10 @@ O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus in
 - Mecânicas: ataque rápido e ataque carregado, bloqueio/aparar, stamina por golpe, durabilidade, sangramento em lâminas, atordoamento em armas pesadas.
 - Armas melee podem ser melhoradas na bancada (afiar, reforçar, encantar).
 
+### 5.2.1 Armas da expansão (Fase 9)
+
+Facão (rápido, também corta árvore), Marreta (lenta, 70 de dano, ótima em rocha), Besta (virotes; puxada de 1,6 s e 75 de dano), Escopeta (8 chumbos de 14, cartuchos, 25 m) e Rifle de caça (85 de dano, 160 m, zoom forte ao mirar). Facão, marreta, besta e virotes saem na bancada; escopeta e rifle (e a munição deles) só no saque, principalmente no posto militar.
+
 ### 5.3.1 Carga e canalização (implementado)
 
 Segurar o botão esquerdo: melee carrega o golpe (gasta stamina enquanto segura; até 2,5× de dano em 1,5 s); o cajado canaliza a última habilidade (gasta mana enquanto segura, até 6× o custo; até 3× de dano, cura, alcance e raio em 2 s); a faca de arremesso ganha força (até 2× de dano e mais alcance). Adaga (rápida, 2× de bônus em ataque surpresa) e faca de arremesso (recuperável, 1,6×) servem à furtividade. Barra de carga acima da hotbar.

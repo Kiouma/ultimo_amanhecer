@@ -32,7 +32,7 @@ func _process(delta: float) -> void:
 	if not visible:
 		return
 	var aiming := Input.is_action_pressed("aim") and not reloading
-	camera.fov = lerpf(camera.fov, aim_fov if aiming else _default_fov, minf(12.0 * delta, 1.0))
+	camera.fov = lerpf(camera.fov, float(data.get("zoom_fov", aim_fov)) if aiming else _default_fov, minf(12.0 * delta, 1.0))
 	var target_x := 0.0 if aiming else _rest_position.x
 	position.x = lerpf(position.x, target_x, minf(12.0 * delta, 1.0))
 
@@ -58,17 +58,19 @@ func _fire() -> void:
 	var spread := stat("spread_aim", 0.3) if aiming else stat("spread_hip", 1.5)
 	if Vector2(user.velocity.x, user.velocity.z).length() > 0.5:
 		spread *= 1.8
-	var hit := aim_ray(stat("range", 60.0), spread)
-
-	if not hit.has("miss"):
-		var damage := stat("damage", 25.0)
-		var collider: Object = hit.get("collider")
-		if collider is Node3D and hit.position.y - collider.global_position.y > 1.45:
-			damage *= headshot_multiplier * user.progression.mult("headshot_damage")
-		if not deal_damage(collider, damage):
-			_spawn_impact(hit.position)
-
-	_spawn_tracer(hit.position)
+	# Escopeta: vários chumbos ("pellets"), cada um com o seu desvio.
+	var pellets := maxi(int(stat("pellets", 1.0)), 1)
+	for p in pellets:
+		var hit := aim_ray(stat("range", 60.0), spread)
+		if not hit.has("miss"):
+			var damage := stat("damage", 25.0)
+			var collider: Object = hit.get("collider")
+			if collider is Node3D and hit.position.y - collider.global_position.y > 1.45:
+				damage *= headshot_multiplier * user.progression.mult("headshot_damage")
+			if not deal_damage(collider, damage):
+				_spawn_impact(hit.position)
+		if p < 3:
+			_spawn_tracer(hit.position)
 	_flash.visible = true
 	get_tree().create_timer(0.05).timeout.connect(func() -> void: _flash.visible = false)
 	make_noise(stat("noise", 0.8))
