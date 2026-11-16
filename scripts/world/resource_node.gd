@@ -231,6 +231,11 @@ func _build() -> void:
 			box.size = Vector3(0.8, 0.2, 0.8)
 			shape.shape = box
 			shape.position.y = 0.1
+	# Desempenho: some de longe (a névoa já esconde). Árvores e rochas se veem de mais longe.
+	var view_range: float = {"tree": 140.0, "rock": 110.0, "crystal": 110.0}.get(str(data.get("kind", "")), 45.0)
 	for m: GeometryInstance3D in _visual.find_children("*", "GeometryInstance3D", true, false):
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		m.visibility_range_end = view_range
+		m.visibility_range_end_margin = 8.0
+		m.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	add_child(shape)

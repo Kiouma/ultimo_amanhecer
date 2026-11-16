@@ -85,6 +85,10 @@ func _setup_level() -> void:
 	add_to_group("world")
 	_plan()
 	_plan_pois()
+	# Desempenho: sombras do sol só até 70 m (a névoa esconde o resto).
+	var sun := get_node_or_null(^"Sun") as DirectionalLight3D
+	if sun:
+		sun.directional_shadow_max_distance = 70.0
 	_build_terrain()
 	_build_water()
 

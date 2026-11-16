@@ -40,6 +40,7 @@ func _ready() -> void:
 
 	var mesh := Weapon.box(Vector3(0.3, 0.2, 0.3), color, Vector3(0, 0.12, 0))
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	mesh.visibility_range_end = 45.0
 	add_child(mesh)
 
 	_label = Label3D.new()
@@ -50,6 +51,7 @@ func _ready() -> void:
 	_label.outline_size = 8
 	_label.position.y = 0.5
 	_label.text = display_text()
+	_label.visibility_range_end = 18.0  # nome só de perto (menos poluição e desenho)
 	add_child(_label)
 
 

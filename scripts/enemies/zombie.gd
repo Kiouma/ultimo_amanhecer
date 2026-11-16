@@ -65,6 +65,9 @@ var _slow_factor := 1.0
 ## Faz parte de uma horda (Horde manda ele caçar os jogadores).
 var horde := false
 var _exploded := false
+var _skip := 0
+var _far_check := 0.0
+var _is_far := false
 var _groan_timer := randf_range(3.0, 10.0)
 var _slow_time := 0.0
 
@@ -109,6 +112,12 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	# Longe de todos e sem caçar: IA a cada 4 quadros (desempenho), só anda.
+	if state in [State.WANDER, State.INVESTIGATE] and not horde and _far_from_players():
+		_skip = (_skip + 1) % 4
+		if _skip != 0:
+			move_and_slide()
+			return
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
 	if _slow_time > 0.0:
 		_slow_time -= delta
@@ -498,6 +507,19 @@ static func explosion_fx(parent: Node, pos: Vector3) -> void:
 	tw.tween_property(ball, "scale", Vector3.ONE * 5.0, 0.35)
 	tw.tween_property(light, "light_energy", 0.0, 0.5)
 	tw.chain().tween_callback(fx.queue_free)
+
+
+## Mais de 40 m de todos os jogadores (conferido 2× por segundo).
+func _far_from_players() -> bool:
+	_far_check -= get_physics_process_delta_time()
+	if _far_check <= 0.0:
+		_far_check = 0.5
+		_is_far = true
+		for p: Node3D in get_tree().get_nodes_in_group("player"):
+			if p.global_position.distance_to(global_position) < 40.0:
+				_is_far = false
+				break
+	return _is_far
 
 
 func _on_died(source: Node) -> void:

@@ -266,6 +266,7 @@ func _build() -> void:
 		panel.add_child(shape)
 	for m: GeometryInstance3D in find_children("*", "GeometryInstance3D", true, false):
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		m.visibility_range_end = 170.0
 
 
 ## Folha da porta: repassa E e o aviso para a peça.
