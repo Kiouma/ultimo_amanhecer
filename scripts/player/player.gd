@@ -82,6 +82,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var weapons: WeaponHolder = $Head/SpringArm3D/Camera3D/WeaponHolder
 @onready var inventory: Inventory = $Inventory
 @onready var survival: Survival = $Survival
+@onready var death_penalty: DeathPenalty = $DeathPenalty
 
 var _focused: Node = null
 var _has_focus := false
@@ -112,6 +113,7 @@ func _ready() -> void:
 	weapons.setup(self, camera, head, inventory)
 	# Fome e sede só correm na máquina do dono (ver Survival).
 	survival.set_process(is_local())
+	death_penalty.set_process(is_local())
 	if is_local():
 		camera.current = true
 		_give_starter_kit()
@@ -207,6 +209,8 @@ func _auto_pickup(delta: float) -> void:
 	var now := Time.get_ticks_msec()
 	var me := get_multiplayer_authority()
 	for item in WorldItems.all_items():
+		if item is DeathBag:
+			continue  # bag só com E (pega tudo de uma vez)
 		if item.is_queued_for_deletion() or global_position.distance_to(item.global_position) > auto_pickup_radius:
 			continue
 		if now - int(_pickup_pending.get(item.name, -100000)) < 1000:
@@ -323,6 +327,10 @@ func _on_died(_source: Node) -> void:
 	EventBus.player_died.emit(self)
 	if not is_local():
 		return
+	# Regras de morte (GDD 7): a mochila vai para uma bag aqui; a hotbar (9 slots,
+	# o que está "equipado") fica com o jogador. Depois, Fraqueza e perda de XP.
+	WorldItems.drop_bag(_empty_backpack(), global_position, display_name())
+	death_penalty.on_died()
 	await get_tree().create_timer(respawn_delay, false).timeout
 	global_position = _spawn_point
 	velocity = Vector3.ZERO
@@ -330,6 +338,24 @@ func _on_died(_source: Node) -> void:
 	mana.refill()
 	survival.refill()
 	health.reset()  # pede ao servidor; quando voltar, dispara revived
+
+
+## Tira tudo da mochila (slots depois da hotbar) e devolve como lista de pilhas.
+func _empty_backpack() -> Array:
+	var contents: Array = []
+	for i in range(Inventory.HOTBAR_SIZE, inventory.slots.size()):
+		var s := inventory.get_slot(i)
+		if not s.is_empty():
+			contents.append({"id": s.id, "count": int(s.count)})
+			inventory.slots[i] = {}
+	inventory.changed.emit()
+	return contents
+
+
+## Nome mostrado (ex.: na bag). Sem perfis ainda: "Jogador 1" é o host.
+func display_name() -> String:
+	var id := get_multiplayer_authority()
+	return "Jogador 1" if id == 1 else "Jogador %s" % str(id).left(4)
 
 
 func _on_revived() -> void:
@@ -343,11 +369,11 @@ func _wants_sprint(crouching: bool) -> bool:
 
 
 func _current_speed(crouching: bool) -> float:
-	var factor := overloaded_speed_factor if inventory.is_overloaded() else 1.0
+	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor()
 	if crouching:
 		return crouch_speed * factor
 	if _wants_sprint(crouching) and is_on_floor():
-		return sprint_speed
+		return sprint_speed * death_penalty.speed_factor()
 	return walk_speed * factor
 
 

@@ -16,6 +16,8 @@ Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o b
 
 Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida).
 
+Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
+
 Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os zumbis ficam mais rápidos e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
 
 ## Testar o co-op no mesmo PC
@@ -63,4 +65,4 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 
 ## Roadmap
 
-Fase atual: **1. Núcleo** concluída (arena com zumbis que perseguem, pistola/machado/dardo de fogo e co-op em rede). Próxima: **Fase 2. Sobrevivência** (fome, sede, inventário, coleta, ciclo dia/noite). Detalhes no GDD, seção 17.
+Concluídas: **1. Núcleo** (zumbis que perseguem, arco/machado/dardo de fogo, co-op em rede) e **2. Sobrevivência** (inventário e hotbar, coleta de recursos, fabricação nas mãos, fome e sede, ciclo dia/noite, morte com bag e Fraqueza). Próxima: **Fase 3. Crafting** (estações, qualidade, durabilidade). Detalhes no GDD, seção 17.

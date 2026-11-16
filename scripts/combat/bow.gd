@@ -64,7 +64,7 @@ func _release() -> void:
 	var speed := lerpf(15.0, stat("arrow_speed", 45.0), power)
 
 	var arrow: Node3D = ARROW.new()
-	arrow.damage = stat("damage", 40.0) * lerpf(0.3, 1.0, power)
+	arrow.damage = stat("damage", 40.0) * lerpf(0.3, 1.0, power) * user.death_penalty.damage_factor()
 	arrow.velocity = direction * speed
 	arrow.caster = user
 	arrow.recover_chance = stat("recover_chance", 0.6)

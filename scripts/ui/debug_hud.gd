@@ -13,6 +13,7 @@ var _weapons: WeaponHolder
 var _hotbar_slots: Array[InventorySlotUI] = []
 var _prompt: Label
 var _inventory_ui: InventoryUI
+var _weakness_label: Label
 
 
 func _ready() -> void:
@@ -43,6 +44,7 @@ func _on_player_spawned(player: Node) -> void:
 	_update_weapon()
 	_bind_inventory(player)
 	_bind_survival(player)
+	_bind_death_penalty(player)
 
 
 func _bind_inventory(player: Player) -> void:
@@ -118,6 +120,30 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## Fraqueza pós-morte: rótulo acima da vida com nível, tempo e efeitos.
+func _bind_death_penalty(player: Player) -> void:
+	var label := Label.new()
+	label.add_theme_color_override("font_color", Color(0.85, 0.55, 0.95))
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 4)
+	var box := health_bar.get_parent()
+	box.add_child(label)
+	box.move_child(label, 0)
+	label.visible = false
+	_weakness_label = label
+	player.death_penalty.changed.connect(_on_weakness_changed.bind(player.death_penalty))
+
+
+func _on_weakness_changed(level: int, time_left: float, penalty: DeathPenalty) -> void:
+	_weakness_label.visible = level > 0
+	if level <= 0:
+		return
+	_weakness_label.text = "Fraqueza %d · %d:%02d  (−%d%% vel. · −%d%% dano · stamina lenta)" % [
+		level, int(time_left) / 60, int(time_left) % 60,
+		roundi((1.0 - penalty.speed_factor()) * 100), roundi((1.0 - penalty.damage_factor()) * 100)]
 
 
 ## Relógio (canto superior direito) e aviso grande quando a noite/o dia começa.

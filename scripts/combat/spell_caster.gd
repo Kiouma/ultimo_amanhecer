@@ -50,7 +50,7 @@ func _launch() -> void:
 	var from := head.global_position + (-head.global_basis.z) * 0.7 + head.global_basis.x * 0.15
 	var aim_point: Vector3 = aim_ray(stat("range", 80.0)).position
 	var bolt: Area3D = PROJECTILE.new()
-	bolt.damage = stat("damage", 30.0)
+	bolt.damage = stat("damage", 30.0) * user.death_penalty.damage_factor()
 	bolt.speed = stat("speed", 22.0)
 	bolt.caster = user
 	bolt.color = _school_color()

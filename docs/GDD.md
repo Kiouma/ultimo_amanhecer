@@ -193,6 +193,8 @@ Os sistemas abaixo criam pressão sem tornar o jogo cansativo. Todos são ajust�
 
 Porcentagem de XP e duração do debuff são provisórias e ajustáveis nas opções de dificuldade.
 
+Implementado na Fase 2 (valores provisórios): a **hotbar (9 slots) conta como o equipado** e fica com o jogador; a mochila vai para a bag, que qualquer jogador pode pegar (E pega tudo; o que não couber cai no chão) e some quando esvazia. Debuff **Fraqueza**: 2 min; cada nível = −7% de velocidade, −10% de dano e −15% de recuperação de stamina; morrer com a Fraqueza ativa sobe um nível (máx. 5) e soma 1 min. Perda de XP: 10%, aplicada quando a progressão existir (Fase 6).
+
 ## 8. Crafting
 
 ### 8.1 Recursos básicos

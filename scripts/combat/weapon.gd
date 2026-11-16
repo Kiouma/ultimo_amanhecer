@@ -99,7 +99,7 @@ func deal_damage(target: Object, amount: float) -> bool:
 	var health := Health.find_in(target)
 	if health == null or health.is_dead:
 		return false
-	health.take_damage(amount, user)
+	health.take_damage(amount * user.death_penalty.damage_factor(), user)
 	return true
 
 

@@ -100,4 +100,5 @@ func _apply_stamina_penalty() -> void:
 	var stamina := _player.stamina
 	if _base_stamina_regen == 0.0:
 		_base_stamina_regen = stamina.regen_per_second
-	stamina.regen_per_second = _base_stamina_regen * (weak_stamina_factor if is_weak() else 1.0)
+	stamina.regen_per_second = _base_stamina_regen * (weak_stamina_factor if is_weak() else 1.0) \
+		* _player.death_penalty.stamina_factor()
