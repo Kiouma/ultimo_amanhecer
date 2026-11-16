@@ -29,7 +29,9 @@ var _visual: Node3D
 func _ready() -> void:
 	data = GameData.get_entry("nodes", node_id)
 	hp = float(data.get("health", 100.0))
-	collision_layer = 1 | 32  # mundo (bloqueia e recebe golpes) + interagível
+	# "solid": false (ex.: galhos caídos) = sem corpo físico: não bloqueia ninguém,
+	# só pode ser usado com E (camada de interagíveis).
+	collision_layer = (1 if data.get("solid", true) else 0) | 32
 	collision_mask = 0
 	if data.get("obstacle", false):
 		add_to_group("navmesh_source")
