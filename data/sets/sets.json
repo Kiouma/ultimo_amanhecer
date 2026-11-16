@@ -1,0 +1,6 @@
+[
+  {"id":"hunter","name":"Caçador","style":"Atirador","bonus":{"2":{"ranged.draw_time":-0.1},"4":{"headshot_damage":0.3,"noise":-0.1},"6":{"ranged.damage":0.15}},"desc":{"2":"Puxa o arco 10% mais rápido","4":"+30% de dano na cabeça e menos barulho","6":"+15% de dano à distância"}},
+  {"id":"warrior","name":"Guerreiro","style":"Guerreiro","bonus":{"2":{"melee.damage":0.1},"4":{"damage_taken":-0.08,"melee.stamina_cost":-0.15},"6":{"melee.damage":0.15,"max_stamina_add":25}},"desc":{"2":"+10% de dano corpo a corpo","4":"−8% de dano recebido, golpes 15% mais baratos","6":"+15% de dano corpo a corpo e +25 de stamina"}},
+  {"id":"arcane","name":"Arcano","style":"Arcano","bonus":{"2":{"max_mana_add":25},"4":{"magic.damage":0.15,"magic.mana":-0.1},"6":{"magic.channel":0.25,"magic.damage":0.1}},"desc":{"2":"+25 de mana máxima","4":"+15% de dano mágico, feitiços 10% mais baratos","6":"Canalização 25% mais forte e +10% de dano mágico"}},
+  {"id":"shadow","name":"Sombra","style":"Sobrevivente (furtividade)","bonus":{"2":{"sneak_damage":0.3},"4":{"noise":-0.2,"thrown.damage":0.15},"6":{"sneak_damage":0.5,"melee.channel":0.25}},"desc":{"2":"Ataque surpresa +30%","4":"−20% de barulho e +15% de dano de arremesso","6":"Ataque surpresa +50% e carga corpo a corpo 25% mais forte"}}
+]

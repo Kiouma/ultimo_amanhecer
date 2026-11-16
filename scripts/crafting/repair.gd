@@ -8,7 +8,7 @@ extends RefCounted
 ##   proporcional à durabilidade que sobra (ou o campo "salvage" do JSON).
 ## Roda na máquina do dono do inventário.
 
-const SALVAGE_TYPES := ["bow", "melee", "firearm", "tool", "station", "trap"]
+const SALVAGE_TYPES := ["bow", "melee", "firearm", "tool", "station", "trap", "armor"]
 
 
 ## Receita que fabrica este item ({} se não houver).

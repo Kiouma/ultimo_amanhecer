@@ -84,6 +84,8 @@ func hud_text() -> String:
 		return "clique para usar"
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "grimoire":
 		return "clique para ler"
+	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "armor":
+		return "clique para vestir"
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") in Structures.PLACEABLE_TYPES:
 		return "clique para colocar à frente"
 	return ""
@@ -95,7 +97,7 @@ func _refresh() -> void:
 	if not s.is_empty():
 		weapon = _weapon_for(s.id)
 	# Sem arma na mão (slot vazio ou recurso): soco. Consumível continua sendo "usar".
-	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap", "grimoire"]):
+	if weapon == null and not is_hammer(s) and (s.is_empty() or not GameData.get_item(s.id).get("type", "") in ["consumable", "station", "trap", "grimoire", "armor"]):
 		weapon = _fists()
 	if weapon != _current:
 		if _current:
@@ -160,6 +162,11 @@ func use_selected() -> void:
 	if is_hammer(s):
 		if user.build and user.build.hammer_repair(selected):
 			_use_cooldown = 0.6
+		return
+	if data.get("type", "") == "armor":
+		if user.equipment.equip_from_inventory(selected):
+			user.notify("Vestiu: %s" % data.get("name", s.id))
+			_use_cooldown = 0.4
 		return
 	if data.get("type", "") == "grimoire":
 		if _read_grimoire(data):

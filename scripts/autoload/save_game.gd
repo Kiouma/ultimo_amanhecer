@@ -155,6 +155,7 @@ func _capture_character(p: Player, level: Node) -> Dictionary:
 		"seed": int(level.get("world_seed")) if "world_seed" in level else 0,
 		"pos": _v(p.global_position), "rot": p.rotation.y,
 		"inventory": p.inventory.slots,
+		"equipment": p.equipment.to_save(),
 		"exploration": (p.get_node(^"Exploration") as Exploration).to_save() if p.has_node(^"Exploration") else {},
 		"health": p.health.current, "hunger": p.survival.hunger, "thirst": p.survival.thirst,
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
@@ -196,6 +197,7 @@ func apply_character(p: Player) -> bool:
 	prog.changed.emit()
 	if p.has_node(^"Exploration") and data.has("exploration"):
 		(p.get_node(^"Exploration") as Exploration).from_save(data.exploration)
+	p.equipment.from_save(data.get("equipment", {}))
 	p.survival.hunger = float(data.get("hunger", 100.0))
 	p.survival.thirst = float(data.get("thirst", 100.0))
 	var weak: Dictionary = data.get("weakness", {})

@@ -88,6 +88,10 @@ O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada hab
 - Coleta, culinária, medicina, furtividade, arrombamento, mecânica.
 - Habilidades: rendimento maior ao coletar, comida que dá bônus, kits médicos melhores, menos ruído ao andar.
 
+### 4.2.1 Equipamento (implementado)
+
+Oito slots: capacete, armadura, calça, botas, luvas, 2 anéis e colar. Cada peça dá **proteção** (armadura A reduz o dano em A/(A+100)) e um bônus próprio. Quatro **conjuntos** de 7 peças (5 de armadura + anel + colar), um por estilo: Caçador (atirador), Guerreiro (melee/tanque, mais proteção e um pouco mais lento), Arcano (mana e dano mágico) e Sombra (silêncio, ataque surpresa e arremesso). 2, 4 e 6 peças do mesmo conjunto liberam bônus extras. Peças gastam durabilidade ao levar golpes e quebradas não protegem até o conserto. Dados em `data/items/gear.json` e `data/sets/sets.json`.
+
 ### 4.3 Builds de exemplo
 
 | Build | Combinação | Estilo de jogo |

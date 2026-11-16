@@ -247,6 +247,12 @@ func _rebuild() -> void:
 		var effects: Dictionary = GameData.get_entry("skills", skill_id).get("effects", {})
 		for key: String in effects:
 			mods[key] = float(mods.get(key, 0.0)) + float(effects[key])
+	# Equipamento vestido (peças e conjuntos).
+	var equipment := get_parent().get_node_or_null(^"Equipment") if get_parent() else null
+	if equipment:
+		var gear: Dictionary = equipment.mods()
+		for key: String in gear:
+			mods[key] = float(mods.get(key, 0.0)) + float(gear[key])
 	_mods = mods
 	_apply_to_player()
 

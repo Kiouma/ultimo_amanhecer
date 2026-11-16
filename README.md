@@ -22,6 +22,8 @@ Construção: **B** liga o modo construção (prévia verde/vermelha na grade). 
 
 Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Atirador, Guerreiro, Arcano, Sobrevivente).
 
+Equipamento (**P**): capacete, armadura, calça, botas, luvas, 2 anéis e colar. Quatro conjuntos, um por estilo: **Caçador** (atirador), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade). Vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras. Fabricados na bancada ou achados (casas, posto militar, ruínas). Clique numa peça na hotbar para vestir.
+
 Magia: **grimórios** ensinam feitiços (clique para ler; pedem nível de Magia): Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. A bancada copia grimórios com cristal arcano.
 
 Mapa (**M**): só mostra o que você já explorou; botão direito marca um ponto. A **bússola** no topo mostra a direção, as marcações e os outros jogadores com a distância. **Ctrl** agacha e levanta (alterna).

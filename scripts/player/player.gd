@@ -90,6 +90,8 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var craft_queue: CraftQueue = $CraftQueue
 ## Proficiências, nível e habilidades (criado no _ready, em todas as máquinas).
 var progression: Progression
+## Capacete, armadura, calça, botas, luvas, anéis e colar.
+var equipment: Equipment
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
@@ -120,6 +122,9 @@ func _ready() -> void:
 	_torch_light.position = Vector3(0.35, -0.25, -0.3)
 	_torch_light.visible = net_torch
 	head.add_child(_torch_light)
+	equipment = Equipment.new()
+	equipment.name = "Equipment"
+	add_child(equipment)
 	progression = Progression.new()
 	progression.name = "Progression"
 	add_child(progression)
@@ -380,6 +385,7 @@ func _on_damaged(amount: float, source: Node) -> void:
 		return  # fome/sede: sem animação de golpe
 	if is_local() and source is Zombie:
 		progression.gain("toughness", amount * 0.25)
+		equipment.wear_on_hit()
 	model.play_action(&"Hit_Chest")
 
 
