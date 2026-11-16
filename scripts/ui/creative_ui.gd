@@ -97,7 +97,8 @@ func _build() -> void:
 	_fly.toggled.connect(func(on: bool) -> void: player.flying = on)
 	left.add_child(_fly)
 	var note := Label.new()
-	note.text = "No criativo nada se gasta: comida, munição,\nmateriais de construção e fabricação, pedras\nde refino e durabilidade. Basta ter 1 unidade."
+	note.text = "Você está invencível.
+No criativo nada se gasta: comida, munição,\nmateriais de construção e fabricação, pedras\nde refino e durabilidade. Basta ter 1 unidade."
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color(0.65, 0.65, 0.6))
 	left.add_child(note)

@@ -24,6 +24,8 @@ const MAX_HEAL_PER_USE := 100.0
 var current: float
 ## Multiplicador do dano recebido (Resistência). O dono pede; o servidor guarda.
 var damage_taken_multiplier := 1.0
+## Não recebe dano (jogador no modo criativo). O dono pede; o servidor guarda.
+var invulnerable := false
 var is_dead := false
 
 
@@ -32,7 +34,7 @@ func _ready() -> void:
 
 
 func take_damage(amount: float, source: Node = null) -> void:
-	if is_dead or amount <= 0.0 or _ignores(source):
+	if is_dead or invulnerable or amount <= 0.0 or _ignores(source):
 		return
 	if multiplayer.is_server():
 		amount *= _taken_factor(source)
@@ -116,6 +118,18 @@ func set_damage_taken_multiplier(value: float) -> void:
 func _request_taken_multiplier(value: float) -> void:
 	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
 		damage_taken_multiplier = clampf(value, 0.25, 1.0)
+
+
+func set_invulnerable(on: bool) -> void:
+	invulnerable = on
+	if Network.is_online() and not multiplayer.is_server():
+		_request_invulnerable.rpc_id(1, on)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_invulnerable(on: bool) -> void:
+	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
+		invulnerable = on
 
 
 func _ignores(source: Node) -> bool:

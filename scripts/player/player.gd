@@ -103,12 +103,14 @@ var skill_wheel: SkillWheel
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
 
-## Modo criativo (Esc > configurações): itens não se gastam, aba Criativo, pode voar.
+## Modo criativo (Esc > configurações): invencível, itens não se gastam, aba Criativo, pode voar.
 var creative := false:
 	set(value):
 		creative = value
 		if inventory:
 			inventory.creative = value
+		if health:
+			health.set_invulnerable(value)
 		if not value:
 			flying = false
 		EventBus.creative_changed.emit(value)

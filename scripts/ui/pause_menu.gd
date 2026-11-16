@@ -66,7 +66,7 @@ func _ready() -> void:
 	box.add_child(mode_label)
 	_mode = OptionButton.new()
 	_mode.add_item("Sobrevivência", 0)
-	_mode.add_item("Criativo (itens infinitos, voo, aba Criativo)", 1)
+	_mode.add_item("Criativo (invencível, itens infinitos, voo)", 1)
 	_mode.item_selected.connect(func(index: int) -> void:
 		if player:
 			player.creative = index == 1
