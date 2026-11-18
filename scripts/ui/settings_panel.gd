@@ -12,6 +12,8 @@ var _volume: HSlider
 var _sprint: OptionButton
 var _crouch: OptionButton
 var _minimap: CheckButton
+var _fps: CheckButton
+var _vsync: CheckButton
 
 
 func _ready() -> void:
@@ -57,6 +59,14 @@ func _ready() -> void:
 	_minimap.text = "Mostrar minimapa"
 	_minimap.toggled.connect(func(on: bool) -> void: Settings.set_value("show_minimap", on))
 	add_child(_minimap)
+	_fps = CheckButton.new()
+	_fps.text = "Mostrar FPS"
+	_fps.toggled.connect(func(on: bool) -> void: Settings.set_value("show_fps", on))
+	add_child(_fps)
+	_vsync = CheckButton.new()
+	_vsync.text = "VSync (sincronia vertical)"
+	_vsync.toggled.connect(func(on: bool) -> void: Settings.set_value("vsync", on))
+	add_child(_vsync)
 
 	var back := Button.new()
 	back.text = "Voltar"
@@ -77,6 +87,8 @@ func _sync() -> void:
 	_sprint.select(1 if Settings.sprint_toggle else 0)
 	_crouch.select(1 if Settings.crouch_toggle else 0)
 	_minimap.set_pressed_no_signal(Settings.show_minimap)
+	_fps.set_pressed_no_signal(Settings.show_fps)
+	_vsync.set_pressed_no_signal(Settings.vsync)
 
 
 func _label(text: String) -> void:

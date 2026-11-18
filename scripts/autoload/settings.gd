@@ -29,6 +29,10 @@ var sprint_toggle := false
 var crouch_toggle := true
 ## Minimapa no canto superior direito.
 var show_minimap := true
+## Contador de FPS no canto superior esquerdo.
+var show_fps := false
+## Sincronia vertical (limita o FPS à taxa do monitor, evita "rasgos" na imagem).
+var vsync := true
 
 
 func _ready() -> void:
@@ -40,6 +44,9 @@ func _ready() -> void:
 	sprint_toggle = bool(cfg.get_value("controls", "sprint_toggle", sprint_toggle))
 	crouch_toggle = bool(cfg.get_value("controls", "crouch_toggle", crouch_toggle))
 	show_minimap = bool(cfg.get_value("interface", "show_minimap", show_minimap))
+	show_fps = bool(cfg.get_value("interface", "show_fps", show_fps))
+	vsync = bool(cfg.get_value("video", "vsync", vsync))
+	_apply_vsync()
 	volume = float(cfg.get_value("audio", "volume", volume))
 	Sfx.volume = volume
 	_apply_language()
@@ -57,6 +64,8 @@ func set_value(key: String, value: Variant) -> void:
 	set(key, value)
 	if key == "volume":
 		Sfx.volume = float(value)
+	elif key == "vsync":
+		_apply_vsync()
 	save()
 
 
@@ -69,8 +78,14 @@ func save() -> void:
 	cfg.set_value("controls", "crouch_toggle", crouch_toggle)
 	cfg.set_value("audio", "volume", volume)
 	cfg.set_value("interface", "show_minimap", show_minimap)
+	cfg.set_value("interface", "show_fps", show_fps)
+	cfg.set_value("video", "vsync", vsync)
 	cfg.save(PATH)
 	changed.emit()
+
+
+func _apply_vsync() -> void:
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
 
 
 func language_index() -> int:

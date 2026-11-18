@@ -75,6 +75,7 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_network()
 	_bind_pickup_feed(player)
 	_bind_minimap(player)
+	_bind_fps()
 	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
 	_bus(Settings.changed, func() -> void:
 		_update_hotbar()
@@ -212,6 +213,30 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## FPS (Esc > Configurações > Mostrar FPS), no canto superior esquerdo; o aviso de rede
+## fica logo abaixo.
+var _fps_label: Label
+var _fps_timer := 0.0
+
+
+func _bind_fps() -> void:
+	_fps_label = Label.new()
+	_fps_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 12)
+	_fps_label.add_theme_font_size_override("font_size", 14)
+	_fps_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_fps_label.add_theme_constant_override("outline_size", 4)
+	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fps_label)
+	_bus(Settings.changed, _apply_fps_setting)
+	_apply_fps_setting()
+
+
+func _apply_fps_setting() -> void:
+	_fps_label.visible = Settings.show_fps
+	if _net_label:
+		_net_label.position.y = 34.0 if Settings.show_fps else 12.0
 
 
 ## Minimapa (canto superior direito, Esc > Configurações liga/desliga). O relógio fica
@@ -556,6 +581,13 @@ func _process(delta: float) -> void:
 	if _minimap and _minimap_frame.visible and _minimap_timer <= 0.0:
 		_minimap_timer = 0.15
 		_minimap.queue_redraw()
+	if _fps_label and _fps_label.visible:
+		_fps_timer -= delta
+		if _fps_timer <= 0.0:
+			_fps_timer = 0.5
+			var fps := Engine.get_frames_per_second()
+			_fps_label.text = "%d FPS" % fps
+			_fps_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.6) if fps >= 55 else (Color(1.0, 0.85, 0.4) if fps >= 30 else Color(1.0, 0.45, 0.4)))
 	_net_timer -= delta
 	if _net_timer <= 0.0:
 		_net_timer = 1.0
