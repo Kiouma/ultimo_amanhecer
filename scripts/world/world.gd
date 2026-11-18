@@ -181,6 +181,12 @@ func ground_height(x: float, z: float) -> float:
 # --- Pontos de interesse (GDD 10.1) ------------------------------------------------------
 # Feitos com peças de construção: dá para ocupar, consertar e reforçar (GDD 9.3).
 
+## Tamanho dos lugares em células de construção (3 m): maiores, dá para andar dentro.
+const HOUSE_SIZE := Vector2i(3, 2)
+const CABIN_SIZE := Vector2i(2, 2)
+const FORT_SIZE := Vector2i(4, 4)
+const RUINS_SIZE := Vector2i(3, 3)
+
 const POI_NAMES := {"house": "Casa abandonada", "cabin": "Cabana", "village": "Vilarejo",
 	"military": "Forte abandonado", "ruins": "Ruínas arcanas"}
 
@@ -193,21 +199,21 @@ func _plan_pois() -> void:
 	for attempt in 40:
 		var a := rng.randf() * TAU
 		var center := Vector2(cos(a), sin(a)) * rng.randf_range(45.0, 70.0)
-		var cells := [Vector2i(-3, -3), Vector2i(1, -3), Vector2i(-3, 1), Vector2i(1, 1)]
+		var cells := [Vector2i(-4, -4), Vector2i(1, -4), Vector2i(-4, 1), Vector2i(1, 1)]
 		var ok := true
 		for c: Vector2i in cells:
-			ok = ok and _poi_fits(_cell_of(center) + c, Vector2i(2, 1))
+			ok = ok and _poi_fits(_cell_of(center) + c, HOUSE_SIZE)
 		if ok:
 			for c: Vector2i in cells:
-				_add_poi("house", _cell_of(center) + c, Vector2i(2, 1), rng, "house", tr("Vilarejo"))
+				_add_poi("house", _cell_of(center) + c, HOUSE_SIZE, rng, "house", "Vilarejo")  # nome traduzido só ao mostrar
 			break
 	# Uma cabana na margem de cada lago.
 	for lake: Array in lakes:
 		for attempt in 20:
 			var a := rng.randf() * TAU
-			var p: Vector2 = lake[0] + Vector2(cos(a), sin(a)) * (float(lake[1]) + 7.0)
-			if _poi_fits(_cell_of(p), Vector2i.ONE):
-				_add_poi("cabin", _cell_of(p), Vector2i.ONE, rng, "house")
+			var p: Vector2 = lake[0] + Vector2(cos(a), sin(a)) * (float(lake[1]) + 10.0)
+			if _poi_fits(_cell_of(p), CABIN_SIZE):
+				_add_poi("cabin", _cell_of(p), CABIN_SIZE, rng, "house")
 				break
 	# Cabanas soltas na floresta.
 	var placed := 0
@@ -215,18 +221,18 @@ func _plan_pois() -> void:
 		if placed >= 4:
 			break
 		var p := Vector2(rng.randf_range(-HALF + 40, HALF - 40), rng.randf_range(-HALF + 40, HALF - 40))
-		if biome_at(p.x, p.y) == "forest" and p.length() > 40.0 and _poi_fits(_cell_of(p), Vector2i.ONE):
-			_add_poi("cabin", _cell_of(p), Vector2i.ONE, rng, "house")
+		if biome_at(p.x, p.y) == "forest" and p.length() > 40.0 and _poi_fits(_cell_of(p), CABIN_SIZE):
+			_add_poi("cabin", _cell_of(p), CABIN_SIZE, rng, "house")
 			placed += 1
 	# Posto militar (3 × 3, muro de pedra, sem teto) longe do centro.
 	for attempt in 100:
 		var a := rng.randf() * TAU
 		var p := Vector2(cos(a), sin(a)) * rng.randf_range(80.0, 110.0)
-		if _poi_fits(_cell_of(p), Vector2i(3, 3)):
-			_add_poi("military", _cell_of(p), Vector2i(3, 3), rng, "military")
+		if _poi_fits(_cell_of(p), FORT_SIZE):
+			_add_poi("military", _cell_of(p), FORT_SIZE, rng, "military")
 			break
 	# Ruínas no meio da zona contaminada.
-	_add_poi("ruins", _cell_of(contaminated_center) - Vector2i.ONE, Vector2i(2, 2), rng, "ruins")
+	_add_poi("ruins", _cell_of(contaminated_center) - Vector2i.ONE, RUINS_SIZE, rng, "ruins")
 
 
 func _cell_of(p: Vector2) -> Vector2i:
@@ -243,7 +249,7 @@ func _poi_fits(cell: Vector2i, size: Vector2i) -> bool:
 				return false
 	var center := (Vector2(cell) + Vector2(size) * 0.5) * BuildPiece.CELL
 	for poi: Dictionary in pois:
-		if center.distance_to(poi.pos) < 14.0:
+		if center.distance_to(poi.pos) < 15.0:
 			return false
 	return true
 
@@ -479,6 +485,29 @@ func _scatter_resources() -> void:
 				if roll < 0.0:
 					resource_spawner.spawn({"id": node_id, "pos": Vector3(x, ground_height(x, z), z), "rot": rng.randf() * TAU})
 					break
+	_scatter_start_area()
+
+
+## Perto de onde se nasce: pedras soltas e galhos para começar (o kit inicial não tem
+## ferramentas; dá para fazer o machado e a picareta de pedra logo).
+const START_PEBBLES := 18
+const START_BRANCHES := 14
+
+
+func _scatter_start_area() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed + 5
+	for k in START_PEBBLES + START_BRANCHES:
+		var node_id := "pebbles" if k < START_PEBBLES else "branches"
+		for attempt in 10:
+			var a := rng.randf() * TAU
+			var d := rng.randf_range(4.0, 24.0)
+			var x := cos(a) * d
+			var z := sin(a) * d
+			if biome_at(x, z) == "lake" or _in_poi(x, z):
+				continue
+			resource_spawner.spawn({"id": node_id, "pos": Vector3(x, ground_height(x, z), z), "rot": rng.randf() * TAU})
+			break
 
 
 ## Mundo aberto: nada de itens soltos perto de onde se nasce (o saque fica nos lugares).

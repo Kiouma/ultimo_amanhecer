@@ -45,27 +45,48 @@ func _ready() -> void:
 		_village_square(square / village)
 
 
-## Objetos encostados por dentro das paredes (cantos e meio dos lados).
+## Objetos encostados por dentro das paredes, virados para dentro. O lado da porta
+## (poi.door: 0 norte, 1 sul, 2 oeste, 3 leste) fica livre: nada bloqueia a entrada.
 func _furnish(poi: Dictionary, rng: RandomNumberGenerator) -> void:
 	var options: Array = SETS.get(str(poi.type), [])
 	if options.is_empty():
 		return
 	var cell: Vector2i = poi.cell
 	var size: Vector2i = poi.size
-	var lo := Vector2(cell) * CELL + Vector2(0.75, 0.75)
-	var hi := Vector2(cell + size) * CELL - Vector2(0.75, 0.75)
-	var spots := [Vector2(lo.x, lo.y), Vector2(hi.x, lo.y), Vector2(lo.x, hi.y), Vector2(hi.x, hi.y),
-		Vector2((lo.x + hi.x) * 0.5, lo.y), Vector2((lo.x + hi.x) * 0.5, hi.y)]
-	var count := clampi(2 + size.x * size.y, 3, spots.size())
+	var lo := Vector2(cell) * CELL + Vector2(0.8, 0.8)
+	var hi := Vector2(cell + size) * CELL - Vector2(0.8, 0.8)
+	# [ponto, giro] a cada ~2,4 m ao longo de cada parede que não tem a porta.
+	var spots: Array = []
+	var sides := {0: [Vector2(lo.x, lo.y), Vector2(hi.x, lo.y), 0.0], 1: [Vector2(lo.x, hi.y), Vector2(hi.x, hi.y), PI],
+		2: [Vector2(lo.x, lo.y), Vector2(lo.x, hi.y), PI * 0.5], 3: [Vector2(hi.x, lo.y), Vector2(hi.x, hi.y), -PI * 0.5]}
+	for side: int in sides:
+		if side == int(poi.door):
+			continue
+		var a: Vector2 = sides[side][0]
+		var b: Vector2 = sides[side][1]
+		var steps := maxi(int(a.distance_to(b) / 2.4), 1)
+		for k in steps + 1:
+			spots.append([a.lerp(b, float(k) / steps), float(sides[side][2])])
 	var y := 0.05 if str(poi.type) in ["house", "cabin"] else 0.0  # em cima da fundação
+	var count := mini(2 + size.x * size.y, spots.size())
+	var used: Array[Vector2] = []
 	for i in count:
-		var spot: Vector2 = spots[rng.randi() % spots.size()]
+		var spot: Array = spots[rng.randi() % spots.size()]
 		spots.erase(spot)
+		var at: Vector2 = spot[0]
 		var pick: Array = options[rng.randi() % options.size()]
-		# Mesa grande só cabe no meio de um lado; perto do canto vai algo menor.
-		if float(pick[1]) > 1.6 and i < 4:
-			pick = options[3 % options.size()]
-		_place(str(pick[0]), float(pick[1]), bool(pick[2]), Vector3(spot.x, y, spot.y), rng.randi_range(0, 3) * PI * 0.5)
+		var too_close := false
+		for other in used:
+			if other.distance_to(at) < (1.0 + float(pick[1]) * 0.5):
+				too_close = true
+		if too_close:
+			continue
+		used.append(at)
+		_place(str(pick[0]), float(pick[1]), bool(pick[2]), Vector3(at.x, y, at.y), float(spot[1]))
+	# Casa grande: uma mesa no meio.
+	if str(poi.type) == "house" and size.x * size.y >= 6:
+		var mid := (lo + hi) * 0.5
+		_place("Table_Large", 1.8, true, Vector3(mid.x, y, mid.y), 0.0 if size.x >= size.y else PI * 0.5)
 
 
 func _village_square(center: Vector2) -> void:
@@ -74,20 +95,10 @@ func _village_square(center: Vector2) -> void:
 	for i in VILLAGE_SQUARE.size():
 		var pick: Array = VILLAGE_SQUARE[i]
 		var a := TAU * i / VILLAGE_SQUARE.size() + rng.randf_range(-0.2, 0.2)
-		var p := center + Vector2(cos(a), sin(a)) * rng.randf_range(2.0, 3.2)
+		var p := center + Vector2(cos(a), sin(a)) * rng.randf_range(1.6, 2.4)
 		_place(str(pick[0]), float(pick[1]), bool(pick[2]), Vector3(p.x, _world.ground_height(p.x, p.y), p.y), -a + PI * 0.5)
-	# Cerquinha de madeira em volta da praça, com aberturas.
-	for k in 10:
-		if k % 3 == 2:
-			continue
-		var a := TAU * k / 10.0
-		var p := center + Vector2(cos(a), sin(a)) * 5.5
-		var fence := ModelKit.fit_width(ModelKit.VILLAGE + "Prop_WoodenFence_Single.gltf", 2.0)
-		if fence:
-			fence.rotation.y = -a
-			fence.position += Vector3(p.x, _world.ground_height(p.x, p.y), p.y)
-			add_child(fence)
-	_place_village_model("Prop_Wagon", 3.4, center + Vector2(6.5, 1.5), 0.6)
+	# Carroça do lado de fora, além das casas.
+	_place_village_model("Prop_Wagon", 3.4, center + Vector2(1.5, 16.0), 0.6)
 
 
 func _place_village_model(model: String, width: float, at: Vector2, rot: float) -> void:

@@ -12,6 +12,8 @@ Jogo de sobrevivência e fantasia 3D (mundo aberto com monstros, coleta, fabrica
 
 Personagem novo começa só com **1 tocha, 2 garrafas de água e 3 frutas silvestres**: o resto se coleta, acha ou fabrica (machado e picareta de pedra, lança e cajado saem nas mãos). Cada vocação tem um **conjunto inicial** de 5 peças feito na bancada com recursos naturais e drops de monstros: **Armadura de pedra** (Guerreiro: muita pedra + presas de ogro), **Traje de patrulheiro** (Arqueiro: couro de goblins), **Manto do aprendiz** (Mago: tecido + pó arcano, moído do cristal arcano na bancada) e **Trajes de pugilista** (Pugilista: tendões de carniçais). O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). Pugilista luta de mãos vazias: proficiência **Pugilismo**, trilha própria e bônus de dano desarmado.
 
+Perto de onde se nasce há pedras soltas (E: +1 pedra) e galhos para começar. Itens recebidos aparecem à direita da tela ("+1 Graveto").
+
 Mouse em cima de um item mostra o que ele faz (ex.: "Recupera 40 de sede"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
 
 Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha (Shift e Ctrl podem ser "segurar" ou "alternar" em Configurações), Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).

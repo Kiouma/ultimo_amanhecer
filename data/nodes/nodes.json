@@ -9,5 +9,5 @@
   {"id":"twisted_tree","name":"Árvore retorcida","kind":"tree","health":140,"per_hit":{"wood":1},"per_hit_chance":{"stick":0.3},"on_depleted":{"wood":5,"stick":2},"respawn":360,"obstacle":true,"radius":0.5,"models":["TwistedTree_1","TwistedTree_2","TwistedTree_3","TwistedTree_4","TwistedTree_5"],"height":[8,10.5]},
   {"id":"herb_patch","name":"Touceira de ervas","kind":"herb","by_hand":true,"solid":false,"verb":"Colher","yield":{"herbs":[2,3]},"respawn":300,"models":["Plant_1","Clover_1","Clover_2"],"height":[0.45,0.6]},
   {"id":"crystal","name":"Cristal arcano","kind":"crystal","gather_as":"rock","health":150,"per_hit":{"stone":0.4},"per_hit_chance":{"arcane_crystal":0.12},"on_depleted":{"arcane_crystal":1},"respawn":900,"obstacle":true,"models":["Rock_Medium_2"],"height":[0.7,0.8]},
-  {"id":"pebbles","name":"Pedrinhas","kind":"pebble","by_hand":true,"solid":false,"verb":"Pegar","yield":{"stone":[1,2]},"respawn":200,"models":["Pebble_Round_1","Pebble_Round_3","Pebble_Square_2","Pebble_Square_5"],"height":[0.18,0.26]}
+  {"id":"pebbles","name":"Pedra solta","kind":"pebble","by_hand":true,"solid":false,"verb":"Pegar","yield":{"stone":[1,1]},"respawn":200,"models":["Pebble_Square_1","Pebble_Square_2","Pebble_Square_3","Pebble_Square_4","Pebble_Square_5","Pebble_Square_6"],"height":[0.2,0.28]}
 ]

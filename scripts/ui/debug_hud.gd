@@ -73,6 +73,7 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_death_penalty(player)
 	_bind_overload(player)
 	_bind_network()
+	_bind_pickup_feed(player)
 	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
 	_bus(Settings.changed, func() -> void:
 		_update_hotbar()
@@ -206,6 +207,54 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## Itens recebidos (coleta, chão, recompensas): "+1 Graveto" à direita da tela. O mesmo
+## item pego de novo logo em seguida soma na mesma linha ("+3 Graveto").
+const FEED_SECONDS := 3.0
+const FEED_MAX := 6
+var _feed: VBoxContainer
+var _feed_rows := {}  # id → [Label, quantidade, Tween]
+
+
+func _bind_pickup_feed(player: Player) -> void:
+	_feed = VBoxContainer.new()
+	_feed.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+	_feed.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_feed.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_feed.alignment = BoxContainer.ALIGNMENT_END
+	_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_feed)
+	player.inventory.received.connect(_on_item_received)
+
+
+func _on_item_received(id: String, count: int) -> void:
+	var row: Array = _feed_rows.get(id, [])
+	if row.is_empty() or not is_instance_valid(row[0]):
+		var label := Label.new()
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		label.add_theme_font_size_override("font_size", 17)
+		label.add_theme_color_override("font_color", Color(0.95, 1.0, 0.85))
+		label.add_theme_color_override("font_outline_color", Color.BLACK)
+		label.add_theme_constant_override("outline_size", 5)
+		_feed.add_child(label)
+		row = [label, 0, null]
+		while _feed.get_child_count() > FEED_MAX:
+			_feed.get_child(0).free()
+	row[1] = int(row[1]) + count
+	var l: Label = row[0]
+	l.text = "+%d  %s" % [int(row[1]), str(GameData.get_item(id).get("name", id))]
+	l.modulate.a = 1.0
+	if row[2] and (row[2] as Tween).is_valid():
+		(row[2] as Tween).kill()
+	var tw := l.create_tween()
+	tw.tween_interval(FEED_SECONDS)
+	tw.tween_property(l, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(func() -> void:
+		_feed_rows.erase(id)
+		l.queue_free())
+	row[2] = tw
+	_feed_rows[id] = row
 
 
 ## Rede (canto superior esquerdo): quem entrou vê o ping até o host; o host vê quantos

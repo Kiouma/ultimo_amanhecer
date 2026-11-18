@@ -27,6 +27,8 @@ const CREATIVE_COUNT := 999
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
 
 signal changed
+## Recebeu itens de fora (coletou, pegou do chão, recompensa): o HUD mostra "+1 Graveto".
+signal received(id: String, count: int)
 
 const HOTBAR_SIZE := 9
 
@@ -335,6 +337,8 @@ func _grant_remote(id: String, count: int, extra: Dictionary) -> void:
 
 func _receive(id: String, count: int, extra: Dictionary = {}) -> void:
 	var left := add_item(id, count, extra)
+	if count - left > 0:
+		received.emit(id, count - left)
 	if left > 0:
 		var player := get_parent() as Node3D
 		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, player, extra)

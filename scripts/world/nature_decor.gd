@@ -38,16 +38,16 @@ const MODELS := {
 const DECOR := {
 	"plains": {"Grass_Common_Short": 0.3, "Grass_Common_Tall": 0.06, "Grass_Wispy_Short": 0.08,
 		"Flower_3_Group": 0.025, "Flower_4_Group": 0.025, "Flower_3_Single": 0.02, "Flower_4_Single": 0.02,
-		"Petal_*": 0.03, "Clover_*": 0.03, "Pebble_Round_*": 0.02},
+		"Petal_*": 0.03, "Clover_*": 0.03},
 	"forest": {"Grass_Common_Short": 0.14, "Grass_Wispy_Short": 0.08, "Fern_1": 0.08, "Plant_1": 0.04,
-		"Plant_7": 0.04, "Plant_1_Big": 0.01, "Mushroom_Common": 0.03, "Clover_*": 0.05, "Pebble_Round_*": 0.02},
+		"Plant_7": 0.04, "Plant_1_Big": 0.01, "Mushroom_Common": 0.03, "Clover_*": 0.05},
 	"swamp": {"Grass_Wispy_Tall": 0.2, "Grass_Common_Tall": 0.1, "Fern_1": 0.06, "Plant_7_Big": 0.04,
 		"Mushroom_Laetiporus": 0.02, "Mushroom_Common": 0.03},
-	"lakeside": {"Grass_Wispy_Tall": 0.12, "Grass_Common_Short": 0.12, "Pebble_Round_*": 0.1,
+	"lakeside": {"Grass_Wispy_Tall": 0.12, "Grass_Common_Short": 0.12,
 		"Plant_7": 0.03, "Flower_3_Single": 0.02},
-	"mountain": {"Pebble_Square_*": 0.12, "RockPath_Square_Small_*": 0.04, "Grass_Wispy_Short": 0.05},
-	"tundra": {"Pebble_Round_*": 0.05, "Pebble_Square_*": 0.05, "Grass_Wispy_Short": 0.025},
-	"contaminated": {"Mushroom_Laetiporus": 0.03, "Mushroom_Common": 0.05, "Pebble_Square_*": 0.06,
+	"mountain": {"RockPath_Square_Small_*": 0.04, "Grass_Wispy_Short": 0.05},
+	"tundra": {"Grass_Wispy_Short": 0.025},
+	"contaminated": {"Mushroom_Laetiporus": 0.03, "Mushroom_Common": 0.05,
 		"Grass_Wispy_Short": 0.05},
 }
 
