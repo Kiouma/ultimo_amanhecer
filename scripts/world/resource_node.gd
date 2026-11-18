@@ -6,6 +6,7 @@ extends StaticBody3D
 ##   fator de coleta da ferramenta ("gather" do item: machado bom em árvore,
 ##   picareta em rocha). Ao esgotar, dá um bônus e some.
 ## - Arbusto/ninho/galhos ("by_hand"): E colhe tudo de uma vez e some.
+## Visual: modelos do Nature MegaKit (NatureKit) quando os dados têm "models".
 ## Some e volta depois de "respawn" segundos (ver Arena).
 ##
 ## Rede: só o servidor muda o recurso. Quem coleta pede (request_gather); o
@@ -137,7 +138,10 @@ func _deplete() -> void:
 	queue_free()
 
 
-# --- Visual (provisório: formas simples) -------------------------------------------
+# --- Visual ------------------------------------------------------------------------
+# Com "models" nos dados: um modelo do Nature MegaKit (NatureKit), escolhido pela posição
+# (igual em todas as máquinas) e escalado para uma altura em "height" [mín, máx].
+# Sem "models": formas simples (reserva).
 
 func _shake() -> void:
 	if _visual == null:
@@ -148,58 +152,67 @@ func _shake() -> void:
 	tw.tween_property(_visual, "rotation:z", 0.0, 0.08)
 
 
+## Põe o modelo do kit em _visual. Devolve a caixa dele já escalada (vazia = sem modelo).
+func _add_model() -> AABB:
+	var models: Array = data.get("models", [])
+	if models.is_empty():
+		return AABB()
+	var h := NatureKit.position_hash(position)
+	var model := str(models[h % models.size()])
+	var span: Array = data.get("height", [0.0, 0.0])
+	var target := lerpf(float(span[0]), float(span[1]), float((h / 7) % 1000) / 999.0)
+	var node := NatureKit.instance(model, target)
+	if node == null:
+		return AABB()
+	_visual.add_child(node)
+	var box := NatureKit.mesh(model).get_aabb()
+	return AABB(box.position * node.scale, box.size * node.scale)
+
+
 func _build() -> void:
 	_visual = Node3D.new()
 	add_child(_visual)
+	var box := _add_model()
+	var has_model := box.size != Vector3.ZERO
 	var shape := CollisionShape3D.new()
 	match str(data.get("kind", "")):
-		"tree" when str(data.get("look", "")) == "pine":
-			_visual.add_child(Weapon.cylinder(0.18, 2.4, Color(0.32, 0.22, 0.14), Vector3(0, 1.2, 0)))
-			for k in 3:
-				var cone := MeshInstance3D.new()
-				var mesh := CylinderMesh.new()
-				mesh.top_radius = 0.0
-				mesh.bottom_radius = 1.5 - k * 0.38
-				mesh.height = 1.8
-				var mat := StandardMaterial3D.new()
-				mat.albedo_color = Color(0.16, 0.3, 0.22).lerp(Color(0.85, 0.88, 0.92), 0.25 if k == 2 else 0.1)
-				mesh.material = mat
-				cone.mesh = mesh
-				cone.position.y = 2.0 + k * 1.0
-				_visual.add_child(cone)
-			var cyl := CylinderShape3D.new()
-			cyl.radius = 0.25
-			cyl.height = 3.0
-			shape.shape = cyl
-			shape.position.y = 1.5
 		"tree":
-			var trunk := Weapon.cylinder(0.22, 3.2, Color(0.36, 0.25, 0.15), Vector3(0, 1.6, 0))
-			_visual.add_child(trunk)
-			_visual.add_child(Weapon.sphere(1.4, Color(0.2, 0.42, 0.18), Vector3(0, 3.6, 0)))
-			_visual.add_child(Weapon.sphere(1.0, Color(0.24, 0.48, 0.2), Vector3(0.6, 4.4, 0.3)))
+			if not has_model:
+				_build_tree_shapes(str(data.get("look", "")) == "pine")
 			var cyl := CylinderShape3D.new()
-			cyl.radius = 0.3
+			cyl.radius = float(data.get("radius", 0.3))
 			cyl.height = 3.2
 			shape.shape = cyl
 			shape.position.y = 1.6
 		"rock":
-			var rock := Weapon.sphere(0.8, Color(0.45, 0.45, 0.47), Vector3(0, 0.45, 0))
-			rock.scale = Vector3(1.3, 0.75, 1.0)
-			_visual.add_child(rock)
-			var box := BoxShape3D.new()
-			box.size = Vector3(1.9, 1.1, 1.5)
-			shape.shape = box
-			shape.position.y = 0.5
+			if not has_model:
+				var rock := Weapon.sphere(0.8, Color(0.45, 0.45, 0.47), Vector3(0, 0.45, 0))
+				rock.scale = Vector3(1.3, 0.75, 1.0)
+				_visual.add_child(rock)
+				box = AABB(Vector3(-0.95, 0.0, -0.75), Vector3(1.9, 1.1, 1.5))
+			var rock_box := BoxShape3D.new()
+			rock_box.size = Vector3(box.size.x * 0.8, maxf(box.end.y, 0.4), box.size.z * 0.8)
+			shape.shape = rock_box
+			shape.position = Vector3(box.get_center().x, rock_box.size.y * 0.5, box.get_center().z)
 		"bush":
-			var bush := Weapon.sphere(0.6, Color(0.18, 0.4, 0.2), Vector3(0, 0.5, 0))
-			bush.scale = Vector3(1.2, 0.85, 1.2)
-			_visual.add_child(bush)
-			# Frutinhas na superfície da folhagem (elipsoide 0,72 × 0,51).
-			for i in 14:
-				var a := TAU * i / 14.0 + (0.3 if i % 2 else 0.0)
-				var h := -0.15 + 0.5 * float(i % 3) / 2.0
-				var r := 0.74 * sqrt(maxf(1.0 - h * h / 0.26, 0.2))
-				_visual.add_child(Weapon.sphere(0.07, Color(0.75, 0.1, 0.2), Vector3(cos(a) * r, 0.5 + h, sin(a) * r)))
+			# Folhagem como elipsoide (raio horizontal rx, vertical ry, centro cy).
+			var rx := 0.72
+			var ry := 0.51
+			var cy := 0.5
+			if has_model:
+				rx = maxf(box.size.x, box.size.z) * 0.36
+				ry = box.end.y * 0.4
+				cy = box.end.y * 0.5
+			else:
+				var bush := Weapon.sphere(0.6, Color(0.18, 0.4, 0.2), Vector3(0, 0.5, 0))
+				bush.scale = Vector3(1.2, 0.85, 1.2)
+				_visual.add_child(bush)
+			# Frutinhas na superfície da folhagem.
+			for i in 16:
+				var a := TAU * i / 16.0 + (0.3 if i % 2 else 0.0)
+				var v := -0.3 + 0.6 * float(i % 3) / 2.0
+				var r := rx * sqrt(maxf(1.0 - v * v, 0.2))
+				_visual.add_child(Weapon.sphere(0.07, Color(0.75, 0.1, 0.2), Vector3(cos(a) * r, cy + v * ry, sin(a) * r)))
 			var sphere := SphereShape3D.new()
 			sphere.radius = 0.6
 			shape.shape = sphere
@@ -211,22 +224,29 @@ func _build() -> void:
 				var feather := Weapon.box(Vector3(0.04, 0.01, 0.22), Color(0.95, 0.95, 0.92), Vector3(-0.1 + i * 0.1, 0.18, 0))
 				feather.rotation.y = 0.5 * i
 				_visual.add_child(feather)
-			var box := BoxShape3D.new()
-			box.size = Vector3(0.6, 0.3, 0.6)
-			shape.shape = box
+			var nest_box := BoxShape3D.new()
+			nest_box.size = Vector3(0.6, 0.3, 0.6)
+			shape.shape = nest_box
 			shape.position.y = 0.15
 		"herb":
-			for i in 7:
-				var leaf := Weapon.box(Vector3(0.05, 0.35, 0.12), Color(0.3, 0.55, 0.25), Vector3(cos(i * 0.9) * 0.15, 0.17, sin(i * 0.9) * 0.15))
-				leaf.rotation = Vector3(0.3 * cos(i * 0.9), i * 0.9, 0.3 * sin(i * 0.9))
-				_visual.add_child(leaf)
-			_visual.add_child(Weapon.sphere(0.05, Color(0.85, 0.85, 0.4), Vector3(0, 0.38, 0), true))
-			var box := BoxShape3D.new()
-			box.size = Vector3(0.6, 0.4, 0.6)
-			shape.shape = box
+			var top := 0.38
+			if has_model:
+				top = box.end.y * 0.85
+			else:
+				for i in 7:
+					var leaf := Weapon.box(Vector3(0.05, 0.35, 0.12), Color(0.3, 0.55, 0.25), Vector3(cos(i * 0.9) * 0.15, 0.17, sin(i * 0.9) * 0.15))
+					leaf.rotation = Vector3(0.3 * cos(i * 0.9), i * 0.9, 0.3 * sin(i * 0.9))
+					_visual.add_child(leaf)
+			# Flores amarelas que brilham: dá para achar a erva no meio do mato.
+			for i in 3:
+				_visual.add_child(Weapon.sphere(0.05, Color(0.85, 0.85, 0.4), Vector3(cos(i * 2.1) * 0.12, top, sin(i * 2.1) * 0.12), true))
+			var herb_box := BoxShape3D.new()
+			herb_box.size = Vector3(0.6, 0.4, 0.6)
+			shape.shape = herb_box
 			shape.position.y = 0.2
 		"crystal":
-			_visual.add_child(Weapon.sphere(0.7, Color(0.35, 0.33, 0.38), Vector3(0, 0.3, 0)))
+			if not has_model:
+				_visual.add_child(Weapon.sphere(0.7, Color(0.35, 0.33, 0.38), Vector3(0, 0.3, 0)))
 			for i in 5:
 				var shard := Weapon.box(Vector3(0.18, 0.9 - i * 0.1, 0.18), Color(0.6, 0.35, 0.95), Vector3(cos(i * 1.3) * 0.3, 0.7, sin(i * 1.3) * 0.3), true)
 				shard.rotation = Vector3(0.35 * cos(i * 1.3), i, 0.35 * sin(i * 1.3))
@@ -237,18 +257,18 @@ func _build() -> void:
 			light.omni_range = 4.0
 			light.position.y = 1.0
 			_visual.add_child(light)
-			var box := BoxShape3D.new()
-			box.size = Vector3(1.4, 1.4, 1.4)
-			shape.shape = box
+			var crystal_box := BoxShape3D.new()
+			crystal_box.size = Vector3(1.4, 1.4, 1.4)
+			shape.shape = crystal_box
 			shape.position.y = 0.6
 		_:  # galhos caídos
 			for i in 4:
 				var branch := Weapon.box(Vector3(0.05, 0.05, 0.7), Color(0.4, 0.28, 0.16), Vector3(0, 0.05, 0))
 				branch.rotation.y = 0.8 * i
 				_visual.add_child(branch)
-			var box := BoxShape3D.new()
-			box.size = Vector3(0.8, 0.2, 0.8)
-			shape.shape = box
+			var branch_box := BoxShape3D.new()
+			branch_box.size = Vector3(0.8, 0.2, 0.8)
+			shape.shape = branch_box
 			shape.position.y = 0.1
 	# Desempenho: some de longe (a névoa já esconde). Árvores e rochas se veem de mais longe.
 	var view_range: float = {"tree": 140.0, "rock": 110.0, "crystal": 110.0}.get(str(data.get("kind", "")), 45.0)
@@ -258,3 +278,25 @@ func _build() -> void:
 		m.visibility_range_end_margin = 8.0
 		m.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	add_child(shape)
+
+
+## Árvore de formas simples (sem modelo): copa redonda ou pinheiro de cones.
+func _build_tree_shapes(pine: bool) -> void:
+	if pine:
+		_visual.add_child(Weapon.cylinder(0.18, 2.4, Color(0.32, 0.22, 0.14), Vector3(0, 1.2, 0)))
+		for k in 3:
+			var cone := MeshInstance3D.new()
+			var mesh := CylinderMesh.new()
+			mesh.top_radius = 0.0
+			mesh.bottom_radius = 1.5 - k * 0.38
+			mesh.height = 1.8
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.16, 0.3, 0.22).lerp(Color(0.85, 0.88, 0.92), 0.25 if k == 2 else 0.1)
+			mesh.material = mat
+			cone.mesh = mesh
+			cone.position.y = 2.0 + k * 1.0
+			_visual.add_child(cone)
+		return
+	_visual.add_child(Weapon.cylinder(0.22, 3.2, Color(0.36, 0.25, 0.15), Vector3(0, 1.6, 0)))
+	_visual.add_child(Weapon.sphere(1.4, Color(0.2, 0.42, 0.18), Vector3(0, 3.6, 0)))
+	_visual.add_child(Weapon.sphere(1.0, Color(0.24, 0.48, 0.2), Vector3(0.6, 4.4, 0.3)))

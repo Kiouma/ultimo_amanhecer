@@ -37,10 +37,10 @@ const BIOME_NAMES := {
 const DENSITY := {
 	"forest": {"tree": 0.55, "berry_bush": 0.05, "branches": 0.08, "nest": 0.05, "rock": 0.03},
 	"plains": {"tree": 0.05, "berry_bush": 0.07, "branches": 0.03, "rock": 0.03, "nest": 0.01},
-	"swamp": {"tree": 0.1, "herb_patch": 0.14, "branches": 0.06},
+	"swamp": {"twisted_tree": 0.04, "dead_tree": 0.03, "tree": 0.03, "herb_patch": 0.14, "branches": 0.06},
 	"lakeside": {"tree": 0.07, "berry_bush": 0.05, "rock": 0.03, "nest": 0.03},
-	"mountain": {"rock": 0.15, "tree": 0.04},
-	"contaminated": {"crystal": 0.2, "rock": 0.05, "tree": 0.02},
+	"mountain": {"rock": 0.15, "pine": 0.04},
+	"contaminated": {"crystal": 0.2, "rock": 0.05, "dead_tree": 0.02},
 	"tundra": {"pine": 0.33, "rock": 0.06, "branches": 0.04},
 }
 const CELL_SIZE := 8.0
@@ -98,6 +98,9 @@ func _setup_level() -> void:
 		sun.directional_shadow_max_distance = 70.0
 	_build_terrain()
 	_build_water()
+	# Vegetação decorativa (só visual; o servidor sem tela não precisa).
+	if DisplayServer.get_name() != "headless":
+		add_child(NatureDecor.new(self))
 
 
 static func find(tree: SceneTree) -> Node:

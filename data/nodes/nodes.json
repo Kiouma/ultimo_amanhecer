@@ -1,10 +1,20 @@
 [
-  { "id": "tree", "name": "Árvore", "kind": "tree", "health": 100, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 3, "stick": 2 }, "respawn": 300, "obstacle": true },
-  { "id": "rock", "name": "Rocha", "kind": "rock", "health": 120, "per_hit": { "stone": 1 }, "per_hit_chance": { "scrap_metal": 0.08 }, "on_depleted": { "stone": 3 }, "respawn": 420, "obstacle": true },
-  { "id": "berry_bush", "name": "Arbusto de frutas", "kind": "bush", "by_hand": true, "verb": "Colher", "yield": { "berries": [2, 4], "stick": [0, 1] }, "respawn": 180 },
+  { "id": "tree", "name": "Árvore", "kind": "tree", "health": 100, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 3, "stick": 2 }, "respawn": 300, "obstacle": true,
+    "models": ["CommonTree_1", "CommonTree_2", "CommonTree_3", "CommonTree_4", "CommonTree_5"], "height": [5.5, 7.5] },
+  { "id": "rock", "name": "Rocha", "kind": "rock", "health": 120, "per_hit": { "stone": 1 }, "per_hit_chance": { "scrap_metal": 0.08 }, "on_depleted": { "stone": 3 }, "respawn": 420, "obstacle": true,
+    "models": ["Rock_Medium_1", "Rock_Medium_2", "Rock_Medium_3"], "height": [1.1, 1.5] },
+  { "id": "berry_bush", "name": "Arbusto de frutas", "kind": "bush", "by_hand": true, "verb": "Colher", "yield": { "berries": [2, 4], "stick": [0, 1] }, "respawn": 180,
+    "models": ["Bush_Common"], "height": [1.0, 1.2] },
   { "id": "nest", "name": "Ninho", "kind": "nest", "by_hand": true, "solid": false, "verb": "Pegar penas do", "yield": { "feather": [2, 4] }, "respawn": 240 },
   { "id": "branches", "name": "Galhos caídos", "kind": "branches", "by_hand": true, "solid": false, "verb": "Juntar", "yield": { "stick": [2, 3] }, "respawn": 150 },
-  { "id": "pine", "name": "Pinheiro", "kind": "tree", "look": "pine", "health": 100, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 4, "stick": 1 }, "respawn": 300, "obstacle": true },
-  { "id": "herb_patch", "name": "Touceira de ervas", "kind": "herb", "by_hand": true, "solid": false, "verb": "Colher", "yield": { "herbs": [2, 3] }, "respawn": 300 },
-  { "id": "crystal", "name": "Cristal arcano", "kind": "crystal", "gather_as": "rock", "health": 150, "per_hit": { "stone": 0.4 }, "per_hit_chance": { "arcane_crystal": 0.12 }, "on_depleted": { "arcane_crystal": 1 }, "respawn": 900, "obstacle": true }
+  { "id": "pine", "name": "Pinheiro", "kind": "tree", "look": "pine", "health": 100, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 4, "stick": 1 }, "respawn": 300, "obstacle": true,
+    "models": ["Pine_1", "Pine_2", "Pine_3", "Pine_4", "Pine_5"], "height": [6.0, 8.5] },
+  { "id": "dead_tree", "name": "Árvore seca", "kind": "tree", "health": 80, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.5 }, "on_depleted": { "wood": 2, "stick": 3 }, "respawn": 300, "obstacle": true,
+    "models": ["DeadTree_1", "DeadTree_2", "DeadTree_3", "DeadTree_4", "DeadTree_5"], "height": [5.0, 7.5] },
+  { "id": "twisted_tree", "name": "Árvore retorcida", "kind": "tree", "health": 140, "per_hit": { "wood": 1 }, "per_hit_chance": { "stick": 0.3 }, "on_depleted": { "wood": 5, "stick": 2 }, "respawn": 360, "obstacle": true, "radius": 0.5,
+    "models": ["TwistedTree_1", "TwistedTree_2", "TwistedTree_3", "TwistedTree_4", "TwistedTree_5"], "height": [8.0, 10.5] },
+  { "id": "herb_patch", "name": "Touceira de ervas", "kind": "herb", "by_hand": true, "solid": false, "verb": "Colher", "yield": { "herbs": [2, 3] }, "respawn": 300,
+    "models": ["Plant_1", "Clover_1", "Clover_2"], "height": [0.45, 0.6] },
+  { "id": "crystal", "name": "Cristal arcano", "kind": "crystal", "gather_as": "rock", "health": 150, "per_hit": { "stone": 0.4 }, "per_hit_chance": { "arcane_crystal": 0.12 }, "on_depleted": { "arcane_crystal": 1 }, "respawn": 900, "obstacle": true,
+    "models": ["Rock_Medium_2"], "height": [0.7, 0.8] }
 ]
