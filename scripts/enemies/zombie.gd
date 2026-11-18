@@ -106,6 +106,10 @@ func _physics_process(delta: float) -> void:
 		_groan_timer = randf_range(4.0, 9.0) if state in [State.CHASE, State.SIEGE] else randf_range(9.0, 20.0)
 		Sfx.play("groan", global_position + Vector3.UP * 1.5, -4.0, 0.15 if _stat("scale", 1.0) < 1.5 else 0.02)
 	if not multiplayer.is_server():
+		# Entre um pacote e outro (30 por segundo, chegando irregular pela internet), anda
+		# pela velocidade recebida: o movimento fica liso; o próximo pacote corrige.
+		if state != State.DEAD:
+			position += Vector3(velocity.x, 0.0, velocity.z) * delta
 		_client_animate()
 		return
 	if state == State.DEAD:

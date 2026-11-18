@@ -8,6 +8,9 @@ var _status: Label
 var _mode: OptionButton
 var _main_box: VBoxContainer
 var _settings: SettingsPanel
+var _share_box: VBoxContainer
+var _share_label: Label
+var _copy_button: Button
 
 
 func _ready() -> void:
@@ -51,6 +54,21 @@ func _ready() -> void:
 			player.creative = index == 1
 			_status.text = tr("Modo criativo: abra o Tab e use a aba Criativo.") if player.creative else tr("Modo sobrevivência."))
 	_main_box.add_child(_mode)
+	# Hospedando: como os amigos entram (IP público e porta, ou aviso de CGNAT/VPN).
+	_share_box = VBoxContainer.new()
+	_share_label = Label.new()
+	_share_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_share_label.custom_minimum_size = Vector2(340, 0)
+	_share_label.add_theme_font_size_override("font_size", 12)
+	_share_label.add_theme_color_override("font_color", Color(0.75, 0.95, 0.75))
+	_share_box.add_child(_share_label)
+	_copy_button = Button.new()
+	_copy_button.text = "Copiar endereço para os amigos"
+	_copy_button.pressed.connect(func() -> void:
+		DisplayServer.clipboard_set(Network.share_address())
+		_status.text = tr("Endereço copiado: %s") % Network.share_address())
+	_share_box.add_child(_copy_button)
+	_main_box.add_child(_share_box)
 	_button(_main_box, "Salvar e sair para o menu", _quit_to_menu)
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -105,6 +123,11 @@ func toggle() -> void:
 	_show_settings(false)
 	if _mode and player:
 		_mode.select(1 if player.creative else 0)
+	var hosting := Network.is_online() and multiplayer.is_server()
+	_share_box.visible = hosting
+	if hosting:
+		_share_label.text = Network.share_text()
+		_copy_button.visible = Network.share_address() != ""
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
 
 

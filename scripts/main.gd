@@ -144,14 +144,14 @@ func _show_main() -> void:
 func _show_multiplayer() -> void:
 	_clear()
 	_title("Multiplayer")
-	_note("Co-op: até 5 jogadores. O host usa a porta 7777 (UDP). Fora da mesma rede, o host precisa liberar essa porta no roteador.")
+	_note("Co-op: até 5 jogadores. Ao hospedar, o jogo tenta abrir a porta 7777 (UDP) no roteador e mostra o endereço para passar aos amigos (também no Esc). Se não der (CGNAT ou roteador sem UPnP), usem uma VPN de jogos como Radmin VPN, ZeroTier ou Tailscale e entrem pelo IP dela. Todos precisam do mesmo executável do jogo.")
 	_button("Hospedar partida (escolher mundo)", func() -> void:
 		_flow = "host"
 		_show_worlds())
 	var row := HBoxContainer.new()
 	var ip := LineEdit.new()
 	ip.text = _address
-	ip.placeholder_text = "IP do host"
+	ip.placeholder_text = "IP do host (ex.: 189.12.34.56 ou 189.12.34.56:7777)"
 	ip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ip.custom_minimum_size = Vector2(0, 40)
 	row.add_child(ip)

@@ -53,4 +53,5 @@ radius = 0.4
 height = 1.8
 
 [node name="Sync" type="MultiplayerSynchronizer" parent="."]
+replication_interval = 0.033
 replication_config = SubResource("SceneReplicationConfig_zombie")

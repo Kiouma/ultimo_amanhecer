@@ -72,6 +72,7 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_overload(player)
+	_bind_network()
 	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
 	_bus(Settings.changed, func() -> void:
 		_update_hotbar()
@@ -205,6 +206,49 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## Rede (canto superior esquerdo): quem entrou vê o ping até o host; o host vê quantos
+## jogadores há e, por um tempo depois de hospedar, como os amigos entram (IP e porta).
+var _net_label: Label
+var _net_timer := 0.0
+var _share_until := 0.0
+
+
+func _bind_network() -> void:
+	_net_label = Label.new()
+	_net_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 12)
+	_net_label.add_theme_font_size_override("font_size", 13)
+	_net_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_net_label.add_theme_constant_override("outline_size", 4)
+	_net_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_net_label.custom_minimum_size = Vector2(420, 0)
+	add_child(_net_label)
+	_share_until = Time.get_ticks_msec() / 1000.0 + 25.0
+	_bus(Network.upnp_finished, func(_info: Dictionary) -> void:
+		_share_until = Time.get_ticks_msec() / 1000.0 + 25.0
+		_update_network())
+	_update_network()
+
+
+func _update_network() -> void:
+	if _net_label == null:
+		return
+	if not Network.is_online():
+		_net_label.text = ""
+		return
+	if multiplayer.is_server():
+		var count := multiplayer.get_peers().size() + 1
+		var text := tr("Hospedando · %d/%d jogadores") % [count, Network.MAX_PLAYERS]
+		if Time.get_ticks_msec() / 1000.0 < _share_until:
+			text += "\n" + Network.share_text()
+		_net_label.text = text
+		_net_label.add_theme_color_override("font_color", Color(0.75, 0.95, 0.75))
+	else:
+		var ping := Network.ping_ms()
+		_net_label.text = tr("Ping: %d ms") % ping
+		var color := Color(0.75, 0.95, 0.75) if ping < 120 else (Color(1.0, 0.85, 0.4) if ping < 250 else Color(1.0, 0.45, 0.4))
+		_net_label.add_theme_color_override("font_color", color)
 
 
 ## Peso acima da capacidade: aviso acima da vida (fica lento, inclusive correndo).
@@ -412,6 +456,10 @@ func _process(delta: float) -> void:
 	if _boss_timer <= 0.0:
 		_boss_timer = 0.25
 		_update_boss_bar()
+	_net_timer -= delta
+	if _net_timer <= 0.0:
+		_net_timer = 1.0
+		_update_network()
 
 
 ## Barra do chefe (Colosso...) no topo, quando algum está vivo a até 60 m.

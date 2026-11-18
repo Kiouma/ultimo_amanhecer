@@ -192,6 +192,10 @@ pause={
 ]
 }
 
+[internationalization]
+
+locale/fallback="pt_BR"
+
 [layer_names]
 
 3d_physics/layer_1="world"

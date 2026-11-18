@@ -31,6 +31,21 @@ func _ready() -> void:
 		if arg.begins_with("--save-root="):
 			root = arg.get_slice("=", 1).trim_suffix("/") + "/"
 	_migrate_legacy()
+	EventBus.player_spawned.connect(_on_player_spawned)
+
+
+## Personagem local saindo do mundo (host caiu, conexão perdida, voltou ao menu): salva
+## na hora, para quem joga no mundo de um amigo não perder o que fez desde o último save.
+func _on_player_spawned(p: Node) -> void:
+	if p is Player and p.is_multiplayer_authority():
+		p.tree_exiting.connect(func() -> void: _save_character_of(p))
+
+
+func _save_character_of(p: Player) -> void:
+	var level := _world()
+	if level == null or current_character_id == "" or not p.is_inside_tree() or p.progression == null:
+		return
+	_write(_character_path(current_character_id), _capture_character(p, level, _read(_character_path(current_character_id))))
 
 
 func _notification(what: int) -> void:

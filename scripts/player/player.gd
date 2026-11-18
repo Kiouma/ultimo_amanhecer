@@ -222,8 +222,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not is_local():
-		# Posição e rotação chegam pela rede; aqui só anima.
+		# Posição e rotação chegam pela rede; entre pacotes, anda pela velocidade recebida
+		# (liso mesmo com a internet atrasando alguns pacotes) e anima.
 		if not health.is_dead:
+			position += Vector3(velocity.x, 0.0, velocity.z) * delta
 			model.update_locomotion(velocity * transform.basis, net_on_floor, net_crouching, net_sprinting)
 		return
 

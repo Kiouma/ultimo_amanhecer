@@ -51,7 +51,15 @@ Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noi
 
 Atalhos de linha de comando (pulam o menu): `godot -- --host`, `godot -- --join=IP`, `godot -- --solo` (usam o personagem e o mundo mais recentes; `--new` cria um mundo novo, `--world=<id>` e `--character=<id>` escolhem, `--save-root=user://pasta` isola os saves para testes).
 
-Entre PCs: na mesma rede use o IP local do host (ex.: `192.168.0.10`). Pela internet, o host libera a porta **7777 UDP** no roteador (ou usa uma VPN como Tailscale/ZeroTier/Radmin).
+Entre PCs: na mesma rede use o IP local do host (ex.: `192.168.0.10`).
+
+**Pela internet (amigos em outras cidades):**
+1. Todos usam **o mesmo executável** (o jogo confere a versão e os dados ao conectar e recusa versões diferentes com um aviso).
+2. O host clica em Multiplayer → Hospedar. O jogo tenta abrir a porta **7777 UDP** sozinho (UPnP) e mostra no canto da tela (e no **Esc**, com botão de copiar) o endereço para passar aos amigos.
+3. Se aparecer que não deu (roteador sem UPnP) abra a porta 7777 UDP no roteador apontando para o PC do host. Se aparecer **CGNAT** (comum em operadoras brasileiras), abrir porta não adianta: usem uma VPN de jogos (**Radmin VPN**, ZeroTier ou Tailscale) — todos entram na mesma rede da VPN e os amigos usam o IP da VPN do host.
+4. Os amigos digitam o endereço em Multiplayer → Entrar (aceita `IP` ou `IP:porta`). O canto da tela mostra o ping.
+
+Quem entra no mundo de um amigo salva o próprio personagem na hora em que sai (inclusive se o host fechar ou a conexão cair).
 
 **Como a rede funciona** (autoload `Network`): o host é o servidor e manda nos zumbis, na vida, no dano e nas mortes. Cada jogador controla o movimento do próprio personagem. Ataques detectam o acerto em quem atacou e pedem o dano ao servidor (`Health.take_damage`).
 
