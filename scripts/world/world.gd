@@ -104,6 +104,15 @@ var _tasks := {}  # id da tarefa na thread → true (espera ao sair)
 var _stream_timer := 0.0
 var _depleted := {}  # "x:z" (posição ×10) → hora (ms) em que o recurso volta
 var _dirty_nav := {}
+## Navegação: blocos calculando na thread, prontos para aplicar ([bloco, malha]).
+var _nav_baking := {}
+var _nav_done: Array = []
+var _nav_mutex := Mutex.new()
+## Recursos a criar ([bloco, dados]) e a liberar: aos poucos, em lotes por quadro.
+var _spawn_queue: Array = []
+var _free_queue: Array = []
+## Tela de carregamento: tudo mais rápido (sem se preocupar com engasgos).
+var preloading := false
 var _terrain_mat: StandardMaterial3D
 var _water_mat: StandardMaterial3D
 
@@ -136,6 +145,7 @@ func _exit_tree() -> void:
 	for id: int in _tasks.keys():
 		WorkerThreadPool.wait_for_task_completion(id)
 	_tasks.clear()
+	MapTiles.wait_all()  # imagens do mapa sendo feitas a partir deste mundo
 	if BuildPiece.base_height_func == cell_base:
 		BuildPiece.base_height_func = Callable()
 
@@ -348,36 +358,40 @@ func _build_region(r: Vector2i) -> void:
 	for poi: Dictionary in _region_pois(r):
 		if str(poi.type) == "square":
 			continue
+		# As peças entram na fila de montagem (aos poucos: um vilarejo tem ~90 peças); as
+		# decisões (paredes faltando, telhado) são sorteadas agora, iguais a antes.
 		var rng := RandomNumberGenerator.new()
 		rng.seed = int(poi.seed)
 		var cell: Vector2i = poi.cell
 		var size: Vector2i = poi.size
+		var jobs: Array = []
 		match str(poi.type):
 			"military":
-				_ring_walls(cell, size, "stone", int(poi.door), 0.0, rng)
+				_ring_walls(cell, size, "stone", int(poi.door), 0.0, rng, jobs)
 			"ruins":
 				for j in size.y:
 					for i in size.x:
 						if rng.randf() < 0.6:
-							Structures._spawn_piece("foundation", "stone", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0)
-				_ring_walls(cell, size, "stone", int(poi.door), 0.4, rng)
+							jobs.append(Structures._spawn_piece.bind("foundation", "stone", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0))
+				_ring_walls(cell, size, "stone", int(poi.door), 0.4, rng, jobs)
 			_:
 				for j in size.y:
 					for i in size.x:
-						Structures._spawn_piece("foundation", "wood", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0)
-				_ring_walls(cell, size, "wood", int(poi.door), 0.12, rng)
+						jobs.append(Structures._spawn_piece.bind("foundation", "wood", "c:%d:%d:0" % [cell.x + i, cell.y + j], 0))
+				_ring_walls(cell, size, "wood", int(poi.door), 0.12, rng, jobs)
 				# Telhado, se as paredes seguram (abandonada: às vezes falta um pedaço).
 				for j in size.y:
 					for i in size.x:
 						if rng.randf() < 0.85:
-							Structures._spawn_piece("floor", "wood", "c:%d:%d:1" % [cell.x + i, cell.y + j], 0)
-		Structures._collapse_unsupported()
-		_drop_loot(poi, rng)
+							jobs.append(Structures._spawn_piece.bind("floor", "wood", "c:%d:%d:1" % [cell.x + i, cell.y + j], 0))
+		jobs.append(Structures._collapse_unsupported)
+		jobs.append(_drop_loot.bind(poi, rng))
+		_build_queue.append_array(jobs)
 
 
-## Paredes em volta de um retângulo de células. door: lado da porta (0 norte, 1 sul,
-## 2 oeste, 3 leste). missing: chance de faltar uma parede (abandonado/ruína).
-func _ring_walls(cell: Vector2i, size: Vector2i, tier: String, door: int, missing: float, rng: RandomNumberGenerator) -> void:
+## Paredes em volta de um retângulo de células (entram em jobs). door: lado da porta
+## (0 norte, 1 sul, 2 oeste, 3 leste). missing: chance de faltar uma parede (abandonado/ruína).
+func _ring_walls(cell: Vector2i, size: Vector2i, tier: String, door: int, missing: float, rng: RandomNumberGenerator, jobs: Array) -> void:
 	var edges: Array = []  # [chave, rot, lado]
 	for i in size.x:
 		edges.append(["z:%d:%d:0" % [cell.x + i, cell.y], 0, 0])
@@ -389,9 +403,9 @@ func _ring_walls(cell: Vector2i, size: Vector2i, tier: String, door: int, missin
 	var door_key: String = door_edges[rng.randi_range(0, door_edges.size() - 1)][0]
 	for e: Array in edges:
 		if e[0] == door_key:
-			Structures._spawn_piece("doorway", tier, e[0], int(e[1]))
+			jobs.append(Structures._spawn_piece.bind("doorway", tier, e[0], int(e[1])))
 		elif rng.randf() >= missing:
-			Structures._spawn_piece("wall", tier, e[0], int(e[1]))
+			jobs.append(Structures._spawn_piece.bind("wall", tier, e[0], int(e[1])))
 
 
 func _drop_loot(poi: Dictionary, rng: RandomNumberGenerator) -> void:
@@ -434,7 +448,7 @@ static func _in_poi_list(x: float, z: float, list: Array) -> bool:
 # --- Blocos: carregar e descarregar ----------------------------------------------------------
 
 func _process(delta: float) -> void:
-	if multiplayer.is_server():
+	if multiplayer.is_server() and not preloading:
 		_pop_timer -= delta
 		if _pop_timer <= 0.0:
 			_pop_timer = POP_INTERVAL
@@ -442,16 +456,55 @@ func _process(delta: float) -> void:
 	_apply_results()
 	_stream_timer -= delta
 	if _stream_timer <= 0.0:
-		_stream_timer = 0.3
+		_stream_timer = 0.0 if preloading else 0.3
 		_stream()
-	for c: Vector2i in _dirty_nav.keys():
+	_process_build_queue()
+	_process_spawn_queue()
+	_process_free_queue()
+	_process_navigation()
+
+
+## Cria recursos aos poucos (cada árvore/pedra custa ~1-2 ms: todos de uma vez travava ao
+## cruzar um bloco): para quando gasta FRAME_BUDGET_MS no quadro.
+const FRAME_BUDGET_MS := 2.5
+const FREES_PER_FRAME := 25
+
+
+func _budget_left(start_usec: int) -> bool:
+	return preloading or Time.get_ticks_usec() - start_usec < FRAME_BUDGET_MS * 1000.0
+
+
+func _process_spawn_queue() -> void:
+	var start := Time.get_ticks_usec()
+	while _budget_left(start) and not _spawn_queue.is_empty():
+		var item: Array = _spawn_queue.pop_front()
+		var c: Vector2i = item[0]
 		var chunk: Dictionary = _chunks.get(c, {})
-		var nav: NavigationRegion3D = chunk.get("nav")
-		if nav == null:
-			_dirty_nav.erase(c)
-		elif not nav.is_baking():
-			_dirty_nav.erase(c)
-			nav.bake_navigation_mesh(true)
+		if not chunk.get("content", false):
+			continue
+		chunk.pending_spawns = int(chunk.get("pending_spawns", 1)) - 1
+		var node := resource_spawner.spawn(item[1])
+		if node:
+			(chunk.resources as Array).append(node)
+
+
+## Peças dos lugares (casas, fortes...): montadas aos poucos também (um vilarejo tem ~90).
+var _build_queue: Array = []  # Callables
+
+
+func _process_build_queue() -> void:
+	var start := Time.get_ticks_usec()
+	while _budget_left(start) and not _build_queue.is_empty():
+		(_build_queue.pop_front() as Callable).call()
+
+
+func _process_free_queue() -> void:
+	var budget := 100000 if preloading else FREES_PER_FRAME
+	while budget > 0 and not _free_queue.is_empty():
+		var node: Node = _free_queue.pop_back()
+		if is_instance_valid(node) and not node.is_queued_for_deletion():
+			node.queue_free()
+		budget -= 1
 
 
 ## Posições que puxam blocos: todos os jogadores (ou o começo, antes de existirem).
@@ -491,7 +544,7 @@ func _stream() -> void:
 		if not _chunks.has(k) and not _pending.has(k):
 			missing.append(k)
 	missing.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return int(want[a]) < int(want[b]))
-	for i in mini(missing.size(), 3):
+	for i in mini(missing.size(), 16 if preloading else 3):
 		_start_terrain_task(missing[i])
 	# Conteúdo (servidor), decoração (jogador local) e descarga.
 	var local := chunk_of(_local_anchor().x, _local_anchor().z)
@@ -515,6 +568,37 @@ func _stream() -> void:
 				chunk.erase("decor")
 
 
+## Tela de carregamento: de 0 a 1, quanto do entorno de `at` já está pronto (terreno;
+## no servidor, recursos e navegação; no cliente, a decoração perto).
+func loading_progress(at: Vector3) -> float:
+	var c0 := chunk_of(at.x, at.z)
+	var total := 0
+	var ok := 0
+	for dz in range(-TERRAIN_RADIUS, TERRAIN_RADIUS + 1):
+		for dx in range(-TERRAIN_RADIUS, TERRAIN_RADIUS + 1):
+			total += 1
+			if _chunks.has(c0 + Vector2i(dx, dz)):
+				ok += 1
+	var terrain := float(ok) / total
+	var inner := 0
+	var inner_ok := 0
+	var radius := CONTENT_RADIUS if multiplayer.is_server() else DECOR_RADIUS
+	for dz in range(-radius, radius + 1):
+		for dx in range(-radius, radius + 1):
+			var k := c0 + Vector2i(dx, dz)
+			inner += 1
+			var chunk: Dictionary = _chunks.get(k, {})
+			if chunk.is_empty():
+				continue
+			if multiplayer.is_server():
+				var nav_ready: bool = chunk.get("nav") != null and not _dirty_nav.has(k) and not _nav_baking.has(k)
+				if chunk.get("content", false) and int(chunk.get("pending_spawns", 0)) == 0 and nav_ready:
+					inner_ok += 1
+			elif chunk.get("decor") != null or DisplayServer.get_name() == "headless":
+				inner_ok += 1
+	return terrain * 0.55 + float(inner_ok) / inner * 0.45
+
+
 func is_chunk_ready(x: float, z: float) -> bool:
 	return _chunks.has(chunk_of(x, z))
 
@@ -522,8 +606,9 @@ func is_chunk_ready(x: float, z: float) -> bool:
 func _start_terrain_task(c: Vector2i) -> void:
 	_pending[c] = "terrain"
 	var near := _pois_for_chunk(c)
+	var with_spawns := multiplayer.is_server()
 	var id := WorkerThreadPool.add_task(func() -> void:
-		var data := _compute_terrain(c, near)
+		var data := _compute_terrain(c, near, with_spawns)
 		_results_mutex.lock()
 		_results.append(data)
 		_results_mutex.unlock())
@@ -548,7 +633,7 @@ func _pois_for_chunk(c: Vector2i) -> Array:
 
 
 func _load_terrain_now(c: Vector2i) -> void:
-	_build_terrain_chunk(_compute_terrain(c, _pois_for_chunk(c)))
+	_build_terrain_chunk(_compute_terrain(c, _pois_for_chunk(c), multiplayer.is_server()))
 
 
 func _apply_results() -> void:
@@ -574,7 +659,8 @@ func _apply_results() -> void:
 
 
 ## Thread: alturas, cores e malha de um bloco (com uma borda para as normais).
-func _compute_terrain(c: Vector2i, near: Array) -> Dictionary:
+## with_spawns (servidor): também sorteia os recursos do bloco (sai da thread principal).
+func _compute_terrain(c: Vector2i, near: Array, with_spawns := false) -> Dictionary:
 	var ox := c.x * CHUNK
 	var oz := c.y * CHUNK
 	var n := VERTS + 2  # borda de 1 vértice em volta
@@ -605,10 +691,13 @@ func _compute_terrain(c: Vector2i, near: Array) -> Dictionary:
 			color = color.lightened(_n("shade", x, z) * 0.06)
 			colors.append(color)
 	var indices := PackedInt32Array()
+	var nav_faces := PackedVector3Array()
 	for j in VERTS - 1:
 		for i in VERTS - 1:
 			var a := j * VERTS + i
 			indices.append_array([a, a + 1, a + VERTS + 1, a, a + VERTS + 1, a + VERTS])
+			if with_spawns:  # servidor: triângulos para a navegação dos monstros
+				nav_faces.append_array([verts[a], verts[a + 1], verts[a + VERTS + 1], verts[a], verts[a + VERTS + 1], verts[a + VERTS]])
 	# Pontos de água (para encher garrafa) a cada 8 m onde o chão está abaixo da água.
 	var water_spots := PackedVector2Array()
 	for j in range(2, VERTS, 4):
@@ -616,7 +705,8 @@ func _compute_terrain(c: Vector2i, near: Array) -> Dictionary:
 			if heights[j * VERTS + i] < WATER_LEVEL - 0.3:
 				water_spots.append(Vector2(ox + i * STEP, oz + j * STEP))
 	return {"kind": "terrain", "chunk": c, "verts": verts, "normals": normals, "colors": colors, "indices": indices,
-		"heights": heights, "lowest": lowest, "water": water_spots}
+		"heights": heights, "lowest": lowest, "water": water_spots,
+		"spawns": _resource_spawns(c, near) if with_spawns else [], "nav_faces": nav_faces}
 
 
 func _build_terrain_chunk(data: Dictionary) -> void:
@@ -670,7 +760,8 @@ func _build_terrain_chunk(data: Dictionary) -> void:
 			source.position = Vector3(spot.x - node.position.x, WATER_LEVEL - 0.1, spot.y - node.position.z)
 			node.add_child(source)
 	add_child(node)
-	_chunks[c] = {"node": node, "body": body}
+	body.set_meta(&"terrain", true)
+	_chunks[c] = {"node": node, "body": body, "heights": data.heights, "spawns": data.spawns, "nav_faces": data.nav_faces}
 	# Móveis dos lugares cujo centro cai neste bloco (todas as máquinas).
 	if DisplayServer.get_name() != "headless":
 		for poi: Dictionary in _pois_for_chunk(c):
@@ -693,27 +784,22 @@ func _load_content(c: Vector2i) -> void:
 	chunk.content = true
 	var center := (Vector2(c) + Vector2(0.5, 0.5)) * CHUNK
 	_build_region(region_of(center.x, center.y))
-	# Navegação deste bloco.
+	# Navegação deste bloco (calculada quando os recursos dele terminarem de aparecer).
 	var nav := NavigationRegion3D.new()
-	var nm: NavigationMesh = nav_region.navigation_mesh.duplicate()
-	nm.filter_baking_aabb = AABB(Vector3(c.x * CHUNK, -40.0, c.y * CHUNK), Vector3(CHUNK, 120.0, CHUNK))
-	nm.border_size = 1.0
-	nav.navigation_mesh = nm
 	add_child(nav)
 	chunk.nav = nav
-	# Recursos (posições fixas pela semente; colhidos voltam depois do tempo).
-	var nodes: Array = []
-	var near := _pois_near(center.x, center.y)
+	# Recursos (sorteados na thread junto com o terreno; colhidos voltam depois do tempo).
 	var now := Time.get_ticks_msec()
-	for spawn: Dictionary in _resource_spawns(c, near):
+	var queued := 0
+	for spawn: Dictionary in chunk.get("spawns", []):
 		var key := "%d:%d" % [roundi(spawn.pos.x * 10.0), roundi(spawn.pos.z * 10.0)]
 		if int(_depleted.get(key, 0)) > now:
 			continue
 		_depleted.erase(key)
-		var node := resource_spawner.spawn(spawn)
-		if node:
-			nodes.append(node)
-	chunk.resources = nodes
+		_spawn_queue.append([c, spawn])
+		queued += 1
+	chunk.resources = []
+	chunk.pending_spawns = queued
 	_dirty_nav[c] = true
 
 
@@ -722,14 +808,108 @@ func _unload_content(c: Vector2i) -> void:
 	if not chunk.get("content", false):
 		return
 	chunk.content = false
-	for node: Node in chunk.get("resources", []):
-		if is_instance_valid(node) and not node.is_queued_for_deletion():
-			node.queue_free()
+	_free_queue.append_array(chunk.get("resources", []))  # some aos poucos
 	chunk.erase("resources")
+	chunk.pending_spawns = 0
 	if chunk.get("nav"):
 		(chunk.nav as Node).queue_free()
 		chunk.erase("nav")
 	_dirty_nav.erase(c)
+	_nav_baking.erase(c)
+
+
+# --- Navegação por bloco ---------------------------------------------------------------------
+# Cada bloco monta a própria geometria (o terreno que já tem + obstáculos perto dele) e o
+# NavigationServer calcula na thread: antes, cada cálculo relia o mundo inteiro na
+# thread principal (~25 ms por bloco, vários blocos de uma vez).
+
+## Blocos a recalcular por quadro (o resto espera o próximo).
+const NAV_BAKES_PER_FRAME := 1
+
+
+func _process_navigation() -> void:
+	# Prontos: aplica a malha nova na região do bloco.
+	_nav_mutex.lock()
+	var done := _nav_done.duplicate()
+	_nav_done.clear()
+	_nav_mutex.unlock()
+	for item: Array in done:
+		var c: Vector2i = item[0]
+		_nav_baking.erase(c)
+		var chunk: Dictionary = _chunks.get(c, {})
+		var nav: NavigationRegion3D = chunk.get("nav")
+		if nav and is_instance_valid(nav):
+			nav.navigation_mesh = item[1]
+	var started := 0
+	for c: Vector2i in _dirty_nav.keys():
+		if started >= (64 if preloading else NAV_BAKES_PER_FRAME):
+			break
+		var chunk: Dictionary = _chunks.get(c, {})
+		if chunk.get("nav") == null:
+			_dirty_nav.erase(c)
+			continue
+		if int(chunk.get("pending_spawns", 0)) > 0 or _nav_baking.has(c):
+			continue  # espera os recursos aparecerem / o cálculo anterior terminar
+		_dirty_nav.erase(c)
+		_bake_chunk_nav(c)
+		started += 1
+
+
+func _bake_chunk_nav(c: Vector2i) -> void:
+	var chunk: Dictionary = _chunks[c]
+	var nm: NavigationMesh = nav_region.navigation_mesh.duplicate()
+	nm.filter_baking_aabb = AABB(Vector3(c.x * CHUNK, -60.0, c.y * CHUNK), Vector3(CHUNK, 200.0, CHUNK))
+	nm.border_size = 1.0
+	var src := NavigationMeshSourceGeometryData3D.new()
+	# Terreno: os triângulos do próprio bloco (montados na thread, com a malha).
+	src.add_faces(chunk.nav_faces, Transform3D(Basis(), (chunk.node as Node3D).position))
+	# Obstáculos perto do bloco (árvores, rochas, construções, estações): pelas colisões.
+	var area := AABB(Vector3(c.x * CHUNK - 4.0, -100.0, c.y * CHUNK - 4.0), Vector3(CHUNK + 8.0, 300.0, CHUNK + 8.0))
+	for n: Node in get_tree().get_nodes_in_group("navmesh_source"):
+		if not n is CollisionObject3D or n.has_meta(&"terrain") or not area.has_point((n as Node3D).global_position):
+			continue
+		for shape_node: Node in n.get_children():
+			var cs := shape_node as CollisionShape3D
+			if cs == null or cs.disabled or cs.shape == null:
+				continue
+			var mesh := _shape_mesh(cs.shape)
+			if mesh:
+				src.add_mesh(mesh, cs.global_transform)
+	_nav_baking[c] = true
+	NavigationServer3D.bake_from_source_geometry_data_async(nm, src, func() -> void:
+		_nav_mutex.lock()
+		_nav_done.append([c, nm])
+		_nav_mutex.unlock())
+
+
+static var _shape_meshes := {}
+
+
+## Malha equivalente à forma de colisão (para a navegação), guardada por forma.
+static func _shape_mesh(shape: Shape3D) -> Mesh:
+	var key := shape.get_instance_id()
+	if _shape_meshes.has(key):
+		return _shape_meshes[key]
+	var mesh: PrimitiveMesh = null
+	if shape is BoxShape3D:
+		mesh = BoxMesh.new()
+		(mesh as BoxMesh).size = (shape as BoxShape3D).size
+	elif shape is CylinderShape3D:
+		mesh = CylinderMesh.new()
+		(mesh as CylinderMesh).top_radius = (shape as CylinderShape3D).radius
+		(mesh as CylinderMesh).bottom_radius = (shape as CylinderShape3D).radius
+		(mesh as CylinderMesh).height = (shape as CylinderShape3D).height
+		(mesh as CylinderMesh).radial_segments = 8
+	elif shape is SphereShape3D:
+		mesh = SphereMesh.new()
+		(mesh as SphereMesh).radius = (shape as SphereShape3D).radius
+		(mesh as SphereMesh).height = (shape as SphereShape3D).radius * 2.0
+		(mesh as SphereMesh).radial_segments = 8
+		(mesh as SphereMesh).rings = 4
+	if _shape_meshes.size() > 4000:
+		_shape_meshes.clear()
+	_shape_meshes[key] = mesh
+	return mesh
 
 
 ## Recursos do bloco: um sorteio por célula de 8 m, mais pedras e galhos extras perto de
@@ -806,7 +986,11 @@ func _queue_rebake(at := Vector3.INF) -> void:
 	for c: Vector2i in _chunks:
 		if not _chunks[c].get("nav"):
 			continue
-		if at == Vector3.INF or c == chunk_of(at.x, at.z):
+		# O obstáculo pode encostar no bloco vizinho: refaz os dois.
+		var near_edge := false
+		for off: Vector2 in [Vector2.ZERO, Vector2(4, 0), Vector2(-4, 0), Vector2(0, 4), Vector2(0, -4)]:
+			near_edge = near_edge or c == chunk_of(at.x + off.x, at.z + off.y)
+		if at == Vector3.INF or near_edge:
 			_dirty_nav[c] = true
 
 

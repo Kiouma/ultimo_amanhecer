@@ -40,7 +40,7 @@ Magia: **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou so
 
 Mapa (**M**): só mostra o que você já explorou; **roda do mouse** dá zoom, arrastar move, botão direito marca um ponto. **Minimapa** no canto superior direito (desliga em Esc → Configurações). A **bússola** no topo mostra a direção, as marcações e os outros jogadores com a distância. **Ctrl** agacha e levanta (alterna).
 
-Mundo: **infinito**, gerado em blocos de 64 m enquanto se anda (terreno numa thread, sem travar), com **relevo** (colinas, vales com lagos e montanhas) e biomas por ruído. Lugares (cabanas, casas, vilarejos, fortes e ruínas) são raros: no máximo um por região de 256 m. Construir acompanha o relevo (cada célula tem a altura do chão; fundações descem até ele). Mundos criados antes desta versão não combinam com o terreno novo: crie um mundo novo.
+Mundo: **infinito**, gerado em blocos de 64 m enquanto se anda (terreno numa thread, sem travar), com **relevo** (colinas, vales com lagos e montanhas) e biomas por ruído. Lugares (cabanas, casas, vilarejos, fortes e ruínas) são raros: no máximo um por região de 256 m. Construir acompanha o relevo (cada célula tem a altura do chão; fundações descem até ele). Mundos criados antes desta versão não combinam com o terreno novo: crie um mundo novo. Ao entrar num mundo, uma **tela de carregamento** espera o terreno, os recursos e os caminhos dos monstros em volta ficarem prontos. Andando, o mundo carrega aos poucos (recursos e construções em lotes por quadro, caminhos dos monstros calculados em segundo plano) para não engasgar.
 
 Clima: chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (fome mais rápida longe de fogueira). **F10** (host) troca o clima.
 

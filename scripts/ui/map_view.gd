@@ -6,8 +6,6 @@ extends Control
 
 const MIN_ZOOM := 0.15
 const MAX_ZOOM := 6.0
-## Imagens novas de bloco por quadro (o resto aparece nos quadros seguintes).
-const NEW_TILES_PER_FRAME := 10
 
 var player: Player
 var world: Node
@@ -66,7 +64,6 @@ func _draw() -> void:
 	var c0 := Vector2i(floori(top_left.x / chunk_size), floori(top_left.y / chunk_size))
 	var c1 := Vector2i(floori(bottom_right.x / chunk_size), floori(bottom_right.y / chunk_size))
 	var seen := exploration()
-	var made := 0
 	_need_more = false
 	for cz in range(c0.y, c1.y + 1):
 		for cx in range(c0.x, c1.x + 1):
@@ -74,13 +71,13 @@ func _draw() -> void:
 			var fog := MapTiles.fog(world, c, seen)
 			if fog == null:
 				continue  # nada visto neste bloco: fica escuro
-			if not MapTiles.has_terrain(world, c):
-				if made >= NEW_TILES_PER_FRAME:
-					_need_more = true
-					continue
-				made += 1
 			var rect := Rect2(world_to_screen(Vector2(c) * chunk_size), Vector2.ONE * chunk_size * zoom)
-			draw_texture_rect(MapTiles.terrain(world, c), rect, false)
+			var tex := MapTiles.terrain(world, c)  # feita numa thread; null = ainda não
+			if tex == null:
+				draw_rect(rect, Color(0.3, 0.32, 0.3))
+				_need_more = true
+			else:
+				draw_texture_rect(tex, rect, false)
 			draw_texture_rect(fog, rect, false)
 	_draw_markers(seen)
 

@@ -42,6 +42,10 @@ func _ready() -> void:
 		_env = world_env.environment
 		if _env.sky:
 			_sky = _env.sky.sky_material as ProceduralSkyMaterial
+			# O céu muda a cada minuto do jogo: recalcular a luz do céu aos poucos, em vários
+			# quadros (de uma vez dava um soluço de ~20 ms por segundo).
+			_env.sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
+			_env.sky.radiance_size = Sky.RADIANCE_SIZE_128
 	_moon = DirectionalLight3D.new()
 	_moon.name = "Moon"
 	_moon.light_color = Color(0.55, 0.65, 1.0)

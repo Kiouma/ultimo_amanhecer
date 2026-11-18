@@ -368,6 +368,59 @@ func _on_joined() -> void:
 	# O nível chega sozinho pelo LevelSpawner.
 	menu.visible = false
 	_show_background(false)
+	_begin_loading(tr("Recebendo o mundo do host..."))
+
+
+# --- Tela de carregamento ------------------------------------------------------------------
+# Fica na frente até o entorno de onde o jogador aparece estar pronto (terreno, recursos e
+# navegação; o mundo carrega mais rápido nesse tempo). O jogador fica parado enquanto isso.
+
+const LOADING_TIMEOUT := 60.0
+
+var _loading: LoadingScreen
+var _loading_time := 0.0
+var _frozen_player: Node3D
+
+
+func _begin_loading(status: String) -> void:
+	if _loading == null:
+		_loading = LoadingScreen.new()
+		add_child(_loading)
+	_loading.open(status)
+	_loading_time = 0.0
+
+
+func _process(delta: float) -> void:
+	if _loading == null or not _loading.visible:
+		return
+	_loading_time += delta
+	var world: Node = level_root.get_child(0) if level_root.get_child_count() > 0 else null
+	var me: Node3D = null
+	for p in get_tree().get_nodes_in_group("player"):
+		if p.is_multiplayer_authority():
+			me = p
+	if world == null or me == null or not world.has_method(&"loading_progress"):
+		if world and me and _loading_time > 1.0:
+			_finish_loading(world)  # arena de teste: nada a esperar
+		return
+	world.preloading = true
+	if _frozen_player != me:
+		_frozen_player = me
+		me.set_physics_process(false)  # parado até o chão em volta estar pronto
+	var progress: float = world.loading_progress(me.global_position)
+	_loading.set_progress(progress, tr("Preparando o terreno...") if progress < 0.55 else tr("Espalhando árvores, pedras e monstros..."))
+	if progress >= 0.999 or _loading_time > LOADING_TIMEOUT:
+		_finish_loading(world)
+
+
+func _finish_loading(world: Node) -> void:
+	if world and "preloading" in world:
+		world.preloading = false
+	if is_instance_valid(_frozen_player):
+		_frozen_player.set_physics_process(true)
+	_frozen_player = null
+	_loading.close()
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _on_connection_failed(reason: String) -> void:
@@ -377,6 +430,10 @@ func _on_connection_failed(reason: String) -> void:
 func _start_level() -> void:
 	menu.visible = false
 	_show_background(false)
+	_begin_loading(tr("Gerando o mundo..."))
+	# Deixa a tela de carregamento aparecer antes de montar o mundo (trava um instante).
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var level := (ARENA if _use_arena else WORLD).instantiate()
 	var saved := 0 if _use_arena else SaveGame.saved_seed()
 	if saved != 0:
@@ -392,6 +449,9 @@ func _start_level() -> void:
 
 
 func _back_to_menu(message: String) -> void:
+	if _loading:
+		_loading.close()
+	_frozen_player = null
 	for child in level_root.get_children():
 		child.queue_free()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
