@@ -22,27 +22,29 @@ const VILLAGE_SQUARE := [["Stall_Empty", 2.0, true], ["Stall_Cart_Empty", 3.0, t
 	["FarmCrate_Apple", 0.8, true], ["FarmCrate_Carrot", 0.8, true], ["Bench", 1.5, true], ["Barrel_Holder", 1.6, true]]
 
 var _world: Node
+var _poi: Dictionary
 
 
-func _init(world: Node) -> void:
-	_world = world
-	name = "PoiDecor"
+## Móveis de um lugar (o mundo cria quando o bloco do centro do lugar carrega e tira
+## junto com ele). Posições do mundo (top_level).
+static func for_poi(world: Node, poi: Dictionary) -> PoiDecor:
+	var node := PoiDecor.new()
+	node._world = world
+	node._poi = poi
+	node.name = "PoiDecor"
+	node.top_level = true
+	return node
 
 
 func _ready() -> void:
-	var square := Vector2.ZERO
-	var village := 0
-	for poi: Dictionary in _world.pois:
-		var rng := RandomNumberGenerator.new()
-		rng.seed = int(poi.seed) + 99
-		match str(poi.type):
-			"house", "cabin", "military", "ruins":
-				_furnish(poi, rng)
-		if str(poi.name) == "Vilarejo":
-			square += poi.pos
-			village += 1
-	if village > 0:
-		_village_square(square / village)
+	global_transform = Transform3D.IDENTITY
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_poi.seed) + 99
+	match str(_poi.type):
+		"house", "cabin", "military", "ruins":
+			_furnish(_poi, rng)
+		"square":
+			_village_square(_poi.pos)
 
 
 ## Objetos encostados por dentro das paredes, virados para dentro. O lado da porta
@@ -67,7 +69,7 @@ func _furnish(poi: Dictionary, rng: RandomNumberGenerator) -> void:
 		var steps := maxi(int(a.distance_to(b) / 2.4), 1)
 		for k in steps + 1:
 			spots.append([a.lerp(b, float(k) / steps), float(sides[side][2])])
-	var y := 0.05 if str(poi.type) in ["house", "cabin"] else 0.0  # em cima da fundação
+	var y := float(poi.get("base", 0.0)) + (0.05 if str(poi.type) in ["house", "cabin"] else 0.0)  # em cima da fundação
 	var count := mini(2 + size.x * size.y, spots.size())
 	var used: Array[Vector2] = []
 	for i in count:
@@ -91,7 +93,7 @@ func _furnish(poi: Dictionary, rng: RandomNumberGenerator) -> void:
 
 func _village_square(center: Vector2) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = int(_world.world_seed) + 1234
+	rng.seed = int(_poi.seed) + 1234
 	for i in VILLAGE_SQUARE.size():
 		var pick: Array = VILLAGE_SQUARE[i]
 		var a := TAU * i / VILLAGE_SQUARE.size() + rng.randf_range(-0.2, 0.2)

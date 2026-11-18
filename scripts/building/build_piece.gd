@@ -167,11 +167,33 @@ func _on_died(_source: Node) -> void:
 # --- Geometria (compartilhada com a prévia do modo construção) ------------------------
 
 ## Posição/rotação de um encaixe. rot = quartos de volta (0-3).
+## Altura do chão da célula (i, j) (o mundo informa; arena = 0). O andar n de uma peça
+## fica em base + n · HEIGHT: a grade acompanha o relevo, célula por célula.
+static var base_height_func: Callable
+
+
+static func cell_base(i: int, j: int) -> float:
+	return float(base_height_func.call(i, j)) if base_height_func.is_valid() else 0.0
+
+
+## Base de um encaixe: célula (c, r) ou a mais alta das duas células de uma borda (x, z).
+static func slot_base(kind: String, i: int, j: int) -> float:
+	match kind:
+		"x": return maxf(cell_base(i - 1, j), cell_base(i, j))
+		"z": return maxf(cell_base(i, j - 1), cell_base(i, j))
+	return cell_base(i, j)
+
+
+## Andar em que fica a altura y na célula (i, j).
+static func level_at(i: int, j: int, y: float) -> int:
+	return maxi(roundi((y - cell_base(i, j)) / HEIGHT), 0)
+
+
 static func slot_transform(key: String, rot_steps: int) -> Transform3D:
 	var p := key.split(":")
 	var i := int(p[1])
 	var j := int(p[2])
-	var y := int(p[3]) * HEIGHT
+	var y := slot_base(p[0], i, j) + int(p[3]) * HEIGHT
 	var pos := Vector3((i + 0.5) * CELL, y, (j + 0.5) * CELL)
 	match p[0]:
 		"x": pos = Vector3(i * CELL, y, (j + 0.5) * CELL)
@@ -184,7 +206,7 @@ static func parts(id: String) -> Array:
 	id = str(GameData.get_entry("buildings", id).get("shape", id))
 	match id:
 		"foundation":
-			return [[Vector3(CELL, 0.6, CELL), Vector3(0, -0.25, 0), 0.0]]  # topo a 5 cm do chão
+			return [[Vector3(CELL, 2.6, CELL), Vector3(0, -1.25, 0), 0.0]]  # topo a 5 cm do chão; desce até o chão em ladeira
 		"floor":
 			return [[Vector3(CELL, 0.2, CELL), Vector3(0, -0.1, 0), 0.0]]
 		"doorway":
@@ -276,6 +298,10 @@ static func door_mesh(tier_id: String, pos: Vector3) -> MeshInstance3D:
 
 func _build() -> void:
 	build_visual(piece_id, tier, self)
+	# Parede do térreo em chão inclinado: rodapé até o chão do lado mais baixo.
+	if slot_key.left(1) in ["x", "z"] and level() == 0 and tier in TIER_COLORS:
+		var plinth := Weapon.box(Vector3(CELL, 1.0, THICKNESS + 0.06), TIER_COLORS[tier].darkened(0.35), Vector3(0, -0.5, 0))
+		add_child(plinth)
 	for part: Array in parts(piece_id):
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()

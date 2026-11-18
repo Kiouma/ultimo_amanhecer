@@ -74,6 +74,7 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_overload(player)
 	_bind_network()
 	_bind_pickup_feed(player)
+	_bind_minimap(player)
 	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
 	_bus(Settings.changed, func() -> void:
 		_update_hotbar()
@@ -148,6 +149,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_inventory_ui)
 	_inventory_ui.bind(player)
 
+	var crafting_ui := CraftingUI.new()
+	add_child(crafting_ui)
+	crafting_ui.bind(player, _inventory_ui)
+
 	_progression_ui = ProgressionUI.new()
 	add_child(_progression_ui)
 	_progression_ui.bind(player)
@@ -207,6 +212,55 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", fill)
 	box.add_child(bar)
 	return bar
+
+
+## Minimapa (canto superior direito, Esc > Configurações liga/desliga). O relógio fica
+## logo abaixo dele.
+const MINIMAP_SIZE := 190.0
+var _clock: Label
+var _minimap_frame: PanelContainer
+var _minimap: MapView
+var _minimap_timer := 0.0
+
+
+func _bind_minimap(player: Player) -> void:
+	var world := get_tree().get_first_node_in_group("world")
+	if world == null or not "CHUNK" in world:
+		return  # arena de teste: sem mapa
+	_minimap_frame = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.05, 0.06, 0.9)
+	style.border_color = Color(0.85, 0.78, 0.6, 0.8)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	_minimap_frame.add_theme_stylebox_override("panel", style)
+	_minimap_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_minimap_frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
+	_minimap_frame.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	add_child(_minimap_frame)
+	_minimap = MapView.new()
+	_minimap.custom_minimum_size = Vector2.ONE * MINIMAP_SIZE
+	_minimap.player = player
+	_minimap.world = world
+	_minimap.zoom = 1.1
+	_minimap.show_labels = false
+	_minimap.round_dots = 0.8
+	_minimap_frame.add_child(_minimap)
+	_minimap_frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
+	var exploration := player.get_node_or_null(^"Exploration") as Exploration
+	if exploration:
+		exploration.revealed.connect(MapTiles.invalidate_fog)
+	_bus(Settings.changed, _apply_minimap_setting)
+	_apply_minimap_setting()
+
+
+func _apply_minimap_setting() -> void:
+	if _minimap_frame == null:
+		return
+	_minimap_frame.visible = Settings.show_minimap
+	if _clock:
+		_clock.offset_top = (MINIMAP_SIZE + 30.0) if Settings.show_minimap else 20.0
+		_clock.offset_bottom = _clock.offset_top + 50.0
 
 
 ## Itens recebidos (coleta, chão, recompensas): "+1 Graveto" à direita da tela. O mesmo
@@ -416,6 +470,7 @@ func _build_clock() -> void:
 	clock.add_theme_color_override("font_outline_color", Color.BLACK)
 	clock.add_theme_constant_override("outline_size", 5)
 	add_child(clock)
+	_clock = clock
 
 	var banner := Label.new()
 	banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 90)
@@ -494,6 +549,13 @@ func _process(delta: float) -> void:
 	if _boss_timer <= 0.0:
 		_boss_timer = 0.25
 		_update_boss_bar()
+	_minimap_timer -= delta
+	if _minimap:
+		# Telas abertas (mouse solto: inventário, bancada, mapa, pausa) escondem o minimapa.
+		_minimap_frame.visible = Settings.show_minimap and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	if _minimap and _minimap_frame.visible and _minimap_timer <= 0.0:
+		_minimap_timer = 0.15
+		_minimap.queue_redraw()
 	_net_timer -= delta
 	if _net_timer <= 0.0:
 		_net_timer = 1.0

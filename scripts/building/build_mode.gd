@@ -292,11 +292,12 @@ func _update_target() -> void:
 func _pick_slot(point: Vector3, normal: Vector3) -> void:
 	var id := piece_id()
 	var slot := str(GameData.get_entry("buildings", id).get("slot", "edge"))
-	var my_level := maxi(roundi(user.global_position.y / BuildPiece.HEIGHT), 0)
 	# Mirando a lateral de algo: puxa o ponto para o lado de quem constrói.
 	var q := point + (normal * 0.05 if absf(normal.y) < 0.7 else Vector3.ZERO)
 	var i := floori(q.x / BuildPiece.CELL)
 	var j := floori(q.z / BuildPiece.CELL)
+	# Andar de quem constrói, medido a partir do chão daquela célula (relevo).
+	var my_level := BuildPiece.level_at(i, j, user.global_position.y)
 	var level := my_level
 	var aimed_kind := _aimed.slot_key.left(1) if _aimed else ""
 	if _aimed:

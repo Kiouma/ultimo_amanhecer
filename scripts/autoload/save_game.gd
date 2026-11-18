@@ -163,6 +163,14 @@ func save_all() -> void:
 
 # --- Mundo ------------------------------------------------------------------------------
 
+## Regiões cujos lugares já foram montados (para não montar de novo ao voltar).
+func saved_regions() -> Dictionary:
+	var out := {}
+	for key: Variant in _read(_world_path(current_world_id)).get("built_regions", []):
+		out[str(key)] = true
+	return out
+
+
 ## Semente do mundo escolhido (0 = mundo novo, ainda sem semente).
 func saved_seed() -> int:
 	return int(_read(_world_path(current_world_id)).get("seed", 0)) if current_world_id != "" else 0
@@ -171,6 +179,9 @@ func saved_seed() -> int:
 func _capture_world(level: Node) -> Dictionary:
 	var data := {"version": VERSION, "seed": int(level.get("world_seed")) if "world_seed" in level else 0,
 		"updated": int(Time.get_unix_time_from_system())}
+	if "built_regions" in level:
+		data.built_regions = (level.built_regions as Dictionary).keys()
+	data.gen = 2  # mundo infinito com relevo
 	var dn := DayNight.find(get_tree())
 	if dn:
 		data.day = dn.day

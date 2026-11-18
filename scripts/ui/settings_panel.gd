@@ -11,6 +11,7 @@ var _sensitivity: HSlider
 var _volume: HSlider
 var _sprint: OptionButton
 var _crouch: OptionButton
+var _minimap: CheckButton
 
 
 func _ready() -> void:
@@ -52,6 +53,11 @@ func _ready() -> void:
 	_label("Agachar (Ctrl)")
 	_crouch = _mode_picker(func(index: int) -> void: Settings.set_value("crouch_toggle", index == 1))
 
+	_minimap = CheckButton.new()
+	_minimap.text = "Mostrar minimapa"
+	_minimap.toggled.connect(func(on: bool) -> void: Settings.set_value("show_minimap", on))
+	add_child(_minimap)
+
 	var back := Button.new()
 	back.text = "Voltar"
 	back.custom_minimum_size = Vector2(0, 36)
@@ -70,6 +76,7 @@ func _sync() -> void:
 	_volume.set_value_no_signal(Settings.volume)
 	_sprint.select(1 if Settings.sprint_toggle else 0)
 	_crouch.select(1 if Settings.crouch_toggle else 0)
+	_minimap.set_pressed_no_signal(Settings.show_minimap)
 
 
 func _label(text: String) -> void:

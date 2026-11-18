@@ -2,7 +2,7 @@ class_name InventoryUI
 extends Control
 ## Tela de inventário (Tab): equipamento e status (esquerda, EquipmentPanel), mochila,
 ## hotbar, peso e fabricação (GDD 8 e 13.2).
-## Aberta com E numa estação (fogueira, bancada), mostra também as receitas dela.
+## As estações (fogueira, bancada) têm a própria tela de fabricação (CraftingUI).
 ## Fabricar entra na fila (CraftQueue), que aparece embaixo com progresso e cancelar.
 ## Arrastar entre slots move/junta; botão direito divide a pilha;
 ## soltar fora da janela joga o item no chão, na frente do jogador.
@@ -20,8 +20,6 @@ var _built := false
 var _craft_list: VBoxContainer
 var _craft_title: Label
 var _queue_box: VBoxContainer
-## Estação aberta (null = só mãos).
-var _station: CraftingStation
 ## Slot sob o mouse (-1 = nenhum): apertar 1-9 troca com aquele slot da hotbar.
 var _hovered := -1
 var _equipment: EquipmentPanel
@@ -39,27 +37,7 @@ func bind(p: Player) -> void:
 		_build()
 	player.inventory.changed.connect(_refresh)
 	player.craft_queue.changed.connect(_refresh_queue)
-	EventBus.station_opened.connect(_on_station_opened)
 	_refresh()
-
-
-func _on_station_opened(station: Node, who: Node) -> void:
-	if who != player:
-		return
-	_station = station
-	if not visible:
-		toggle()
-	else:
-		_refresh()
-
-
-func _process(_delta: float) -> void:
-	# Afastou da estação: volta a mostrar só as receitas das mãos.
-	if _station and (not is_instance_valid(_station) \
-			or _station.global_position.distance_to(player.global_position) > CraftingStation.USE_RANGE + 1.0):
-		_station = null
-		if visible:
-			_refresh()
 
 
 func _input(event: InputEvent) -> void:
@@ -91,8 +69,6 @@ func toggle() -> void:
 	if visible:
 		_refresh()
 		_equipment.refresh()
-	else:
-		_station = null
 
 
 # Soltar fora dos slots (no fundo escuro) = jogar no chão.
@@ -124,61 +100,13 @@ func _refresh() -> void:
 	_refresh_queue()
 
 
-## Receitas da estação aberta (se houver) e das mãos. Fabricar (1), ×5 e Tudo entram na fila.
+## Receitas feitas nas mãos (as das estações ficam na tela de cada estação, CraftingUI).
 func _refresh_crafting() -> void:
 	for child in _craft_list.get_children():
 		child.queue_free()
-	var stations: Array[String] = ["hands"]
-	if _station:
-		stations.push_front(_station.station)
-	_craft_title.text = tr("Fabricar (%s)") % (_station.display_name().to_lower() + tr(" + mãos") if _station else tr("mãos"))
-	for station in stations:
-		if stations.size() > 1:
-			var header := Label.new()
-			header.text = Crafting.station_name(station).capitalize()
-			header.add_theme_color_override("font_color", Color(0.95, 0.8, 0.45))
-			_craft_list.add_child(header)
-		for recipe in Crafting.recipes_for(station):
-			_craft_list.add_child(_recipe_row(recipe))
-	if _station and _station.station == "workbench":
-		_add_repair_section()
-
-
-func _recipe_row(recipe: Dictionary) -> Control:
-	var possible := Crafting.max_times(player.inventory, recipe)
-	var result := GameData.get_item(str(recipe.result))
-	# Nome e ingredientes em cima, botões embaixo à direita (cabe numa coluna estreita).
-	var row := VBoxContainer.new()
-	row.add_theme_constant_override("separation", 2)
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var title := Label.new()
-	title.text = "%s ×%d" % [result.get("name", recipe.result), int(recipe.get("amount", 1))]
-	title.add_theme_color_override("font_color", Color(0.92, 0.92, 0.88) if possible > 0 else Color(0.55, 0.55, 0.52))
-	info.add_child(title)
-	var needs := Label.new()
-	needs.text = "%s · %ss" % [Crafting.describe_ingredients(recipe), str(recipe.get("time", 2))]
-	needs.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	needs.add_theme_font_size_override("font_size", 12)
-	needs.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
-	info.add_child(needs)
-	row.add_child(info)
-	var buttons := HBoxContainer.new()
-	buttons.alignment = BoxContainer.ALIGNMENT_END
-	buttons.add_child(_craft_button("Fabricar", recipe, 1, possible >= 1))
-	buttons.add_child(_craft_button("×5", recipe, 5, possible >= 5))
-	buttons.add_child(_craft_button(tr("Tudo (%d)") % possible, recipe, -1, possible >= 2))
-	row.add_child(buttons)
-	return row
-
-
-## times = -1: quantas der na hora do clique.
-func _craft_button(text: String, recipe: Dictionary, times: int, enabled: bool) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.disabled = not enabled
-	button.pressed.connect(_enqueue.bind(recipe, times))
-	return button
+	_craft_title.text = tr("Fabricar (%s)") % tr("mãos")
+	for recipe in Crafting.recipes_for("hands"):
+		_craft_list.add_child(RecipeCard.build(player, recipe, _enqueue))
 
 
 func _enqueue(recipe: Dictionary, times: int) -> void:
@@ -187,11 +115,11 @@ func _enqueue(recipe: Dictionary, times: int) -> void:
 
 
 ## Bancada: reparar (durabilidade cheia) e desmontar (recupera materiais) itens do inventário.
-func _add_repair_section() -> void:
+func add_repair_section(target: Control) -> void:
 	var header := Label.new()
 	header.text = "Reparar, refinar e desmontar"
 	header.add_theme_color_override("font_color", Color(0.95, 0.8, 0.45))
-	_craft_list.add_child(header)
+	target.add_child(header)
 	var inv := player.inventory
 	var any := false
 	for i in inv.slots.size():
@@ -242,26 +170,31 @@ func _add_repair_section() -> void:
 		salvage_button.pressed.connect(func() -> void: Repair.salvage(player.inventory, i))
 		actions.add_child(salvage_button)
 		row.add_child(actions)
-		_craft_list.add_child(row)
+		target.add_child(row)
 	if not any:
 		var none := Label.new()
 		none.text = "nada para reparar ou desmontar"
 		none.add_theme_color_override("font_color", Color(0.5, 0.5, 0.48))
-		_craft_list.add_child(none)
+		target.add_child(none)
 
 
 ## Fila: uma linha por trabalho, com progresso, pausa (longe da estação) e cancelar.
 func _refresh_queue() -> void:
-	if _queue_box == null:
+	fill_queue(_queue_box)
+
+
+## Fila de fabricação em `box` (também usada pela tela das estações).
+func fill_queue(box: Control) -> void:
+	if box == null:
 		return
-	for child in _queue_box.get_children():
+	for child in box.get_children():
 		child.queue_free()
 	var queue := player.craft_queue
 	if queue.jobs.is_empty():
 		var empty := Label.new()
 		empty.text = "vazia"
 		empty.add_theme_color_override("font_color", Color(0.5, 0.5, 0.48))
-		_queue_box.add_child(empty)
+		box.add_child(empty)
 	for i in queue.jobs.size():
 		var job: Dictionary = queue.jobs[i]
 		var row := HBoxContainer.new()
@@ -286,7 +219,7 @@ func _refresh_queue() -> void:
 		cancel.tooltip_text = "Cancelar (devolve os ingredientes)"
 		cancel.pressed.connect(queue.cancel.bind(i))
 		row.add_child(cancel)
-		_queue_box.add_child(row)
+		box.add_child(row)
 
 
 func _build() -> void:

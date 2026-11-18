@@ -24,7 +24,9 @@ Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abr
 
 Base: **Baú** (guarda 30 pilhas para o grupo), **Cama** (E: renasce nela) e **Coletor de água** (água limpa, mais rápido na chuva).
 
-Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar; **E** nelas abre as receitas da estação. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela). Água: beber a garrafa deixa uma garrafa vazia; encha no **lago** (água suja, pode fazer passar mal) e ferva na fogueira.
+Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar; **E** nelas abre as receitas da estação. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela). Água: beber a garrafa deixa uma garrafa vazia; encha no **lago** (água suja, pode fazer passar mal) e ferva na fogueira. Interagir (**E**) com uma estação abre a tela dela, só com as receitas daquela estação (na bancada, também reparar/refinar/desmontar). Cada receita mostra os recursos como "Madeira 12/5" (o que você tem / o que pede; verde se tem, vermelho se falta) e o botão Fabricar fica verde ou vermelho.
+
+Clique duplo num item do inventário: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
 
 Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Zumbis presos do lado de fora batem na peça mais fraca.
 
@@ -36,7 +38,9 @@ Equipamento (**Tab**, à esquerda do inventário, arrumado como um corpo): capac
 
 Magia: **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5; mais mana, mais dano e alcance). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. **Q** tocado conjura a última; **Q segurado** abre a roda de habilidades (mova o mouse e solte para **escolher**, sem conjurar). O ícone à esquerda da hotbar mostra a última. Com o **cajado** na mão, o clique também conjura; segurar canaliza e queima toda a mana da barra (mais mana, efeito até 3×). A mana regenera 4× mais rápido depois de 3 s sem conjurar nem atacar. A bancada copia grimórios com cristal arcano.
 
-Mapa (**M**): só mostra o que você já explorou; botão direito marca um ponto. A **bússola** no topo mostra a direção, as marcações e os outros jogadores com a distância. **Ctrl** agacha e levanta (alterna).
+Mapa (**M**): só mostra o que você já explorou; **roda do mouse** dá zoom, arrastar move, botão direito marca um ponto. **Minimapa** no canto superior direito (desliga em Esc → Configurações). A **bússola** no topo mostra a direção, as marcações e os outros jogadores com a distância. **Ctrl** agacha e levanta (alterna).
+
+Mundo: **infinito**, gerado em blocos de 64 m enquanto se anda (terreno numa thread, sem travar), com **relevo** (colinas, vales com lagos e montanhas) e biomas por ruído. Lugares (cabanas, casas, vilarejos, fortes e ruínas) são raros: no máximo um por região de 256 m. Construir acompanha o relevo (cada célula tem a altura do chão; fundações descem até ele). Mundos criados antes desta versão não combinam com o terreno novo: crie um mundo novo.
 
 Clima: chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (fome mais rápida longe de fogueira). **F10** (host) troca o clima.
 

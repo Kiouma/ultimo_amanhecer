@@ -382,6 +382,7 @@ func _start_level() -> void:
 	if saved != 0:
 		level.world_seed = saved
 		level.from_save = true
+		level.built_regions = SaveGame.saved_regions()
 	level_root.add_child(level, true)
 	if saved != 0:
 		SaveGame.apply_world(level)

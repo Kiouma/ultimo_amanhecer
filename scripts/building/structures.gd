@@ -280,7 +280,7 @@ func _is_obstructed(piece_id: String, xform: Transform3D) -> bool:
 	var space := _root.get_world_3d().direct_space_state
 	var volumes: Array = BuildPiece.parts(piece_id)
 	if piece_id == "foundation":
-		volumes = [[Vector3(BuildPiece.CELL, 1.4, BuildPiece.CELL), Vector3(0, 0.85, 0), 0.0]]  # espaço acima dela
+		volumes = [[Vector3(BuildPiece.CELL, 1.2, BuildPiece.CELL), Vector3(0, 1.3, 0), 0.0]]  # espaço acima dela (aceita chão um pouco mais alto em ladeira)
 	for part: Array in volumes:
 		var box := BoxShape3D.new()
 		var size: Vector3 = part[0]
@@ -303,7 +303,7 @@ func wall_slot_in_front(player: Node3D) -> Array:
 	var forward := -player.global_basis.z
 	var point := player.global_position + Vector3(forward.x, 0, forward.z).normalized() * 2.5
 	var cell := BuildPiece.CELL
-	var level := maxi(roundi(player.global_position.y / BuildPiece.HEIGHT), 0)
+	var level := BuildPiece.level_at(floori(point.x / cell), floori(point.z / cell), player.global_position.y)
 	if absf(forward.x) > absf(forward.z):
 		return ["x:%d:%d:%d" % [roundi(point.x / cell), floori(point.z / cell), level], 1]
 	return ["z:%d:%d:%d" % [floori(point.x / cell), roundi(point.z / cell), level], 0]

@@ -1,16 +1,12 @@
 class_name NatureDecor
 extends Node3D
-## Vegetação decorativa do mundo (grama, flores, samambaias, cogumelos, pedrinhas), com
+## Vegetação decorativa de um bloco do mundo (grama, flores, samambaias, cogumelos), com
 ## os modelos do Stylized Nature MegaKit (NatureKit). Só visual: sem colisão, sem rede.
 ##
-## Gerada a partir da semente do mundo: todas as máquinas montam a mesma coisa sozinhas.
-## O mapa é dividido em blocos de CHUNK metros; em cada bloco, cada modelo vira um
-## MultiMeshInstance3D (um desenho para todas as cópias) que some de longe.
-## Pontos de STEP em STEP metros (com sorteio dentro da célula) escolhem um enfeite
-## conforme o bioma (DECOR). Construir em cima apaga os enfeites daquele pedaço.
+## compute() roda numa thread (só usa o ruído do mundo e a lista de lugares) e devolve,
+## por modelo, as transformações; build() monta um MultiMeshInstance3D por modelo (um
+## desenho para todas as cópias). Construir em cima apaga os enfeites daquele pedaço.
 
-const World := preload("res://scripts/world/world.gd")
-const CHUNK := 20.0
 const STEP := 2.0
 
 ## Modelo: [escala mín, escala máx, distância de visão].
@@ -34,7 +30,7 @@ const MODELS := {
 }
 
 ## Por bioma: chance de cada enfeite em cada ponto. Nomes terminados em "*" sorteiam
-## entre as variantes (Pebble_Round_* = Pebble_Round_1..5).
+## entre as variantes (Clover_* = Clover_1..2).
 const DECOR := {
 	"plains": {"Grass_Common_Short": 0.3, "Grass_Common_Tall": 0.06, "Grass_Wispy_Short": 0.08,
 		"Flower_3_Group": 0.025, "Flower_4_Group": 0.025, "Flower_3_Single": 0.02, "Flower_4_Single": 0.02,
@@ -51,46 +47,38 @@ const DECOR := {
 		"Grass_Wispy_Short": 0.05},
 }
 
-## Bloco (Vector2i) -> {modelo: [MultiMeshInstance3D, PackedVector3Array posições]}.
-var _chunks := {}
-var _world: Node
+## modelo → [MultiMeshInstance3D, PackedVector3Array posições locais]
+var _batches := {}
 
 
-func _init(world: Node) -> void:
-	_world = world
-	name = "NatureDecor"
-
-
-func _ready() -> void:
-	_generate(int(_world.world_seed))
-	var structures := _world.get_node_or_null(^"Structures")
-	if structures:
-		structures.child_entered_tree.connect(func(piece: Node) -> void: _clear_under.call_deferred(piece))
-
-
-func _generate(seed_value: int) -> void:
+## Thread: enfeites do bloco c (posições locais ao canto do bloco).
+static func compute(world: Node, c: Vector2i, near_pois: Array) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed_value + 31
-	var variants := {}  # "Pebble_Round_*" -> [Pebble_Round_1, ...]
+	rng.seed = hash([int(world.world_seed), c.x, c.y, 31])
+	var variants := {}  # "Clover_*" -> [Clover_1, ...]
 	for key: String in MODELS:
 		var base := key.rstrip("0123456789")
 		if base != key and base.ends_with("_"):
 			if not variants.has(base + "*"):
 				variants[base + "*"] = []
 			variants[base + "*"].append(key)
-	# Pontos agrupados por bloco e modelo: {Vector2i: {modelo: [Transform3D...]}}
-	var placed := {}
-	var half := World.HALF
-	var cells := int(World.SIZE / STEP)
+	var chunk_size: float = world.CHUNK
+	var ox := c.x * chunk_size
+	var oz := c.y * chunk_size
+	var cells := int(chunk_size / STEP)
+	var out := {}
 	for cj in cells:
 		for ci in cells:
-			var x := -half + (ci + rng.randf()) * STEP
-			var z := -half + (cj + rng.randf()) * STEP
+			var lx := (ci + rng.randf()) * STEP
+			var lz := (cj + rng.randf()) * STEP
 			var roll := rng.randf()
 			var pick := rng.randi()
 			var spin := rng.randf() * TAU
 			var size_t := rng.randf()
-			var table: Dictionary = DECOR.get(_world.biome_at(x, z), {})
+			var x := ox + lx
+			var z := oz + lz
+			var h: float = world._height_with(x, z, near_pois)
+			var table: Dictionary = DECOR.get(world._biome_raw(x, z, world._raw_height(x, z)), {})
 			if table.is_empty():
 				continue
 			var model := ""
@@ -99,65 +87,66 @@ func _generate(seed_value: int) -> void:
 				if roll < 0.0:
 					model = key
 					break
-			if model == "" or _world._in_poi(x, z):
+			if model == "" or world._in_poi_list(x, z, near_pois):
 				continue
 			if variants.has(model):
 				var list: Array = variants[model]
 				model = list[pick % list.size()]
 			var span: Array = MODELS[model]
 			var s := lerpf(float(span[0]), float(span[1]), size_t)
-			var basis := Basis(Vector3.UP, spin).scaled(Vector3.ONE * s)
-			var chunk := Vector2i(floori((x + half) / CHUNK), floori((z + half) / CHUNK))
-			if not placed.has(chunk):
-				placed[chunk] = {}
-			if not placed[chunk].has(model):
-				placed[chunk][model] = []
-			placed[chunk][model].append(Transform3D(basis, Vector3(x, _world.ground_height(x, z) - 0.03, z)))
-	for chunk: Vector2i in placed:
-		_chunks[chunk] = {}
-		for model: String in placed[chunk]:
-			_build_batch(chunk, model, placed[chunk][model])
+			if not out.has(model):
+				out[model] = []
+			out[model].append(Transform3D(Basis(Vector3.UP, spin).scaled(Vector3.ONE * s), Vector3(lx, h - 0.03, lz)))
+	return out
 
 
-func _build_batch(chunk: Vector2i, model: String, transforms: Array) -> void:
-	var mesh := NatureKit.mesh(model)
-	if mesh == null:
-		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = mesh
-	mm.instance_count = transforms.size()
-	var points := PackedVector3Array()
-	for k in transforms.size():
-		mm.set_instance_transform(k, transforms[k])
-		points.append(transforms[k].origin)
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.visibility_range_end = float(MODELS[model][2])
-	mmi.visibility_range_end_margin = 6.0
-	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-	add_child(mmi)
-	_chunks[chunk][model] = [mmi, points]
+## Monta os enfeites calculados (thread principal).
+static func build(batches: Dictionary) -> NatureDecor:
+	var node := NatureDecor.new()
+	node.name = "Decor"
+	for model: String in batches:
+		var mesh := NatureKit.mesh(model)
+		if mesh == null:
+			continue
+		var transforms: Array = batches[model]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = transforms.size()
+		var points := PackedVector3Array()
+		for k in transforms.size():
+			mm.set_instance_transform(k, transforms[k])
+			points.append(transforms[k].origin)
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = float(MODELS[model][2])
+		mmi.visibility_range_end_margin = 6.0
+		mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+		node.add_child(mmi)
+		node._batches[model] = [mmi, points]
+	return node
+
+
+func _ready() -> void:
+	var structures := get_tree().get_first_node_in_group("world").get_node_or_null(^"Structures") if get_tree().get_first_node_in_group("world") else null
+	if structures:
+		structures.child_entered_tree.connect(func(piece: Node) -> void: _clear_under.call_deferred(piece))
+		for piece in structures.get_children():
+			_clear_under(piece)
 
 
 ## Peça construída no chão: some com os enfeites embaixo dela (grama não atravessa o piso).
 func _clear_under(piece: Node) -> void:
-	if not is_instance_valid(piece) or not piece is Node3D:
+	if not is_instance_valid(piece) or not piece is Node3D or not is_inside_tree():
 		return
-	var p: Vector3 = (piece as Node3D).global_position
-	if p.y > 1.5:
-		return  # andar de cima
+	var p: Vector3 = (piece as Node3D).global_position - global_position
 	var reach := BuildPiece.CELL * 0.5 + 0.3
-	var half := World.HALF
-	var c0 := Vector2i(floori((p.x - reach + half) / CHUNK), floori((p.z - reach + half) / CHUNK))
-	var c1 := Vector2i(floori((p.x + reach + half) / CHUNK), floori((p.z + reach + half) / CHUNK))
-	for cj in range(c0.y, c1.y + 1):
-		for ci in range(c0.x, c1.x + 1):
-			var batches: Dictionary = _chunks.get(Vector2i(ci, cj), {})
-			for model: String in batches:
-				var mm: MultiMesh = batches[model][0].multimesh
-				var points: PackedVector3Array = batches[model][1]
-				for k in points.size():
-					if absf(points[k].x - p.x) < reach and absf(points[k].z - p.z) < reach:
-						mm.set_instance_transform(k, Transform3D(Basis().scaled(Vector3.ZERO), points[k]))
+	if p.x < -reach or p.z < -reach or p.x > 64.0 + reach or p.z > 64.0 + reach:
+		return
+	for model: String in _batches:
+		var mm: MultiMesh = _batches[model][0].multimesh
+		var points: PackedVector3Array = _batches[model][1]
+		for k in points.size():
+			if absf(points[k].x - p.x) < reach and absf(points[k].z - p.z) < reach and absf(points[k].y - p.y) < 2.0:
+				mm.set_instance_transform(k, Transform3D(Basis().scaled(Vector3.ZERO), points[k]))

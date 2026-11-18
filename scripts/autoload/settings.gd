@@ -27,6 +27,8 @@ var volume := 0.8
 var sprint_toggle := false
 ## true = Ctrl liga/desliga o agachar; false = agacha enquanto segura.
 var crouch_toggle := true
+## Minimapa no canto superior direito.
+var show_minimap := true
 
 
 func _ready() -> void:
@@ -37,6 +39,7 @@ func _ready() -> void:
 	mouse_sensitivity = float(cfg.get_value("controls", "mouse_sensitivity", mouse_sensitivity))
 	sprint_toggle = bool(cfg.get_value("controls", "sprint_toggle", sprint_toggle))
 	crouch_toggle = bool(cfg.get_value("controls", "crouch_toggle", crouch_toggle))
+	show_minimap = bool(cfg.get_value("interface", "show_minimap", show_minimap))
 	volume = float(cfg.get_value("audio", "volume", volume))
 	Sfx.volume = volume
 	_apply_language()
@@ -65,6 +68,7 @@ func save() -> void:
 	cfg.set_value("controls", "sprint_toggle", sprint_toggle)
 	cfg.set_value("controls", "crouch_toggle", crouch_toggle)
 	cfg.set_value("audio", "volume", volume)
+	cfg.set_value("interface", "show_minimap", show_minimap)
 	cfg.save(PATH)
 	changed.emit()
 
