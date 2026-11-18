@@ -57,10 +57,6 @@ func _ready() -> void:
 	WorldItems.register(items_root, item_spawner)
 	resource_spawner.spawn_function = _create_resource
 	Structures.register(structures_root, structure_spawner)
-	# Hordas (GDD 11): mesmo nome em todas as máquinas (RPCs de aviso).
-	var horde := Horde.new()
-	horde.name = "Horde"
-	add_child(horde)
 	# Clima (GDD 10.3), mesmo nome em todas as máquinas.
 	var weather := Weather.new()
 	weather.name = "Weather"

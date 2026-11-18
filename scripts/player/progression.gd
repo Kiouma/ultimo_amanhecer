@@ -36,9 +36,9 @@ var skills := {}
 ## Usos por tipo de arma ("bow", "melee", "spell", "thrown").
 var mastery_uses := {}
 ## Habilidades mágicas aprendidas (grimórios): id → nível (1 a MAX_SPELL_LEVEL).
-var spells := {"firebolt": 1}
+var spells := {}
 ## Última habilidade conjurada (Q rápido conjura ela).
-var last_spell := "firebolt"
+var last_spell := ""
 
 var _mods := {}
 var _recent := {}  # proficiência → [início da janela (s), XP na janela]
@@ -162,7 +162,7 @@ func use_weapon(weapon_type: String) -> void:
 
 # --- Habilidades (trilhas, GDD 4.2) ------------------------------------------------
 
-const TRAIL_NAMES := {"shooter": "Arqueiro", "warrior": "Guerreiro", "arcane": "Arcano", "survivor": "Sobrevivente"}
+const TRAIL_NAMES := {"shooter": "Arqueiro", "warrior": "Guerreiro", "arcane": "Arcano", "survivor": "Sobrevivente", "brawler": "Pugilista"}
 
 
 ## Por que não dá para aprender ("" = dá).
@@ -198,6 +198,10 @@ func apply_background(background_id: String) -> void:
 	for prof: String in bonus:
 		if levels.has(prof):
 			levels[prof] = clampi(get_level(prof) + int(bonus[prof]), 1, MAX_LEVEL)
+	# Vocação que já sabe magia (Mago): habilidades iniciais.
+	for spell: String in GameData.get_entry("backgrounds", background_id).get("spells", []):
+		learn_spell(spell)
+		last_spell = spell
 	_rebuild()
 	changed.emit()
 
@@ -224,7 +228,7 @@ func spell_level(spell_id: String) -> int:
 
 
 static func mastery_name(weapon_type: String) -> String:
-	return str({"bow": TranslationServer.translate("arco"), "melee": TranslationServer.translate("armas brancas"), "spell": TranslationServer.translate("feitiços"), "thrown": TranslationServer.translate("arremesso")}.get(weapon_type, weapon_type))
+	return str({"bow": TranslationServer.translate("arco"), "melee": TranslationServer.translate("armas brancas"), "spell": TranslationServer.translate("feitiços"), "thrown": TranslationServer.translate("arremesso"), "unarmed": TranslationServer.translate("desarmado")}.get(weapon_type, weapon_type))
 
 
 ## Abate (vem do servidor): XP do personagem.
@@ -273,7 +277,7 @@ static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: Str
 	var prog := of(attacker)
 	if prog == null or not prog.is_multiplayer_authority():
 		return amount
-	var prof: String = {"bow": "firearms", "thrown": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
+	var prof: String = {"bow": "firearms", "thrown": "firearms", "melee": "melee", "unarmed": "unarmed", "spell": "magic"}.get(weapon_type, "")
 	if weapon_type == "spell" and target is Zombie:
 		amount *= 1.0 - clampf(float(target.stats.get("magic_resist", 0.0)), 0.0, 0.9)
 	if target is Zombie and not target.is_dead():

@@ -35,13 +35,14 @@ const BIOME_NAMES := {
 }
 ## Chance por célula de 8 m de cada recurso, por bioma.
 const DENSITY := {
-	"forest": {"tree": 0.55, "berry_bush": 0.05, "branches": 0.08, "nest": 0.05, "rock": 0.03},
-	"plains": {"tree": 0.05, "berry_bush": 0.07, "branches": 0.03, "rock": 0.03, "nest": 0.01},
-	"swamp": {"twisted_tree": 0.04, "dead_tree": 0.03, "tree": 0.03, "herb_patch": 0.14, "branches": 0.06},
-	"lakeside": {"tree": 0.07, "berry_bush": 0.05, "rock": 0.03, "nest": 0.03},
-	"mountain": {"rock": 0.15, "pine": 0.04},
-	"contaminated": {"crystal": 0.2, "rock": 0.05, "dead_tree": 0.02},
-	"tundra": {"pine": 0.33, "rock": 0.06, "branches": 0.04},
+	# Coletáveis raros (frutas, ninhos, ervas, cristais); gravetos e pedras (pedrinhas) fartos.
+	"forest": {"tree": 0.42, "rock": 0.04, "pebbles": 0.06, "branches": 0.12, "berry_bush": 0.025, "nest": 0.02},
+	"plains": {"tree": 0.04, "rock": 0.04, "pebbles": 0.07, "branches": 0.06, "berry_bush": 0.035, "nest": 0.005},
+	"swamp": {"twisted_tree": 0.03, "dead_tree": 0.03, "tree": 0.02, "pebbles": 0.03, "branches": 0.1, "herb_patch": 0.07},
+	"lakeside": {"tree": 0.05, "rock": 0.04, "pebbles": 0.1, "branches": 0.05, "berry_bush": 0.025, "nest": 0.015},
+	"mountain": {"rock": 0.18, "pine": 0.03, "pebbles": 0.1},
+	"contaminated": {"crystal": 0.1, "rock": 0.05, "dead_tree": 0.02, "pebbles": 0.04},
+	"tundra": {"pine": 0.26, "rock": 0.07, "pebbles": 0.06, "branches": 0.07},
 }
 const CELL_SIZE := 8.0
 ## Profundidade da faixa de tundra (a partir das montanhas do norte).
@@ -82,6 +83,7 @@ var _swamp_noise := FastNoiseLite.new()
 var _hill_noise := FastNoiseLite.new()
 var _pop_timer := 2.0
 var _necro_night := false
+var _troll_night := false
 var _tiles: Array[NavigationRegion3D] = []
 var _dirty_tiles := {}
 
@@ -101,6 +103,7 @@ func _setup_level() -> void:
 	# Vegetação decorativa (só visual; o servidor sem tela não precisa).
 	if DisplayServer.get_name() != "headless":
 		add_child(NatureDecor.new(self))
+		add_child(PoiDecor.new(self))
 
 
 static func find(tree: SceneTree) -> Node:
@@ -179,7 +182,7 @@ func ground_height(x: float, z: float) -> float:
 # Feitos com peças de construção: dá para ocupar, consertar e reforçar (GDD 9.3).
 
 const POI_NAMES := {"house": "Casa abandonada", "cabin": "Cabana", "village": "Vilarejo",
-	"military": "Posto militar", "ruins": "Ruínas arcanas"}
+	"military": "Forte abandonado", "ruins": "Ruínas arcanas"}
 
 
 func _plan_pois() -> void:
@@ -478,15 +481,9 @@ func _scatter_resources() -> void:
 					break
 
 
+## Mundo aberto: nada de itens soltos perto de onde se nasce (o saque fica nos lugares).
 func _scatter_loot() -> void:
-	if from_save:
-		return
-	for entry in loot:
-		var angle := randf() * TAU
-		var dist := randf_range(3.0, loot_radius)
-		var x := cos(angle) * dist
-		var z := sin(angle) * dist
-		WorldItems.spawn(entry[0], entry[1], Vector3(x, ground_height(x, z) + 0.5, z))
+	pass
 
 
 ## Sem zumbis fixos: a população em volta dos jogadores cuida disso.
@@ -517,6 +514,7 @@ func _update_population() -> void:
 		return
 	var night := DayNight.find(get_tree()) != null and DayNight.find(get_tree()).is_night()
 	_maybe_necromancer(players, night)
+	_maybe_troll(players, night)
 	var spawned := 0
 	for p: Node3D in players:
 		if spawned >= 2:
@@ -555,6 +553,23 @@ func _maybe_necromancer(players: Array, night: bool) -> void:
 			for poi: Dictionary in pois:
 				if poi.type == "ruins":
 					spawn_zombie("necromancer", Vector3(poi.pos.x, 0.0, poi.pos.y + 4.0))
+			return
+
+## Uma vez por noite, se alguém está nas montanhas, o Troll ancião desce perto dele
+## (chefe das montanhas; antes vinha com as hordas).
+func _maybe_troll(players: Array, night: bool) -> void:
+	if not night:
+		_troll_night = false
+		return
+	if _troll_night:
+		return
+	for p: Node3D in players:
+		if biome_at(p.global_position.x, p.global_position.z) == "mountain":
+			var pos := _spawn_spot_near(p.global_position)
+			if pos == Vector3.INF:
+				return
+			_troll_night = true
+			spawn_zombie("colossus", pos)
 			return
 
 

@@ -1,8 +1,6 @@
 [
-  { "id": "survivor", "name": "Sobrevivente comum", "desc": "Sem bônus: só o kit básico.", "bonus": {}, "starting_items": {} },
-  { "id": "ex_military", "name": "Ex-militar", "desc": "Arquearia 4 · +20 flechas e 2 bandagens", "bonus": { "firearms": 3 }, "starting_items": { "arrow": 20, "bandage": 2 } },
-  { "id": "lumberjack", "name": "Lenhador", "desc": "Melee 4 · picareta e 10 de madeira", "bonus": { "melee": 3 }, "starting_items": { "pickaxe_stone": 1, "wood": 10 } },
-  { "id": "occult_student", "name": "Estudante de ocultismo", "desc": "Magia 4 · Grimório da vida", "bonus": { "magic": 3 }, "starting_items": { "grimoire_life": 1 } },
-  { "id": "nurse", "name": "Enfermeiro", "desc": "Resistência 4 · kit médico e 3 bandagens", "bonus": { "toughness": 3 }, "starting_items": { "medkit_basic": 1, "bandage": 3 } },
-  { "id": "carpenter", "name": "Carpinteiro", "desc": "Crafting e construção 4 · 20 de madeira e 10 de pedra", "bonus": { "crafting": 3 }, "starting_items": { "wood": 20, "stone": 10 } }
+  {"id":"warrior","name":"Guerreiro","desc":"Melee 4 · conjunto inicial: Armadura de pedra (pedra, madeira e presas de ogro)","bonus":{"melee":3}},
+  {"id":"archer","name":"Arqueiro","desc":"Arquearia 4 · conjunto inicial: Traje de patrulheiro (couro de goblins)","bonus":{"firearms":3}},
+  {"id":"mage","name":"Mago","desc":"Magia 4 e conhece Dardo de fogo · conjunto inicial: Manto do aprendiz (tecido e pó arcano)","bonus":{"magic":3},"spells":["firebolt"]},
+  {"id":"brawler","name":"Pugilista","desc":"Pugilismo 4 · luta de mãos vazias · conjunto inicial: Trajes de pugilista (tendões de carniçais)","bonus":{"unarmed":3}}
 ]

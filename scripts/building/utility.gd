@@ -208,24 +208,32 @@ func _local_player() -> Node3D:
 
 # --- Visual ------------------------------------------------------------------------------
 
+## Móvel do Fantasy Props (largura em metros). false = modelo não achado (usa caixas).
+func _add_model(model: String, width: float) -> bool:
+	var node := ModelKit.fit_width(ModelKit.PROPS + model + ".gltf", width)
+	if node == null:
+		return false
+	add_child(node)
+	return true
+
+
 func _build() -> void:
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	match station:
 		"chest":
-			add_child(Weapon.box(Vector3(1.0, 0.55, 0.6), Color(0.45, 0.3, 0.17), Vector3(0, 0.28, 0)))
-			add_child(Weapon.box(Vector3(1.04, 0.12, 0.64), Color(0.35, 0.23, 0.13), Vector3(0, 0.6, 0)))
-			add_child(Weapon.box(Vector3(0.12, 0.14, 0.04), Color(0.7, 0.62, 0.3), Vector3(0, 0.45, 0.31)))
+			if not _add_model("Chest_Wood", 1.1):
+				add_child(Weapon.box(Vector3(1.0, 0.55, 0.6), Color(0.45, 0.3, 0.17), Vector3(0, 0.28, 0)))
 			box.size = Vector3(1.0, 0.7, 0.6)
 			shape.position.y = 0.35
 		"bed":
-			add_child(Weapon.box(Vector3(1.0, 0.35, 2.0), Color(0.42, 0.29, 0.17), Vector3(0, 0.18, 0)))
-			add_child(Weapon.box(Vector3(0.9, 0.12, 1.85), Color(0.55, 0.2, 0.18), Vector3(0, 0.41, 0)))
-			add_child(Weapon.box(Vector3(0.7, 0.12, 0.35), Color(0.85, 0.85, 0.8), Vector3(0, 0.5, -0.7)))
-			box.size = Vector3(1.0, 0.5, 2.0)
+			if not _add_model("Bed_Twin1", 2.1):
+				add_child(Weapon.box(Vector3(1.0, 0.35, 2.0), Color(0.42, 0.29, 0.17), Vector3(0, 0.18, 0)))
+			box.size = ModelKit.fitted_size(ModelKit.PROPS + "Bed_Twin1.gltf", 2.1) if ModelKit.scene(ModelKit.PROPS + "Bed_Twin1.gltf") else Vector3(1.0, 0.5, 2.0)
 			shape.position.y = 0.25
 		_:  # coletor
-			add_child(Weapon.cylinder(0.45, 0.8, Color(0.4, 0.3, 0.2), Vector3(0, 0.4, 0)))
+			if not _add_model("Barrel", 0.9):
+				add_child(Weapon.cylinder(0.45, 0.8, Color(0.4, 0.3, 0.2), Vector3(0, 0.4, 0)))
 			var cloth := Weapon.box(Vector3(1.4, 0.04, 1.4), Color(0.75, 0.75, 0.7), Vector3(0, 1.1, 0))
 			add_child(cloth)
 			for x in [-0.65, 0.65]:

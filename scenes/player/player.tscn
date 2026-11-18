@@ -39,6 +39,9 @@ properties/6/replication_mode = 2
 properties/7/path = NodePath(".:net_torch")
 properties/7/spawn = false
 properties/7/replication_mode = 2
+properties/8/path = NodePath(".:net_outfit")
+properties/8/spawn = true
+properties/8/replication_mode = 2
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2

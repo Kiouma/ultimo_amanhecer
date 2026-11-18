@@ -258,6 +258,9 @@ func _bind_overload(player: Player) -> void:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
+	# Quebra linha em vez de alargar a coluna (senão as barras esticam junto com o texto).
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(1, 0)
 	var box := health_bar.get_parent()
 	box.add_child(label)
 	box.move_child(label, 0)
@@ -278,6 +281,9 @@ func _bind_death_penalty(player: Player) -> void:
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
+	# Quebra linha em vez de alargar a coluna (senão as barras esticam junto com o texto).
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(1, 0)
 	var box := health_bar.get_parent()
 	box.add_child(label)
 	box.move_child(label, 0)
@@ -379,41 +385,24 @@ func _build_clock() -> void:
 		tw.tween_interval(3.0)
 		tw.tween_property(banner, "modulate:a", 0.0, 1.2)
 	_bus(EventBus.night_started, func(d: int) -> void:
-		var h := Horde.find(get_tree())
-		if h and h.is_horde_day(d):
-			return  # a faixa da horda ocupa o lugar
-		show_banner.call(tr("Noite %d\nos mortos estão mais rápidos") % d, Color(0.75, 0.8, 1.0)))
+		show_banner.call(tr("Noite %d\nos monstros ficam mais ferozes") % d, Color(0.75, 0.8, 1.0)))
 	_bus(EventBus.day_started, func(d: int) -> void:
-		var h := Horde.find(get_tree())
-		if h and h.is_horde_day(d):
-			show_banner.call(tr("Dia %d\na horda vem esta noite: preparem a base") % d, Color(1.0, 0.55, 0.4))
-		else:
-			show_banner.call(tr("Dia %d") % d, Color(1.0, 0.9, 0.6)))
+		show_banner.call(tr("Dia %d") % d, Color(1.0, 0.9, 0.6)))
 	_bus(EventBus.weather_changed, func(state: String) -> void:
 		var texts := {"rain": tr("Começou a chover\nos sons ficam abafados"), "fog": tr("A neblina baixou\nninguém enxerga longe"),
 			"storm": tr("Tempestade!\nraios por toda parte"), "cold": tr("Frio extremo\nfique perto de uma fogueira")}
 		if texts.has(state):
 			show_banner.call(texts[state], Color(0.8, 0.88, 1.0)))
-	_bus(EventBus.horde_started, func(n: int) -> void:
-		show_banner.call(tr("A HORDA %d CHEGOU") % n, Color(1.0, 0.3, 0.25)))
-	_bus(EventBus.horde_ended, func(n: int, survived: bool) -> void:
-		show_banner.call(tr("Horda %d vencida!\nrecompensa no inventário") % n if survived else tr("A horda %d passou") % n,
-			Color(0.6, 1.0, 0.6)))
 
 	var day_night := DayNight.find(get_tree())
 	if day_night == null:
 		return
-	var update := func(d: int, h: float) -> void:
+	var update := func(d: int, _h: float) -> void:
 		clock.text = "%s %d · %s" % [tr("Noite") if day_night.is_night() else tr("Dia"), d, day_night.clock_text()]
 		var color := Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85)
 		var weather := Weather.find(get_tree())
 		if weather and weather.state != "clear":
 			clock.text += " · " + weather.display_name()
-		var horde := Horde.find(get_tree())
-		if horde:
-			clock.text += "\n" + horde.status_text(d, h)
-			if horde.active or horde.days_until(d) == 0:
-				color = Color(1.0, 0.45, 0.4)
 		clock.add_theme_color_override("font_color", color)
 	day_night.time_changed.connect(update)
 	update.call(day_night.day, day_night.hour)

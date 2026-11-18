@@ -1,19 +1,11 @@
 [
-  { "id": "crafting", "name": "Crafting e construção", "raised_by": "Fabricar itens, construir e consertar", "max_level": 100,
-    "effects": { "craft_time": -0.004 }, "summary": "fabrica mais rápido e com mais qualidade" },
-  { "id": "athletics", "name": "Atletismo", "raised_by": "Correr e pular", "max_level": 100,
-    "effects": { "move_speed": 0.002, "sprint_stamina": -0.004, "carry_weight_add": 0.2 }, "summary": "mais velocidade e carga, corrida gasta menos stamina" },
-  { "id": "toughness", "name": "Resistência", "raised_by": "Receber dano de inimigos", "max_level": 100,
-    "effects": { "damage_taken": -0.0025 }, "summary": "menos dano recebido" },
-  { "id": "firearms", "name": "Arquearia", "raised_by": "Atirar com arco ou besta e acertar", "max_level": 100,
-    "effects": { "ranged.damage": 0.005, "ranged.draw_time": -0.003 },
-    "summary": "mais dano à distância e puxa o arco mais rápido" },
-  { "id": "melee", "name": "Melee", "raised_by": "Golpear inimigos", "max_level": 100,
-    "effects": { "melee.damage": 0.005, "melee.stamina_cost": -0.004, "melee.attack_time": -0.002 }, "summary": "mais dano e golpes mais baratos" },
-  { "id": "magic", "name": "Magia", "raised_by": "Conjurar feitiços e acertar", "max_level": 100,
-    "effects": { "magic.damage": 0.005, "magic.mana": -0.003, "magic.cooldown": -0.003, "max_mana_add": 1.0 }, "summary": "mais mana, feitiços mais fortes e baratos" },
-  { "id": "stealth", "name": "Furtividade", "raised_by": "Andar agachado perto de zumbis e atacar de surpresa", "max_level": 100,
-    "effects": { "noise": -0.004, "sneak_damage": 0.01 }, "summary": "menos barulho, mais dano em ataque surpresa" },
-  { "id": "survival", "name": "Sobrevivência", "raised_by": "Coletar, comer, beber e curar", "max_level": 100,
-    "effects": { "gather_yield": 0.005, "food": 0.005, "heal": 0.005 }, "summary": "coleta mais, comida e cura rendem mais" }
+  {"id":"crafting","name":"Crafting e construção","raised_by":"Fabricar itens, construir e consertar","max_level":100,"effects":{"craft_time":-0.004},"summary":"fabrica mais rápido e com mais qualidade"},
+  {"id":"athletics","name":"Atletismo","raised_by":"Correr e pular","max_level":100,"effects":{"move_speed":0.002,"sprint_stamina":-0.004,"carry_weight_add":0.2},"summary":"mais velocidade e carga, corrida gasta menos stamina"},
+  {"id":"toughness","name":"Resistência","raised_by":"Receber dano de inimigos","max_level":100,"effects":{"damage_taken":-0.0025},"summary":"menos dano recebido"},
+  {"id":"firearms","name":"Arquearia","raised_by":"Atirar com arco ou besta e acertar","max_level":100,"effects":{"ranged.damage":0.005,"ranged.draw_time":-0.003},"summary":"mais dano à distância e puxa o arco mais rápido"},
+  {"id":"melee","name":"Melee","raised_by":"Golpear inimigos","max_level":100,"effects":{"melee.damage":0.005,"melee.stamina_cost":-0.004,"melee.attack_time":-0.002},"summary":"mais dano e golpes mais baratos"},
+  {"id":"unarmed","name":"Pugilismo","raised_by":"Lutar de mãos vazias e acertar","max_level":100,"effects":{"unarmed.damage":0.01,"unarmed.stamina_cost":-0.004},"summary":"socos mais fortes e mais baratos"},
+  {"id":"magic","name":"Magia","raised_by":"Conjurar feitiços e acertar","max_level":100,"effects":{"magic.damage":0.005,"magic.mana":-0.003,"magic.cooldown":-0.003,"max_mana_add":1},"summary":"mais mana, feitiços mais fortes e baratos"},
+  {"id":"stealth","name":"Furtividade","raised_by":"Andar agachado perto de monstros e atacar de surpresa","max_level":100,"effects":{"noise":-0.004,"sneak_damage":0.01},"summary":"menos barulho, mais dano em ataque surpresa"},
+  {"id":"survival","name":"Sobrevivência","raised_by":"Coletar, comer, beber e curar","max_level":100,"effects":{"gather_yield":0.005,"food":0.005,"heal":0.005},"summary":"coleta mais, comida e cura rendem mais"}
 ]

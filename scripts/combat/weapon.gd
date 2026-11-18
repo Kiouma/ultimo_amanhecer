@@ -173,6 +173,7 @@ func category() -> String:
 		"bow": return "ranged"
 		"spell", "focus": return "magic"
 		"thrown": return "thrown"
+		"unarmed": return "unarmed"
 	return "melee"
 
 
@@ -180,7 +181,7 @@ func category() -> String:
 func count_use() -> void:
 	if user and user.progression:
 		user.progression.use_weapon(weapon_type())
-		user.progression.gain({"ranged": "firearms", "thrown": "firearms", "melee": "melee", "magic": "magic"}[category()], 0.3)
+		user.progression.gain({"ranged": "firearms", "thrown": "firearms", "melee": "melee", "unarmed": "unarmed", "magic": "magic"}[category()], 0.3)
 
 
 func quality_multiplier() -> float:

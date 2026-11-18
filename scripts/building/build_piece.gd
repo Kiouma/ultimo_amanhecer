@@ -26,6 +26,11 @@ const DOOR_LAYER := 64
 const MAX_LEVEL := 3
 
 const TIER_NAMES := {"wood": "madeira", "stone": "pedra", "earth": "terra"}
+## Modelos do Medieval Village por material (terra = muro mágico, continua liso).
+const TIER_MODELS := {
+	"wood": {"wall": "Wall_Plaster_Straight", "floor": "Floor_WoodDark", "door": "Door_1_Flat"},
+	"stone": {"wall": "Wall_UnevenBrick_Straight", "floor": "Floor_UnevenBrick", "door": "Door_2_Flat"},
+}
 const TIER_COLORS := {"wood": Color(0.56, 0.39, 0.23), "stone": Color(0.56, 0.56, 0.54), "earth": Color(0.4, 0.31, 0.22)}
 
 var piece_id := "wall"
@@ -217,11 +222,31 @@ static func build_visual(id: String, tier_id: String, parent: Node3D, with_door 
 			parent.add_child(Weapon.box(Vector3(CELL - 0.2, h, depth), color if k % 2 == 0 else color.darkened(0.08),
 				Vector3(0, h * 0.5, CELL * 0.5 - depth * (k + 0.5))))
 		return
+	var models: Dictionary = TIER_MODELS.get(tier_id, {})
+	var is_edge := str(GameData.get_entry("buildings", id).get("slot", "")) == "edge"
+	if is_edge and models.has("wall"):
+		# Parede/portal: cada bloco sólido vira um pedaço de parede do Medieval Village
+		# esticado para a mesma caixa (o visual bate com a colisão, inclusive o vão da porta).
+		for part: Array in parts(id):
+			var wall := ModelKit.fit_box(ModelKit.VILLAGE + str(models.wall) + ".gltf", part[0], Vector3.ZERO)
+			if wall:
+				wall.transform = part_transform(part) * wall.transform
+				parent.add_child(wall)
+		if with_door and id == "doorway":
+			parent.add_child(door_mesh(tier_id, Vector3(0, DOOR_HEIGHT * 0.5, 0)))
+		return
 	for part: Array in parts(id):
 		var mesh := Weapon.box(part[0], color)
 		mesh.transform = part_transform(part)
 		parent.add_child(mesh)
-	if str(GameData.get_entry("buildings", id).get("slot", "")) == "edge":
+	if models.has("floor") and id in ["foundation", "floor"]:
+		# Piso da vila por cima (tábuas na madeira, pedras na pedra).
+		var top := 0.05 if id == "foundation" else 0.0
+		var floor_model := ModelKit.fit_box(ModelKit.VILLAGE + str(models.floor) + ".gltf", Vector3(CELL, 0.02, CELL), Vector3(0, top + 0.012, 0))
+		if floor_model:
+			parent.add_child(floor_model)
+		return
+	if is_edge:
 		# Pilares nas pontas (madeira) ou cinta no topo (pedra): dá para ler a grade.
 		for x in [-CELL * 0.5 + 0.08, CELL * 0.5 - 0.08]:
 			parent.add_child(Weapon.box(Vector3(0.16, HEIGHT, THICKNESS + 0.04), dark, Vector3(x, HEIGHT * 0.5, 0)))
@@ -234,6 +259,16 @@ static func build_visual(id: String, tier_id: String, parent: Node3D, with_door 
 
 static func door_mesh(tier_id: String, pos: Vector3) -> MeshInstance3D:
 	var color: Color = TIER_COLORS.get(tier_id, Color.GRAY)
+	var models: Dictionary = TIER_MODELS.get(tier_id, {})
+	if models.has("door"):
+		# Folha da porta do Medieval Village (com a mesma caixa da porta de antes).
+		var holder := MeshInstance3D.new()
+		holder.position = pos
+		var door := ModelKit.fit_box(ModelKit.VILLAGE + str(models.door) + ".gltf", Vector3(DOOR_WIDTH - 0.04, DOOR_HEIGHT - 0.02, 0.1), Vector3.ZERO)
+		if door:
+			holder.add_child(door)
+			return holder
+		holder.free()
 	var mesh := Weapon.box(Vector3(DOOR_WIDTH - 0.04, DOOR_HEIGHT - 0.02, 0.08), color.darkened(0.45), pos)
 	mesh.add_child(Weapon.box(Vector3(0.06, 0.06, 0.16), Color(0.7, 0.65, 0.4), Vector3(DOOR_WIDTH * 0.5 - 0.18, 0, 0)))
 	return mesh

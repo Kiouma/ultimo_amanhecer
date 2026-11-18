@@ -8,3 +8,6 @@ Toda vez que adicionar um asset de terceiros, registre aqui. Isso evita problema
 | `models/characters/universal_base/` | Quaternius | quaternius.com (Universal Base Characters [Standard]) | CC0 (confirmar na página do pacote) | Sim, se CC0 | 2026-11-15 |
 | `animations/ual/` | Quaternius | quaternius.com (Universal Animation Library 1 e 2 [Standard]) | CC0 (confirmar na página do pacote) | Sim, se CC0 | 2026-11-15 |
 | `models/environment/nature/` | Quaternius | quaternius.com (Stylized Nature MegaKit [Standard]) | CC0 1.0 (License_Standard.txt do pacote) | Sim | 2026-11-17 |
+| `models/props/fantasy/` | Quaternius | quaternius.com (Fantasy Props MegaKit [Standard]) | CC0 1.0 | Sim | 2026-11-18 |
+| `models/buildings/village/` | Quaternius | quaternius.com (Medieval Village MegaKit [Standard]) | CC0 1.0 | Sim | 2026-11-18 |
+| `models/characters/outfits/` | Quaternius | quaternius.com (Modular Character Outfits - Fantasy [Standard]) | CC0 (página do pacote) | Sim | 2026-11-18 |

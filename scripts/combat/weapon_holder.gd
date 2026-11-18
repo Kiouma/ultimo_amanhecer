@@ -11,7 +11,7 @@ signal changed
 
 ## Mãos livres: soco fraco que também coleta (mal) madeira.
 const FISTS := {
-	"id": "", "name": "Mãos livres", "type": "melee", "damage": 6, "stamina_cost": 5,
+	"id": "", "name": "Mãos livres", "type": "unarmed", "damage": 8, "stamina_cost": 5,
 	"range": 1.7, "attack_time": 0.45, "hit_delay": 0.18, "noise": 0.05,
 	"gather": {"tree": 0.3}, "combo": ["Punch_Jab", "Punch_Cross"], "no_viewmodel": true,
 }

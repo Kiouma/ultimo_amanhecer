@@ -324,6 +324,18 @@ class EquipSlot extends PanelContainer:
 				panel.slot_clicked(slot, true)
 			accept_event()
 
+	func _make_custom_tooltip(for_text: String) -> Object:
+		var item := panel.player.equipment.get_item(slot)
+		if item.is_empty():
+			return null  # dica de texto padrão (slot vazio)
+		var box := ItemTooltip.build(item)
+		var hint := Label.new()
+		hint.text = tr("Clique para tirar.")
+		hint.add_theme_font_size_override("font_size", 11)
+		hint.modulate = Color(0.7, 0.7, 0.66)
+		box.get_child(0).add_child(hint)
+		return box if for_text != "" else null
+
 	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
 		if not (data is Dictionary and data.has("slot_from")):
 			return false

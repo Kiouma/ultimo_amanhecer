@@ -64,12 +64,12 @@ func _build() -> void:
 			add_child(_flame)
 			box.size = Vector3(1.1, 0.4, 1.1)
 			shape.position.y = 0.2
-		_:  # bancada
-			add_child(Weapon.box(Vector3(1.6, 0.08, 0.8), Color(0.5, 0.34, 0.2), Vector3(0, 0.9, 0)))
-			for x in [-0.7, 0.7]:
-				for z in [-0.32, 0.32]:
-					add_child(Weapon.box(Vector3(0.08, 0.9, 0.08), Color(0.4, 0.27, 0.16), Vector3(x, 0.45, z)))
-			add_child(Weapon.box(Vector3(0.3, 0.12, 0.2), Color(0.5, 0.5, 0.52), Vector3(0.4, 1.0, 0.1)))
+		_:  # bancada (Fantasy Props)
+			var bench := ModelKit.fit_width(ModelKit.PROPS + "Workbench.gltf", 1.7)
+			if bench:
+				add_child(bench)
+			else:
+				add_child(Weapon.box(Vector3(1.6, 0.08, 0.8), Color(0.5, 0.34, 0.2), Vector3(0, 0.9, 0)))
 			box.size = Vector3(1.6, 1.0, 0.8)
 			shape.position.y = 0.5
 	shape.shape = box

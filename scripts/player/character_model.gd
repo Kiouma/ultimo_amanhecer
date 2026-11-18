@@ -47,6 +47,47 @@ func attach(scene: PackedScene) -> void:
 	instance.free()
 
 
+const OUTFIT_DIR := "res://assets/models/characters/outfits/"
+## Malhas do traje vestido agora (Modular Character Outfits, mesmo esqueleto).
+var _outfit_meshes: Array[MeshInstance3D] = []
+var _outfit_names := PackedStringArray()
+
+
+## Veste as peças de traje pedidas (nomes dos .gltf, ex.: "Male_Ranger_Body") e tira
+## as que não estão na lista. Lista vazia = sem traje (só o corpo base).
+func set_outfit(parts: PackedStringArray) -> void:
+	if parts == _outfit_names:
+		return
+	_outfit_names = parts
+	for m in _outfit_meshes:
+		if is_instance_valid(m):
+			m.queue_free()
+	_outfit_meshes.clear()
+	for part in parts:
+		var scene := load(OUTFIT_DIR + part + ".gltf") as PackedScene if ResourceLoader.exists(OUTFIT_DIR + part + ".gltf") else null
+		if scene == null:
+			continue
+		var instance := scene.instantiate()
+		for mesh: MeshInstance3D in instance.find_children("*", "MeshInstance3D"):
+			mesh.get_parent().remove_child(mesh)
+			mesh.owner = null
+			skeleton.add_child(mesh)
+			mesh.skeleton = NodePath("..")
+			mesh.cast_shadow = _shadow_mode
+			_outfit_meshes.append(mesh)
+		instance.free()
+
+
+var _shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+
+## 1ª pessoa: o corpo (e o traje) só projeta sombra.
+func set_shadow_mode(mode: GeometryInstance3D.ShadowCastingSetting) -> void:
+	_shadow_mode = mode
+	for mesh: GeometryInstance3D in find_children("*", "GeometryInstance3D", true, false):
+		mesh.cast_shadow = mode
+
+
 func set_hair_color(color: Color) -> void:
 	hair_color = color
 	for mesh: MeshInstance3D in skeleton.get_children():

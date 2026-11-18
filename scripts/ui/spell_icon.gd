@@ -33,7 +33,7 @@ func _draw() -> void:
 	var c := size * 0.5
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.1, 0.1, 0.12, 0.85))
 	if id == "":
-		draw_string(font, Vector2(6, 38), tr("sem\nmagia"), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.5))
+		draw_multiline_string(font, Vector2(6, 30), tr("sem\nmagia"), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, -1, Color(1, 1, 1, 0.5))
 		return
 	var color := school_color(id)
 	draw_circle(c, 22.0, Color(color, 0.85))

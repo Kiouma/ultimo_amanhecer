@@ -261,6 +261,13 @@ func _build() -> void:
 			crystal_box.size = Vector3(1.4, 1.4, 1.4)
 			shape.shape = crystal_box
 			shape.position.y = 0.6
+		"pebble":  # pedrinhas soltas no chão (E pega pedra)
+			if not has_model:
+				_visual.add_child(Weapon.sphere(0.12, Color(0.5, 0.5, 0.52), Vector3(0, 0.06, 0)))
+			var pebble_box := BoxShape3D.new()
+			pebble_box.size = Vector3(0.6, 0.3, 0.6)
+			shape.shape = pebble_box
+			shape.position.y = 0.15
 		_:  # galhos caídos
 			for i in 4:
 				var branch := Weapon.box(Vector3(0.05, 0.05, 0.7), Color(0.4, 0.28, 0.16), Vector3(0, 0.05, 0))

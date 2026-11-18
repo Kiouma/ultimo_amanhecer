@@ -141,22 +141,18 @@ func refresh() -> void:
 			var refine := Inventory.refine_of(s)
 			if refine > 0:
 				_name_label.text += " +%d" % refine
-				if interactive:
-					tooltip_text += "
-Refino +%d (+%d%% dano/eficiência)" % [refine, refine * 5]
-			if interactive:
-				tooltip_text += "
-Qualidade %d (+%d%% dano, durabilidade e eficiência)" % [q, roundi((Inventory.quality_multiplier(s) - 1.0) * 100)]
-			tooltip_text += "
-Durabilidade %d / %d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)] if interactive else ""
 			if Inventory.is_broken(s):
-				_name_label.text += "
-(quebrado)"
-		var weight := float(data.get("weight", 0.0))
-		tooltip_text = tr("%s\n%s · %.2f kg cada · %.1f kg") % [item_name, str(data.get("type", "")), weight, weight * count] \
-			if interactive else ""
+				_name_label.text += "\n" + tr("(quebrado)")
+		# O texto só liga a dica; o conteúdo é o painel de _make_custom_tooltip.
+		tooltip_text = item_name if interactive else ""
 	_update_dur_bar()
 	_update_style()
+
+
+## Dica com as informações do item (efeitos, números, Material/Consumível).
+func _make_custom_tooltip(_for_text: String) -> Object:
+	var s := inventory.get_slot(index) if inventory else {}
+	return ItemTooltip.build(s) if not s.is_empty() else null
 
 
 func _update_dur_bar() -> void:

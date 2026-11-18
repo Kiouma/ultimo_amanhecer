@@ -78,7 +78,7 @@ func _refresh() -> void:
 		row.add_child(info)
 		_profs.add_child(row)
 	var parts: PackedStringArray = []
-	for t in ["bow", "melee", "spell", "thrown"]:
+	for t in ["bow", "melee", "unarmed", "spell", "thrown"]:
 		parts.append("%s %d" % [Progression.mastery_name(t).capitalize(), prog.mastery_level(t)])
 	_mastery.text = tr("Maestria (até +10% de dano): ") + " · ".join(parts)
 	_refresh_skills()
@@ -153,7 +153,7 @@ const BONUS_NAMES := {
 	"ranged.recover_chance": "Recuperar flechas", "attack_speed": "Velocidade de ataque", "cooldown_reduction": "Redução de recarga",
 	"spell_resist": "Resistência a magia", "carry_weight_add": "Capacidade de carga", "loot_bonus": "Aumento de loot",
 	"headshot_damage": "Dano na cabeça", "magic.channel": "Força da canalização", "melee.channel": "Carga do golpe",
-	"ranged.arrow_speed": "Velocidade da flecha", "gather_yield": "Coleta de recursos", "craft_time": "Tempo de fabricação",
+	"ranged.arrow_speed": "Velocidade da flecha", "unarmed.damage": "Dano desarmado", "unarmed.stamina_cost": "Stamina por soco", "gather_yield": "Coleta de recursos", "craft_time": "Tempo de fabricação",
 }
 
 

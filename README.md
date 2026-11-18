@@ -1,6 +1,6 @@
 # Último Amanhecer
 
-Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arco e besta, corpo a corpo ou magia. O design completo está em [docs/GDD.md](docs/GDD.md).
+Jogo de sobrevivência e fantasia 3D (mundo aberto com monstros, coleta, fabricação e construção), co-op de até 5 jogadores, com combate por arco e besta, corpo a corpo ou magia. O design completo está em [docs/GDD.md](docs/GDD.md).
 
 **Engine:** Godot 4.6 (Forward+, física Jolt) · **Linguagem:** GDScript
 
@@ -8,7 +8,11 @@ Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arco
 
 1. Abra o Godot 4.6.
 2. Clique em **Importar**, escolha a pasta deste projeto (`project.godot`) e abra.
-3. Aperte **F5**. A tela inicial (um vale gerado na hora) tem **Singleplayer**, **Multiplayer**, **Personagens**, **Configurações** e **Sair do jogo**. Em **Personagens** você cria (nome + **passado**) e exclui personagens. Singleplayer e Hospedar pedem o **mundo** (criar, continuar ou excluir) e depois o **personagem** que entra nele; Entrar pede o IP e o personagem. O personagem leva inventário, equipamento, níveis e habilidades para qualquer mundo.
+3. Aperte **F5**. A tela inicial (um vale gerado na hora) tem **Singleplayer**, **Multiplayer**, **Personagens**, **Configurações** e **Sair do jogo**. Em **Personagens** você cria (nome + **vocação**: Guerreiro, Arqueiro, Mago ou Pugilista) e exclui personagens. Singleplayer e Hospedar pedem o **mundo** (criar, continuar ou excluir) e depois o **personagem** que entra nele; Entrar pede o IP e o personagem. O personagem leva inventário, equipamento, níveis e habilidades para qualquer mundo.
+
+Personagem novo começa só com **1 tocha, 2 garrafas de água e 3 frutas silvestres**: o resto se coleta, acha ou fabrica (machado e picareta de pedra, lança e cajado saem nas mãos). Cada vocação tem um **conjunto inicial** de 5 peças feito na bancada com recursos naturais e drops de monstros: **Armadura de pedra** (Guerreiro: muita pedra + presas de ogro), **Traje de patrulheiro** (Arqueiro: couro de goblins), **Manto do aprendiz** (Mago: tecido + pó arcano, moído do cristal arcano na bancada) e **Trajes de pugilista** (Pugilista: tendões de carniçais). O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). Pugilista luta de mãos vazias: proficiência **Pugilismo**, trilha própria e bônus de dano desarmado.
+
+Mouse em cima de um item mostra o que ele faz (ex.: "Recupera 40 de sede"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
 
 Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha (Shift e Ctrl podem ser "segurar" ou "alternar" em Configurações), Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
 
@@ -34,7 +38,7 @@ Mapa (**M**): só mostra o que você já explorou; botão direito marca um ponto
 
 Clima: chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (fome mais rápida longe de fogueira). **F10** (host) troca o clima.
 
-Hordas: a cada **7 dias**, ao anoitecer, uma horda ataca em ondas (o relógio mostra quantos dias faltam; o céu fica vermelho na tarde da horda). Sobreviver dá recompensa. **F9** (host) chama uma horda agora, para testar.
+Monstros: carniçais, goblins, ogros, xamãs goblins, espectros noturnos, diabretes flamejantes e draugrs gélidos, conforme a região. Chefes: o **Necromante** surge nas ruínas à noite (zona contaminada) e o **Troll ancião** desce das montanhas à noite. Não há mais hordas.
 
 Salvamento: o jogo salva sozinho a cada 2 minutos, ao fechar a janela e pelo menu de pausa (**Esc**). O host salva o mundo (construções, itens no chão, dia, clima); cada jogador salva o próprio personagem (inventário, progressão), que pode ser levado para o mundo de um amigo. Saves ficam em `user://worlds/` e `user://characters/` (o save antigo vira "Mundo 1" e "Personagem 1").
 
@@ -42,7 +46,7 @@ Idiomas (**Esc → Configurações**, com bandeira): português, inglês, chinê
 
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
-Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os zumbis ficam mais rápidos e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
+Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os monstros ficam mais ferozes e ouvem melhor; segure a **tocha** para iluminar. Para testar, **F8** (no host) adianta 1 hora. O mapa completo de teclas (GDD 13.3) já está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
 
 ## Testar o co-op no mesmo PC
 
@@ -61,14 +65,14 @@ Entre PCs: na mesma rede use o IP local do host (ex.: `192.168.0.10`).
 
 Quem entra no mundo de um amigo salva o próprio personagem na hora em que sai (inclusive se o host fechar ou a conexão cair).
 
-**Como a rede funciona** (autoload `Network`): o host é o servidor e manda nos zumbis, na vida, no dano e nas mortes. Cada jogador controla o movimento do próprio personagem. Ataques detectam o acerto em quem atacou e pedem o dano ao servidor (`Health.take_damage`).
+**Como a rede funciona** (autoload `Network`): o host é o servidor e manda nos monstros, na vida, no dano e nas mortes. Cada jogador controla o movimento do próprio personagem. Ataques detectam o acerto em quem atacou e pedem o dano ao servidor (`Health.take_damage`).
 
 ## Estrutura
 
 ```
 assets/        Arte e som (veja assets/README.md e assets/LICENSES.md)
-data/          Conteúdo do jogo em JSON: itens, receitas, zumbis, feitiços,
-               proficiências, passados. Carregado pelo autoload GameData.
+data/          Conteúdo do jogo em JSON: itens, receitas, monstros (data/zombies), feitiços,
+               proficiências, vocações (data/backgrounds). Carregado pelo autoload GameData.
 scenes/        Cenas .tscn, separadas por módulo
   main.tscn    Cena inicial: menu e contêiner do nível
   levels/      Mapas (test_arena.tscn é a arena da Fase 1)

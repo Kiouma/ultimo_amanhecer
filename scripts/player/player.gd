@@ -12,12 +12,10 @@ signal interaction_prompt_changed(text: String)
 ## Aviso curto para o HUD ("Você passou mal", "Não dá para colocar aqui"...).
 signal notified(text: String)
 
-## Kit inicial provisório (até existir criação de personagem, GDD 4.4).
+## Kit inicial de todo personagem novo: o resto se coleta, acha ou fabrica.
 ## Cada entrada: [id, quantidade, slot da hotbar ou -1].
 const STARTER_KIT := [
-	["bow_wood", 1, 0], ["axe_iron", 1, 1], ["staff_wood", 1, 2], ["bandage", 2, 3],
-	["arrow", 15, -1], ["feather", 5, -1], ["stick", 5, -1],
-	["berries", 6, 4], ["water_bottle", 1, 5], ["torch", 1, 6], ["hammer", 1, 7],
+	["torch", 1, 0], ["water_bottle", 2, 1], ["berries", 3, 2],
 ]
 
 @export_group("Movimento")
@@ -74,6 +72,13 @@ var net_torch := false:
 			_torch_light.visible = value
 
 var _torch_light: OmniLight3D
+
+## Peças de traje vestidas (nomes separados por vírgula), replicadas: todos veem a roupa.
+var net_outfit := "":
+	set(value):
+		net_outfit = value
+		if is_node_ready():
+			model.set_outfit(PackedStringArray(value.split(",", false)))
 
 var _noise_timer := 0.0
 var _spawn_point := Vector3.ZERO
@@ -160,6 +165,8 @@ func _ready() -> void:
 	progression.name = "Progression"
 	add_child(progression)
 	progression.leveled.connect(notify)
+	equipment.changed.connect(_update_outfit)
+	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
 	# Fome e sede só correm na máquina do dono (ver Survival).
 	survival.set_process(is_local())
@@ -199,6 +206,20 @@ func _on_settings_changed() -> void:
 	mouse_sensitivity = Settings.mouse_sensitivity
 	if not Settings.sprint_toggle:
 		_sprint_on = false
+
+
+## Dono: traje a partir do equipamento vestido (peças com "outfit"; quebradas não aparecem).
+func _update_outfit() -> void:
+	if not is_local():
+		return
+	var parts := PackedStringArray()
+	for slot: String in Equipment.SLOTS:
+		var item := equipment.get_item(slot)
+		if item.is_empty() or Inventory.is_broken(item):
+			continue
+		for part: String in GameData.get_item(item.id).get("outfit", []):
+			parts.append(part)
+	net_outfit = ",".join(parts)
 
 
 ## Verdadeiro se este é o personagem controlado nesta máquina.
@@ -597,5 +618,4 @@ func _apply_camera_mode() -> void:
 	weapons.visible = first_person and not (build and build.active)
 	var shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if first_person \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	for mesh: GeometryInstance3D in model.find_children("*", "GeometryInstance3D", true, false):
-		mesh.cast_shadow = shadow_mode
+	model.set_shadow_mode(shadow_mode)

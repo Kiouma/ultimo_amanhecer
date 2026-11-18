@@ -18,5 +18,8 @@
   {"id":"good_appetite","name":"Bom de garfo","trail":"survivor","requires":{"survival":5},"cost":1,"effects":{"food":0.3},"desc":"Comida e bebida rendem 30% mais"},
   {"id":"medic","name":"Socorrista","trail":"survivor","requires":{"survival":8},"cost":1,"effects":{"heal":0.3},"desc":"Bandagens e kits curam 30% mais"},
   {"id":"assassin","name":"Ataque surpresa","trail":"survivor","requires":{"stealth":8},"cost":2,"effects":{"sneak_damage":0.5},"desc":"Ataque em inimigo desatento: +50% de dano extra"},
-  {"id":"master_builder","name":"Mestre de obras","trail":"survivor","requires":{"crafting":5},"cost":1,"effects":{"craft_time":-0.2},"desc":"Fabrica 20% mais rápido"}
+  {"id":"master_builder","name":"Mestre de obras","trail":"survivor","requires":{"crafting":5},"cost":1,"effects":{"craft_time":-0.2},"desc":"Fabrica 20% mais rápido"},
+  {"id":"iron_fists","name":"Punhos de ferro","trail":"brawler","requires":{"unarmed":3},"cost":1,"effects":{"unarmed.damage":0.3},"desc":"+30% de dano desarmado"},
+  {"id":"flurry","name":"Sequência rápida","trail":"brawler","requires":{"unarmed":6},"cost":1,"effects":{"attack_speed":0.1},"desc":"+10% de velocidade de ataque"},
+  {"id":"fighter_breath","name":"Fôlego de lutador","trail":"brawler","requires":{"unarmed":10},"cost":2,"effects":{"unarmed.stamina_cost":-0.3,"max_stamina_add":20},"desc":"Socos 30% mais baratos e +20 de stamina máxima"}
 ]
