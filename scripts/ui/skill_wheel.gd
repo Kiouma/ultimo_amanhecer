@@ -1,7 +1,7 @@
 class_name SkillWheel
 extends Control
 ## Roda de habilidades (Q segurado): as habilidades aprendidas em volta do centro.
-## Mexer o mouse aponta a escolha; soltar Q conjura a apontada. Sem mexer = cancela.
+## Mexer o mouse aponta a escolha; soltar Q troca para a apontada (sem conjurar). Sem mexer = cancela.
 ## Também desenha o ícone da última habilidade, ao lado esquerdo da hotbar (SpellIcon).
 
 const RADIUS := 150.0
@@ -77,7 +77,7 @@ func _draw() -> void:
 		var text := str(data.get("name", id))
 		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 		draw_string(font, p + Vector2(-w * 0.5, 52), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
-		draw_string(font, p + Vector2(-14, 6), "Nv %d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
+		draw_string(font, p + Vector2(-14, 6), tr("Nv %d") % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
 	if _aim.length() >= DEAD_ZONE:
 		draw_line(center, center + _aim, Color(1, 1, 1, 0.7), 2.0)
-	draw_string(font, center + Vector2(-60, 6), "solte Q" if choice != "" else "mova o mouse", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1, 1, 1, 0.8))
+	draw_string(font, center + Vector2(-60, 6), tr("solte Q para escolher") if choice != "" else tr("mova o mouse"), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1, 1, 1, 0.8))

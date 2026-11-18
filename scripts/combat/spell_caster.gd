@@ -33,6 +33,7 @@ func stat(key: String, default: float) -> float:
 		"radius", "range", "chain_range": value *= 1.0 + 0.12 * up
 		"duration": value *= 1.0 + 0.15 * up
 		"chains": value += floorf(up / 2.0)
+		"cooldown": value *= 1.0 - Progression.cooldown_reduction(user)
 	# Canalização (cajado): mais efeito, mesmo custo base.
 	if _power > 1.0 and key in ["damage", "heal", "radius", "range", "chain_range", "duration"]:
 		value *= _power
@@ -52,7 +53,8 @@ func handle_attack(_held: bool, just_pressed: bool) -> void:
 
 
 ## Também usado pelo atalho Q (feitiço rápido), mesmo com outra arma na mão.
-func cast(power := 1.0) -> bool:
+## prepaid: a mana já foi paga (canalização do cajado).
+func cast(power := 1.0, prepaid := false) -> bool:
 	if casting or cooldown > 0.0:
 		return false
 	_power = power
@@ -61,8 +63,10 @@ func cast(power := 1.0) -> bool:
 		user.notify(block)
 		return false
 	var mana: StatPool = user.get(&"mana")
-	if mana and not mana.spend(stat("mana", 15.0)):
+	if mana and not prepaid and not mana.spend(stat("mana", 15.0)):
 		return false
+	if mana:
+		mana.mark_action()
 	casting = true
 	cooldown = stat("cooldown", 1.0) + stat("cast_time", 0.4)
 	play_body_anim(&"Spell_Simple_Shoot")
@@ -83,7 +87,7 @@ func _cast_block_reason() -> String:
 		var slot := Structures.wall_slot_in_front(user)
 		var reason := Structures.check_build("earth_wall", slot[0], slot[1], user.global_position)
 		if reason != "":
-			return "Sem espaço para o muro: " + reason.to_lower()
+			return tr("Sem espaço para o muro: ") + reason.to_lower()
 	return ""
 
 
@@ -203,8 +207,8 @@ func hud_text() -> String:
 	if casting:
 		return "conjurando..."
 	if cooldown > 0.0:
-		return "recarga %.1fs · %d mana" % [cooldown, cost]
-	return "%d mana" % cost
+		return tr("recarga %.1fs · %d mana") % [cooldown, cost]
+	return tr("%d mana") % cost
 
 
 func _school_color() -> Color:

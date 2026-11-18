@@ -42,7 +42,7 @@ func _ready() -> void:
 ## Nome mostrado e aviso de interação (só recursos colhidos à mão).
 func get_prompt() -> String:
 	if data.get("by_hand", false):
-		return "[E] %s %s" % [data.get("verb", "Coletar"), str(data.get("name", node_id)).to_lower()]
+		return "[E] %s %s" % [data.get("verb", tr("Coletar")), str(data.get("name", node_id)).to_lower()]
 	return ""
 
 

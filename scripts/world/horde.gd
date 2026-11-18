@@ -60,11 +60,11 @@ func is_horde_day(day: int) -> bool:
 ## Texto curto para o relógio do HUD.
 func status_text(day: int, _hour: float) -> String:
 	if active:
-		return "HORDA %d · restam %d" % [number, remaining]
+		return tr("HORDA %d · restam %d") % [number, remaining]
 	var left := days_until(day)
 	if left == 0:
-		return "Horda hoje à noite"
-	return "Horda em %d dia%s" % [left, "" if left == 1 else "s"]
+		return tr("Horda hoje à noite")
+	return tr("Horda em 1 dia") if left == 1 else tr("Horda em %d dias") % left
 
 
 func _process(delta: float) -> void:
@@ -221,7 +221,7 @@ func finish(survived: bool) -> void:
 
 ## Recompensa por jogador vivo (GDD 11: itens raros).
 func reward_for(n: int) -> Dictionary:
-	var out := {"refine_stone": 2 + 2 * n, "refine_stone_uncommon": n, "arcane_crystal": n, "arrow": 10, "ammo_9mm": 6 * n, "medkit_basic": 1}
+	var out := {"refine_stone": 2 + 2 * n, "refine_stone_uncommon": n, "arcane_crystal": n, "arrow": 10 + 5 * n, "bolt": 4 * n, "medkit_basic": 1}
 	if n >= 2:
 		out["refine_stone_rare"] = n / 2
 	if n >= 4:

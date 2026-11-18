@@ -2,17 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.08, 0.09, 0.08, 0.92)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-content_margin_left = 28.0
-content_margin_top = 24.0
-content_margin_right = 28.0
-content_margin_bottom = 24.0
-
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
@@ -28,95 +17,10 @@ layer = 10
 
 [node name="Menu" type="Control" parent="UI"]
 unique_name_in_owner = true
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Background" type="ColorRect" parent="UI/Menu"]
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.16, 0.19, 0.16, 1)
-
-[node name="Center" type="CenterContainer" parent="UI/Menu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Panel" type="PanelContainer" parent="UI/Menu/Center"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
-
-[node name="VBox" type="VBoxContainer" parent="UI/Menu/Center/Panel"]
-custom_minimum_size = Vector2(340, 0)
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Title" type="Label" parent="UI/Menu/Center/Panel/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "Último Amanhecer"
-horizontal_alignment = 1
-
-[node name="Subtitle" type="Label" parent="UI/Menu/Center/Panel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.72, 0.68, 1)
-text = "protótipo · fase 6"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="UI/Menu/Center/Panel/VBox"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-
-[node name="SoloButton" type="Button" parent="UI/Menu/Center/Panel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-text = "Jogar sozinho"
-
-[node name="HostButton" type="Button" parent="UI/Menu/Center/Panel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-text = "Hospedar partida (co-op)"
-
-[node name="JoinRow" type="HBoxContainer" parent="UI/Menu/Center/Panel/VBox"]
-layout_mode = 2
-
-[node name="Address" type="LineEdit" parent="UI/Menu/Center/Panel/VBox/JoinRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "IP do host"
-text = "127.0.0.1"
-
-[node name="JoinButton" type="Button" parent="UI/Menu/Center/Panel/VBox/JoinRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(110, 40)
-layout_mode = 2
-text = "Entrar"
-
-[node name="Status" type="Label" parent="UI/Menu/Center/Panel/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(340, 0)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.8, 0.45, 1)
-autowrap_mode = 3
-
-[node name="Help" type="Label" parent="UI/Menu/Center/Panel/VBox"]
-custom_minimum_size = Vector2(340, 0)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.62, 0.58, 1)
-theme_override_font_sizes/font_size = 13
-text = "Co-op: até 5 jogadores. O host usa a porta 7777 (UDP). Fora da mesma rede, o host precisa liberar essa porta no roteador."
-autowrap_mode = 3

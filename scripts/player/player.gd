@@ -57,8 +57,10 @@ var first_person := true
 
 # Estado de animação replicado para os outros jogadores.
 var net_crouching := false
-## Agachar é alternado (Ctrl liga/desliga). Correr ou pular levanta.
+## Agachar: alternado (Ctrl liga/desliga) ou segurado, conforme Configurações. Correr ou pular levanta.
 var _crouch_on := false
+## Correr no modo alternado (Shift liga/desliga; parar de andar ou acabar a stamina desliga).
+var _sprint_on := false
 ## Frio do Congelado: fator de velocidade e tempo restante.
 var _chill_factor := 1.0
 var _chill_time := 0.0
@@ -172,10 +174,13 @@ func _ready() -> void:
 		add_child(build)
 		build.setup(self)
 		camera.current = true
-		# Personagem salvo (se escolhido no menu) ou kit inicial + passado.
+		mouse_sensitivity = Settings.mouse_sensitivity
+		Settings.changed.connect(_on_settings_changed)
+		# Personagem escolhido no menu: o salvo (itens, níveis...) ou, se for novo, kit
+		# inicial + passado.
 		if not SaveGame.apply_character(self):
 			_give_starter_kit()
-			_apply_background(Network.background)
+			_apply_background(SaveGame.character_background())
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_apply_camera_mode()
 	else:
@@ -188,6 +193,12 @@ func _ready() -> void:
 	if name.is_valid_int():
 		set_multiplayer_authority(name.to_int())
 	EventBus.player_spawned.emit(self)
+
+
+func _on_settings_changed() -> void:
+	mouse_sensitivity = Settings.mouse_sensitivity
+	if not Settings.sprint_toggle:
+		_sprint_on = false
 
 
 ## Verdadeiro se este é o personagem controlado nesta máquina.
@@ -234,7 +245,7 @@ func _physics_process(delta: float) -> void:
 		var now := Time.get_ticks_msec()
 		if now - _last_jump_ms < DOUBLE_TAP_MS:
 			flying = not flying
-			notify("Voo %s" % ("ligado (Espaço sobe, Ctrl desce)" if flying else "desligado"))
+			notify(tr("Voo %s") % (tr("ligado (Espaço sobe, Ctrl desce)") if flying else tr("desligado")))
 			now = -10000
 		_last_jump_ms = now
 	if flying:
@@ -250,15 +261,23 @@ func _physics_process(delta: float) -> void:
 		velocity.y = jump_velocity
 		progression.gain("athletics", 0.3)
 
-	if not flying and Input.is_action_just_pressed("crouch") and captured:
-		_crouch_on = not _crouch_on
-	if _crouch_on and (Input.is_action_just_pressed("jump") or Input.is_action_pressed("sprint")):
+	if captured and Settings.sprint_toggle and Input.is_action_just_pressed("sprint"):
+		_sprint_on = not _sprint_on
+	if not flying and captured:
+		if Settings.crouch_toggle:
+			if Input.is_action_just_pressed("crouch"):
+				_crouch_on = not _crouch_on
+		else:
+			_crouch_on = Input.is_action_pressed("crouch")
+	if _crouch_on and Settings.crouch_toggle and (Input.is_action_just_pressed("jump") or _sprint_pressed()):
 		_crouch_on = false
 	var crouching := _crouch_on
 	var target_head := crouch_head_height if crouching else stand_head_height
 	head.position.y = lerpf(head.position.y, target_head, minf(10.0 * delta, 1.0))
 
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if _sprint_on and (input.length() < 0.1 or stamina.current <= 0.0):
+		_sprint_on = false  # corrida alternada para quando o jogador para ou cansa
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	var target := direction * _current_speed(crouching) * (FLY_SPEED_FACTOR if flying else 1.0)
 	var weight := minf(acceleration * delta, 1.0)
@@ -404,7 +423,7 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 	match kind:
 		&"tracer":
 			Weapon.spawn_tracer(self, from, to)
-			Sfx.play("gunshot", from, 2.0)
+			Sfx.play("spell", from, -3.0)
 		&"ring":
 			SpellCaster._ring_fx(self, from, from.distance_to(to), color)
 		&"arrow":
@@ -467,7 +486,7 @@ func set_respawn_point(at: Vector3) -> void:
 	_spawn_point = at
 	_spawn_point_set = true
 	has_bed = true
-	notify("Você vai renascer nesta cama")
+	notify(tr("Você vai renascer nesta cama"))
 
 
 ## Golpe gelado: lento por um tempo. Vem do servidor; vale na máquina do dono.
@@ -486,7 +505,7 @@ func _remote_chill(factor: float, duration: float) -> void:
 
 func _chill(factor: float, duration: float) -> void:
 	if _chill_time <= 0.0:
-		notify("Congelando: você está mais lento")
+		notify(tr("Congelando: você está mais lento"))
 	_chill_factor = clampf(factor, 0.2, 1.0)
 	_chill_time = maxf(_chill_time, duration)
 
@@ -508,7 +527,7 @@ func place_station(slot_index: int) -> bool:
 	query.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty() or hit.normal.y < 0.8 or not Structures.can_place_at(hit.position):
-		notify("Não dá para colocar aqui")
+		notify(tr("Não dá para colocar aqui"))
 		return false
 	inventory.consume_from_slot(slot_index, 1)
 	Structures.place(s.id, hit.position, rotation.y, float(s.get("dur", -1.0)))
@@ -529,10 +548,12 @@ func _empty_backpack() -> Array:
 	return contents
 
 
-## Nome mostrado (ex.: na bag). Sem perfis ainda: "Jogador 1" é o host.
+## Nome mostrado (ex.: na bag): o do personagem escolhido no menu (nesta máquina).
 func display_name() -> String:
+	if is_local() and SaveGame.character_name() != "":
+		return SaveGame.character_name()
 	var id := get_multiplayer_authority()
-	return "Jogador 1" if id == 1 else "Jogador %s" % str(id).left(4)
+	return tr("Jogador 1") if id == 1 else tr("Jogador %s") % str(id).left(4)
 
 
 func _on_revived() -> void:
@@ -540,9 +561,16 @@ func _on_revived() -> void:
 	model.play(&"Idle")
 
 
+## Shift: segurado ou alternado (Configurações).
+func _sprint_pressed() -> bool:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return false
+	return _sprint_on if Settings.sprint_toggle else Input.is_action_pressed("sprint")
+
+
+## Sobrecarregado ainda corre, mas no ritmo reduzido (antes travava a corrida sem aviso).
 func _wants_sprint(crouching: bool) -> bool:
-	return Input.is_action_pressed("sprint") and not crouching and stamina.current > 0.0 \
-		and not inventory.is_overloaded()
+	return _sprint_pressed() and not crouching and stamina.current > 0.0
 
 
 func _current_speed(crouching: bool) -> float:
@@ -555,7 +583,7 @@ func _current_speed(crouching: bool) -> float:
 	if crouching:
 		return crouch_speed * factor
 	if _wants_sprint(crouching) and is_on_floor():
-		return sprint_speed * death_penalty.speed_factor() * bonus
+		return sprint_speed * factor
 	return walk_speed * factor
 
 

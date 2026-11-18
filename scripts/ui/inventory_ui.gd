@@ -1,12 +1,15 @@
 class_name InventoryUI
 extends Control
-## Tela de inventário (Tab): mochila, hotbar, peso e fabricação (GDD 8 e 13.2).
+## Tela de inventário (Tab): equipamento e status (esquerda, EquipmentPanel), mochila,
+## hotbar, peso e fabricação (GDD 8 e 13.2).
 ## Aberta com E numa estação (fogueira, bancada), mostra também as receitas dela.
 ## Fabricar entra na fila (CraftQueue), que aparece embaixo com progresso e cancelar.
 ## Arrastar entre slots move/junta; botão direito divide a pilha;
 ## soltar fora da janela joga o item no chão, na frente do jogador.
 
 const COLUMNS := 8
+## Slots um pouco menores que os da hotbar do HUD: equipamento + mochila + fabricação cabem em 1280 px.
+const SLOT_SIZE := Vector2(54, 54)
 
 var player: Player
 var _slots: Array[InventorySlotUI] = []
@@ -21,11 +24,12 @@ var _queue_box: VBoxContainer
 var _station: CraftingStation
 ## Slot sob o mouse (-1 = nenhum): apertar 1-9 troca com aquele slot da hotbar.
 var _hovered := -1
+var _equipment: EquipmentPanel
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP  # o fundo recebe o "soltar no chão"
+	mouse_filter = Control.MOUSE_FILTER_STOP  # o fundo recebe o tr("soltar no chão")
 	visible = false
 
 
@@ -86,6 +90,7 @@ func toggle() -> void:
 	_hovered = -1
 	if visible:
 		_refresh()
+		_equipment.refresh()
 	else:
 		_station = null
 
@@ -110,7 +115,7 @@ func _refresh() -> void:
 		slot.refresh()
 	var inv := player.inventory
 	var weight := inv.total_weight()
-	_weight_label.text = "Peso: %.1f / %.0f kg%s" % [weight, inv.max_weight, "  (sobrecarregado: lento)" if inv.is_overloaded() else ""]
+	_weight_label.text = tr("Peso: %.1f / %.0f kg%s") % [weight, inv.max_weight, tr("  (sobrecarregado: lento)") if inv.is_overloaded() else ""]
 	_weight_label.add_theme_color_override("font_color", Color(1, 0.45, 0.35) if inv.is_overloaded() else Color(0.85, 0.85, 0.8))
 	_weight_bar.max_value = inv.max_weight
 	_weight_bar.value = minf(weight, inv.max_weight)
@@ -126,7 +131,7 @@ func _refresh_crafting() -> void:
 	var stations: Array[String] = ["hands"]
 	if _station:
 		stations.push_front(_station.station)
-	_craft_title.text = "Fabricar (%s)" % (_station.display_name().to_lower() + " + mãos" if _station else "mãos")
+	_craft_title.text = tr("Fabricar (%s)") % (_station.display_name().to_lower() + tr(" + mãos") if _station else tr("mãos"))
 	for station in stations:
 		if stations.size() > 1:
 			var header := Label.new()
@@ -142,7 +147,9 @@ func _refresh_crafting() -> void:
 func _recipe_row(recipe: Dictionary) -> Control:
 	var possible := Crafting.max_times(player.inventory, recipe)
 	var result := GameData.get_item(str(recipe.result))
-	var row := HBoxContainer.new()
+	# Nome e ingredientes em cima, botões embaixo à direita (cabe numa coluna estreita).
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var title := Label.new()
@@ -151,13 +158,17 @@ func _recipe_row(recipe: Dictionary) -> Control:
 	info.add_child(title)
 	var needs := Label.new()
 	needs.text = "%s · %ss" % [Crafting.describe_ingredients(recipe), str(recipe.get("time", 2))]
+	needs.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	needs.add_theme_font_size_override("font_size", 12)
 	needs.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 	info.add_child(needs)
 	row.add_child(info)
-	row.add_child(_craft_button("Fabricar", recipe, 1, possible >= 1))
-	row.add_child(_craft_button("×5", recipe, 5, possible >= 5))
-	row.add_child(_craft_button("Tudo (%d)" % possible, recipe, -1, possible >= 2))
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_END
+	buttons.add_child(_craft_button("Fabricar", recipe, 1, possible >= 1))
+	buttons.add_child(_craft_button("×5", recipe, 5, possible >= 5))
+	buttons.add_child(_craft_button(tr("Tudo (%d)") % possible, recipe, -1, possible >= 2))
+	row.add_child(buttons)
 	return row
 
 
@@ -188,7 +199,9 @@ func _add_repair_section() -> void:
 		if not (Repair.is_repairable(s) or Repair.is_salvageable(s) or Refine.can_be_refined(s)):
 			continue
 		any = true
-		var row := HBoxContainer.new()
+		var row := VBoxContainer.new()
+		var actions := HBoxContainer.new()
+		actions.alignment = BoxContainer.ALIGNMENT_END
 		var info := VBoxContainer.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var title := Label.new()
@@ -200,7 +213,7 @@ func _add_repair_section() -> void:
 		info.add_child(title)
 		var cost := Repair.repair_cost(s)
 		var details := Label.new()
-		var refine_text := "máximo" if Refine.is_maxed(s) else "+%d: %d× %s, %d%% de chance" % [Inventory.refine_of(s) + 1, Refine.cost(s), str(GameData.get_item(Refine.stone_for(s)).get("name", "")).to_lower(), roundi(Refine.chance(s) * 100.0)]
+		var refine_text := tr("máximo") if Refine.is_maxed(s) else tr("+%d: %d× %s, %d%% de chance") % [Inventory.refine_of(s) + 1, Refine.cost(s), str(GameData.get_item(Refine.stone_for(s)).get("name", "")).to_lower(), roundi(Refine.chance(s) * 100.0)]
 		details.text = "reparo: %s · refino: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", refine_text if Refine.can_be_refined(s) else "—", Repair.describe(Repair.salvage_result(s))]
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
@@ -211,7 +224,7 @@ func _add_repair_section() -> void:
 		repair_button.text = "Reparar"
 		repair_button.disabled = not Repair.can_repair(inv, s)
 		repair_button.pressed.connect(func() -> void: Repair.repair(player.inventory, s))
-		row.add_child(repair_button)
+		actions.add_child(repair_button)
 		var refine_button := Button.new()
 		refine_button.text = "Refinar"
 		refine_button.tooltip_text = "+5% de dano/eficiência por nível (até +21). Pode falhar (as pedras se perdem, o nível fica).\nPedras: +1~5 comum, +6~10 incomum, +11~15 rara, +16~20 épica, +21 lendária.\nCinco pedras viram uma de nível acima, aqui na bancada."
@@ -219,15 +232,16 @@ func _add_repair_section() -> void:
 		refine_button.pressed.connect(func() -> void:
 			var result := Refine.refine(player.inventory, s)
 			if result == Refine.Result.SUCCESS:
-				player.notify("Refino deu certo: %s" % Inventory.display_name_of(s))
+				player.notify(tr("Refino deu certo: %s") % Inventory.display_name_of(s))
 			elif result == Refine.Result.FAILED:
-				player.notify("O refino falhou (as pedras se perderam)"))
-		row.add_child(refine_button)
+				player.notify(tr("O refino falhou (as pedras se perderam)")))
+		actions.add_child(refine_button)
 		var salvage_button := Button.new()
 		salvage_button.text = "Desmontar"
 		salvage_button.disabled = Repair.salvage_result(s).is_empty()
 		salvage_button.pressed.connect(func() -> void: Repair.salvage(player.inventory, i))
-		row.add_child(salvage_button)
+		actions.add_child(salvage_button)
+		row.add_child(actions)
 		_craft_list.add_child(row)
 	if not any:
 		var none := Label.new()
@@ -256,8 +270,8 @@ func _refresh_queue() -> void:
 		label.add_theme_font_size_override("font_size", 13)
 		var item_name := str(GameData.get_item(str(job.recipe.result)).get("name", job.recipe.result))
 		var paused := i == 0 and not queue.is_station_ok(job.recipe)
-		var note := "  (pausado: longe da %s)" % Crafting.station_name(str(job.recipe.station)) if paused else ""
-		label.text = "%s · faltam %d%s" % [item_name, int(job.left), note]
+		var note := tr("  (pausado: longe da %s)") % Crafting.station_name(str(job.recipe.station)) if paused else ""
+		label.text = tr("%s · faltam %d%s") % [item_name, int(job.left), note]
 		row.add_child(label)
 		if i == 0:
 			var bar := ProgressBar.new()
@@ -298,15 +312,20 @@ func _build() -> void:
 	UITabs.attach(self, "inventory", panel)
 
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 24)
+	columns.add_theme_constant_override("separation", 20)
 	panel.add_child(columns)
+
+	_equipment = EquipmentPanel.new()
+	columns.add_child(_equipment)
+	_equipment.setup(player)
+	columns.add_child(VSeparator.new())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
 	columns.add_child(vbox)
 
 	var craft := VBoxContainer.new()
-	craft.custom_minimum_size = Vector2(400, 0)
+	craft.custom_minimum_size = Vector2(330, 0)
 	craft.add_theme_constant_override("separation", 8)
 	columns.add_child(craft)
 	_craft_title = Label.new()
@@ -314,7 +333,7 @@ func _build() -> void:
 	_craft_title.add_theme_font_size_override("font_size", 22)
 	craft.add_child(_craft_title)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(400, 320)
+	scroll.custom_minimum_size = Vector2(330, 420)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	craft.add_child(scroll)
 	_craft_list = VBoxContainer.new()
@@ -372,6 +391,7 @@ func _build() -> void:
 func _new_slot(i: int) -> InventorySlotUI:
 	var slot := InventorySlotUI.new()
 	slot.setup(player.inventory, i)
+	slot.custom_minimum_size = SLOT_SIZE
 	slot.mouse_entered.connect(func() -> void: _hovered = i)
 	slot.mouse_exited.connect(func() -> void:
 		if _hovered == i:

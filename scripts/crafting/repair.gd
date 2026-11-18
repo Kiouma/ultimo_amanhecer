@@ -8,7 +8,7 @@ extends RefCounted
 ##   proporcional à durabilidade que sobra (ou o campo "salvage" do JSON).
 ## Roda na máquina do dono do inventário.
 
-const SALVAGE_TYPES := ["bow", "melee", "firearm", "tool", "station", "trap", "armor"]
+const SALVAGE_TYPES := ["bow", "melee", "tool", "station", "trap", "armor"]
 
 
 ## Receita que fabrica este item ({} se não houver).
@@ -113,7 +113,7 @@ static func salvage(inventory: Inventory, index: int) -> bool:
 ## "Madeira 1 · Sucata 2"
 static func describe(materials: Dictionary) -> String:
 	if materials.is_empty():
-		return "nada"
+		return TranslationServer.translate("nada")
 	var parts: PackedStringArray = []
 	for id: String in materials:
 		parts.append("%s %d" % [GameData.get_item(id).get("name", id), int(materials[id])])

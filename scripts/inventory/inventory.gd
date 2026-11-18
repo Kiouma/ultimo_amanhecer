@@ -32,7 +32,7 @@ const HOTBAR_SIZE := 9
 
 @export var backpack_size := 24
 ## Peso máximo em kg. Acima disso o personagem fica lento (ver Player).
-@export var max_weight := 40.0
+@export var max_weight := 60.0
 
 var slots: Array[Dictionary] = []
 ## Modo criativo (ver Player.creative): itens não se gastam nem se desgastam.
@@ -128,7 +128,7 @@ func add_item(id: String, count: int, extra: Dictionary = {}) -> int:
 	return left
 
 
-const HOTBAR_FIRST_TYPES := ["bow", "firearm", "melee", "focus", "thrown", "consumable", "tool", "station", "trap"]
+const HOTBAR_FIRST_TYPES := ["bow", "melee", "focus", "thrown", "consumable", "tool", "station", "trap"]
 
 
 func _fill_order(id: String) -> Array:

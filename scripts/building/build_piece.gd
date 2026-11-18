@@ -78,7 +78,7 @@ func is_blocking() -> bool:
 
 
 func display_name() -> String:
-	return "%s de %s" % [data.get("name", piece_id), TIER_NAMES.get(tier, tier)]
+	return tr("%s de %s") % [data.get("name", piece_id), tr(TIER_NAMES.get(tier, tier))]
 
 
 ## Ponto da peça mais perto de `from` (para o zumbi chegar perto e bater). Em
@@ -103,7 +103,7 @@ func has_prompt() -> bool:
 
 
 func get_prompt() -> String:
-	return "[E] %s porta" % ("Fechar" if open else "Abrir") if is_door() else ""
+	return tr("[E] %s porta") % (tr("Fechar") if open else tr("Abrir")) if is_door() else ""
 
 
 func interact(player: Node3D) -> void:

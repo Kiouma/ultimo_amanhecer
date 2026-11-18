@@ -25,6 +25,14 @@ WorldItems="*res://scripts/inventory/world_items.gd"
 Structures="*res://scripts/building/structures.gd"
 SaveGame="*res://scripts/autoload/save_game.gd"
 Sfx="*res://scripts/autoload/sfx.gd"
+Settings="*res://scripts/autoload/settings.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [input]
 

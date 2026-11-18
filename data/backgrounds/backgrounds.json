@@ -1,6 +1,6 @@
 [
   { "id": "survivor", "name": "Sobrevivente comum", "desc": "Sem bônus: só o kit básico.", "bonus": {}, "starting_items": {} },
-  { "id": "ex_military", "name": "Ex-militar", "desc": "Pontaria 4 · +20 flechas e 2 bandagens", "bonus": { "firearms": 3 }, "starting_items": { "arrow": 20, "bandage": 2 } },
+  { "id": "ex_military", "name": "Ex-militar", "desc": "Arquearia 4 · +20 flechas e 2 bandagens", "bonus": { "firearms": 3 }, "starting_items": { "arrow": 20, "bandage": 2 } },
   { "id": "lumberjack", "name": "Lenhador", "desc": "Melee 4 · picareta e 10 de madeira", "bonus": { "melee": 3 }, "starting_items": { "pickaxe_stone": 1, "wood": 10 } },
   { "id": "occult_student", "name": "Estudante de ocultismo", "desc": "Magia 4 · Grimório da vida", "bonus": { "magic": 3 }, "starting_items": { "grimoire_life": 1 } },
   { "id": "nurse", "name": "Enfermeiro", "desc": "Resistência 4 · kit médico e 3 bandagens", "bonus": { "toughness": 3 }, "starting_items": { "medkit_basic": 1, "bandage": 3 } },

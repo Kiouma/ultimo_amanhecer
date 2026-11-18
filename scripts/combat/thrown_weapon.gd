@@ -64,11 +64,11 @@ func channel_fraction() -> float:
 
 
 func channel_label() -> String:
-	return "Força do arremesso"
+	return tr("Força do arremesso")
 
 
 func hud_text() -> String:
-	return "×%d · segure para mais força" % user.inventory.count_of(str(data.id))
+	return tr("×%d · segure para mais força") % user.inventory.count_of(str(data.id))
 
 
 func on_unequip() -> void:

@@ -88,7 +88,7 @@ func channel_fraction() -> float:
 
 
 func channel_label() -> String:
-	return "Puxando o arco"
+	return tr("Puxando o arco")
 
 
 func on_unequip() -> void:
@@ -108,8 +108,8 @@ func _arrow_id() -> String:
 func hud_text() -> String:
 	if drawing:
 		var bar := int(draw * 10.0)
-		return "%s%s  %d flechas" % ["■".repeat(bar), "□".repeat(10 - bar), arrows()]
-	return "%d flechas" % arrows() if arrows() > 0 else "sem flechas"
+		return tr("%s%s  %d flechas") % ["■".repeat(bar), "□".repeat(10 - bar), arrows()]
+	return tr("%d flechas") % arrows() if arrows() > 0 else tr("sem flechas")
 
 
 func _build_viewmodel() -> void:

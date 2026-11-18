@@ -539,17 +539,20 @@ func _on_died(source: Node) -> void:
 	collision_mask = 1
 	model.play_action(&"Death01")
 	if multiplayer.is_server():
-		_drop_loot()
+		_drop_loot(source)
 		# Sumir no servidor some em todos (MultiplayerSpawner).
 		get_tree().create_timer(15.0, false).timeout.connect(queue_free)
 
 
 ## Servidor: sorteia os "drops" do tipo (ex.: Pedra de refino, que só vem de inimigos).
-func _drop_loot() -> void:
+## Quem matou com "aumento de loot" (itens) aumenta as chances e quantidades.
+func _drop_loot(killer: Node = null) -> void:
 	var drops: Dictionary = stats.get("drops", {})
+	var prog := Progression.of(killer)
+	var bonus := 1.0 + (prog.server_loot_bonus if prog else 0.0)
 	# Valor < 1 = chance de 1; >= 1 = quantidade garantida (+ chance da fração).
 	for id: String in drops:
-		var value := float(drops[id])
+		var value := float(drops[id]) * bonus
 		var amount := int(value) + (1 if randf() < value - int(value) else 0)
 		if amount > 0:
 			WorldItems.spawn(id, amount, global_position + Vector3.UP * 0.5)

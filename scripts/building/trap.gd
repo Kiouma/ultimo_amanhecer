@@ -53,8 +53,8 @@ func display_name() -> String:
 
 
 func get_prompt() -> String:
-	var state := "QUEBRADA · " if uses <= 0.0 else ""
-	return "[E] Recolher %s (%s%d/%d)" % [display_name().to_lower(), state, ceili(uses), int(max_uses())]
+	var state := tr("QUEBRADA · ") if uses <= 0.0 else ""
+	return tr("[E] Recolher %s (%s%d/%d)") % [display_name().to_lower(), state, ceili(uses), int(max_uses())]
 
 
 func interact(player: Node3D) -> void:

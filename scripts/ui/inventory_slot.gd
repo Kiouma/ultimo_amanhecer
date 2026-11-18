@@ -153,7 +153,7 @@ Durabilidade %d / %d" % [roundi(Inventory.durability_of(s)), roundi(max_dur)] if
 				_name_label.text += "
 (quebrado)"
 		var weight := float(data.get("weight", 0.0))
-		tooltip_text = "%s\n%s · %.2f kg cada · %.1f kg" % [item_name, str(data.get("type", "")), weight, weight * count] \
+		tooltip_text = tr("%s\n%s · %.2f kg cada · %.1f kg") % [item_name, str(data.get("type", "")), weight, weight * count] \
 			if interactive else ""
 	_update_dur_bar()
 	_update_style()

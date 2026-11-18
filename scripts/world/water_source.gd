@@ -42,8 +42,8 @@ func _ready() -> void:
 func get_prompt() -> String:
 	var player := _local_player()
 	if player and player.inventory.count_of("empty_bottle") > 0:
-		return "[E] Encher garrafa (água suja)"
-	return "[E] Beber do lago (arriscado)"
+		return tr("[E] Encher garrafa (água suja)")
+	return tr("[E] Beber do lago (arriscado)")
 
 
 func interact(player: Node3D) -> void:
@@ -51,14 +51,14 @@ func interact(player: Node3D) -> void:
 	if inventory.count_of("empty_bottle") > 0:
 		inventory.remove_item("empty_bottle", 1)
 		Crafting.give_result(inventory, {"result": "dirty_water", "amount": 1}, 1)
-		player.notify("Garrafa cheia de água suja: ferva na fogueira")
+		player.notify(tr("Garrafa cheia de água suja: ferva na fogueira"))
 		return
 	if not player.survival.consume(0.0, drink_water):
-		player.notify("Você não está com sede")
+		player.notify(tr("Você não está com sede"))
 		return
 	if randf() < drink_sick_chance:
 		player.health.take_damage(drink_sick_damage, player)
-		player.notify("Você passou mal (água do lago)")
+		player.notify(tr("Você passou mal (água do lago)"))
 
 
 func _local_player() -> Node:

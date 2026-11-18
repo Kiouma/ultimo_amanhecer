@@ -29,7 +29,7 @@ func display_name() -> String:
 
 
 func get_prompt() -> String:
-	return "[E] Usar %s" % display_name().to_lower()
+	return tr("[E] Usar %s") % display_name().to_lower()
 
 
 func interact(player: Node3D) -> void:

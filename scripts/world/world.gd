@@ -196,7 +196,7 @@ func _plan_pois() -> void:
 			ok = ok and _poi_fits(_cell_of(center) + c, Vector2i(2, 1))
 		if ok:
 			for c: Vector2i in cells:
-				_add_poi("house", _cell_of(center) + c, Vector2i(2, 1), rng, "house", "Vilarejo")
+				_add_poi("house", _cell_of(center) + c, Vector2i(2, 1), rng, "house", tr("Vilarejo"))
 			break
 	# Uma cabana na margem de cada lago.
 	for lake: Array in lakes:

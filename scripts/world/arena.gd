@@ -19,8 +19,7 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @export var loot := [
 	["canned_food", 2], ["water_bottle", 2], ["berries", 8], ["empty_bottle", 2],
 	["arrow", 8], ["bandage", 2], ["medkit_basic", 1],
-	# Arma de fogo é achado raro (GDD 5.2): uma pistola vazia e um pouco de munição.
-	["pistol_9mm", 1], ["ammo_9mm", 12],
+	["crossbow", 1], ["bolt", 10],
 	["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
 	["spear_wood", 1], ["torch", 1],
 	# Grimórios (GDD 12: descoberta). Outros saem na bancada com cristal arcano.

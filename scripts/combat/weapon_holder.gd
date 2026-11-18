@@ -2,10 +2,10 @@ class_name WeaponHolder
 extends Node3D
 ## Fica na câmera do jogador e segue a hotbar do inventário (teclas 1-9, rodinha).
 ## O item do slot selecionado define o que o botão esquerdo faz:
-## - arma de fogo / melee / feitiço: cria (uma vez) e mostra a arma;
+## - arco / melee / feitiço: cria (uma vez) e mostra a arma;
 ## - consumível (bandagem, kit médico): usa e gasta um;
 ## - outro item ou vazio: mãos livres.
-## R recarrega; Q conjura o primeiro feitiço da hotbar sem trocar de slot.
+## Q conjura a última habilidade sem trocar de slot.
 
 signal changed
 
@@ -19,7 +19,6 @@ const FISTS := {
 ## Posição de cada tipo de arma na tela (1ª pessoa).
 const VIEW_OFFSETS := {
 	"bow": Vector3(0.02, -0.1, -0.5),
-	"firearm": Vector3(0.2, -0.2, -0.55),
 	"melee": Vector3(0.42, -0.52, -0.62),
 	"spell": Vector3(0.26, -0.24, -0.6),
 	"focus": Vector3(0.3, -0.4, -0.55),
@@ -70,7 +69,7 @@ func select(index: int) -> void:
 func display_name() -> String:
 	var s := selected_item()
 	if s.is_empty():
-		return "Mãos livres"
+		return tr("Mãos livres")
 	return Inventory.display_name_of(s)
 
 
@@ -79,7 +78,7 @@ func hud_text() -> String:
 	if is_hammer(s) and not Inventory.is_broken(s) and user.build:
 		return user.build.hammer_text()
 	if (_current and _current.is_broken()) or Inventory.is_broken(s):
-		return "QUEBRADO · repare na bancada"
+		return tr("QUEBRADO · repare na bancada")
 	if _current and _current.data.get("no_viewmodel", false):
 		return "×%d" % int(s.count) if not s.is_empty() and int(s.count) > 1 else "soco"
 	if _current:
@@ -87,16 +86,16 @@ func hud_text() -> String:
 	if not s.is_empty() and int(s.count) > 1:
 		return "×%d" % int(s.count)
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "consumable":
-		return "clique para usar"
+		return tr("clique para usar")
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "grimoire":
-		return "clique para ler"
+		return tr("clique para ler")
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "armor":
-		return "clique para vestir"
+		return tr("clique para vestir")
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") == "focus":
 		var spell := user.progression.last_spell
-		return "clique: %s (Nv %d)" % [GameData.get_item(spell).get("name", "—"), user.progression.spell_level(spell)] if spell != "" else "sem habilidade"
+		return tr("clique: %s (Nv %d)") % [GameData.get_item(spell).get("name", "—"), user.progression.spell_level(spell)] if spell != "" else tr("sem habilidade")
 	if not s.is_empty() and GameData.get_item(s.id).get("type", "") in Structures.PLACEABLE_TYPES:
-		return "clique para colocar à frente"
+		return tr("clique para colocar à frente")
 	return ""
 
 
@@ -137,6 +136,9 @@ func _process(delta: float) -> void:
 			changed.emit()
 	if user == null or not _accepts_input():
 		return
+	# Atacando: a mana sai do "fora de ação" (regeneração acelerada só depois de 3 s parado).
+	if Input.is_action_pressed("attack") and user.mana:
+		user.mana.mark_action()
 	if _current:
 		_current.handle_attack(Input.is_action_pressed("attack"), Input.is_action_just_pressed("attack"))
 	elif Input.is_action_just_pressed("attack"):
@@ -176,14 +178,14 @@ func use_selected() -> void:
 		return
 	if data.get("type", "") == "focus":
 		if Inventory.is_broken(s):
-			user.notify("Cajado quebrado: repare na bancada")
+			user.notify(tr("Cajado quebrado: repare na bancada"))
 			return
 		if await cast_spell(user.progression.last_spell):
 			inventory.wear(inventory.get_slot(selected), 1.0)
 		return
 	if data.get("type", "") == "armor":
 		if user.equipment.equip_from_inventory(selected):
-			user.notify("Vestiu: %s" % data.get("name", s.id))
+			user.notify(tr("Vestiu: %s") % data.get("name", s.id))
 			_use_cooldown = 0.4
 		return
 	if data.get("type", "") == "grimoire":
@@ -213,7 +215,7 @@ func use_selected() -> void:
 	# Água suja e afins: chance de passar mal.
 	if randf() < float(data.get("sick_chance", 0.0)):
 		user.health.take_damage(float(data.get("sick_damage", 10.0)), user)
-		user.notify("Você passou mal (%s)" % str(data.get("name", s.id)).to_lower())
+		user.notify(tr("Você passou mal (%s)") % str(data.get("name", s.id)).to_lower())
 	_use_cooldown = 1.0
 	user.play_action_synced(&"Consume")
 
@@ -230,7 +232,7 @@ func _burn_torch(delta: float) -> void:
 	var s := selected_item()
 	if inventory.wear(s, 1.0) <= 0.0:
 		user.net_torch = false
-		user.notify("A tocha apagou: repare na bancada")
+		user.notify(tr("A tocha apagou: repare na bancada"))
 
 
 ## Grimório (GDD 12): ensina os feitiços que ainda não estão no inventário.
@@ -239,17 +241,17 @@ func _read_grimoire(data: Dictionary) -> bool:
 	var req: Dictionary = data.get("requires", {})
 	for prof: String in req:
 		if user.progression.get_level(prof) < int(req[prof]):
-			user.notify("Difícil demais: precisa de %s nível %d" % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])])
+			user.notify(tr("Difícil demais: precisa de %s nível %d") % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])])
 			return false
 	var learned: PackedStringArray = []
 	for spell_id: String in data.get("teaches", []):
 		var level := user.progression.learn_spell(spell_id)
 		if level == 1:
-			learned.append("aprendeu %s (roda do Q)" % GameData.get_item(spell_id).get("name", spell_id))
+			learned.append(tr("aprendeu %s (roda do Q)") % GameData.get_item(spell_id).get("name", spell_id))
 		elif level > 1:
-			learned.append("%s subiu para o nível %d" % [GameData.get_item(spell_id).get("name", spell_id), level])
+			learned.append(tr("%s subiu para o nível %d") % [GameData.get_item(spell_id).get("name", spell_id), level])
 	if learned.is_empty():
-		user.notify("Você já domina o que este grimório ensina (nível máximo)")
+		user.notify(tr("Você já domina o que este grimório ensina (nível máximo)"))
 		return false
 	user.notify(", ".join(learned))
 	user.progression.last_spell = str(data.get("teaches", [""])[0])
@@ -262,7 +264,8 @@ static func is_hammer(s: Dictionary) -> bool:
 	return not s.is_empty() and GameData.get_item(s.id).get("use", "") == "hammer"
 
 
-## Q: tocar conjura a última habilidade; segurar abre a roda e soltar conjura a escolhida.
+## Q: tocar conjura a última habilidade; segurar abre a roda e soltar só troca para a
+## escolhida (não conjura: a próxima tocada no Q conjura).
 func _update_q() -> void:
 	if _q_down < 0 or user == null:
 		return
@@ -280,14 +283,19 @@ func _update_q() -> void:
 		spell = user.skill_wheel.close()
 		if spell == "":
 			return  # cancelou
-		user.progression.last_spell = spell
+		if spell != user.progression.last_spell:
+			user.progression.last_spell = spell
+			user.progression.changed.emit()
+			changed.emit()
+		user.notify(tr("Habilidade selecionada: %s") % str(GameData.get_item(spell).get("name", spell)))
+		return
 	cast_spell(spell)
 
 
 ## Conjura uma habilidade aprendida (pelo Q ou pelo cajado).
 func cast_spell(spell_id: String) -> bool:
 	if spell_id == "" or user.progression.spell_level(spell_id) <= 0:
-		user.notify("Nenhuma habilidade aprendida (leia um grimório)")
+		user.notify(tr("Nenhuma habilidade aprendida (leia um grimório)"))
 		return false
 	var caster := caster_for(spell_id)
 	return caster != null and await caster.cast()
@@ -324,7 +332,6 @@ func _weapon_for(id: String) -> Weapon:
 	var kind := str(data.get("type", ""))
 	match kind:
 		"bow": weapon = Bow.new()
-		"firearm": weapon = Firearm.new()
 		"melee": weapon = MeleeWeapon.new()
 		"spell": weapon = SpellCaster.new()
 		"focus": weapon = FocusWeapon.new()

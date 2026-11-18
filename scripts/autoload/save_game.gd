@@ -1,28 +1,36 @@
 extends Node
-## Salvamento (GDD 17, Fase 8), autoload "SaveGame".
-## - Mundo (user://save/world.json), salvo pelo host: semente, dia/hora, clima,
+## Salvamento (GDD 17), autoload "SaveGame". Vários personagens e vários mundos:
+## - Mundos (user://worlds/<id>.json), salvos pelo host: nome, semente, dia/hora, clima,
 ##   construções, estações, armadilhas e itens/bags no chão. Recursos e zumbis voltam
 ##   pela semente e pela população.
-## - Personagem (user://save/character.json), salvo por cada jogador na própria
-##   máquina (inventário e progressão são do dono): dá para levar o personagem para o
-##   mundo de um amigo. A posição só volta se for o mesmo mundo (mesma semente).
-## Salva sozinho a cada AUTOSAVE_SECONDS, ao fechar a janela e pelo menu de pausa.
+## - Personagens (user://characters/<id>.json), salvos por cada jogador na própria
+##   máquina: nome, passado, inventário, equipamento, níveis, habilidades, fome/sede...
+##   O mesmo personagem entra em qualquer mundo (inclusive no de um amigo); a posição
+##   é guardada por mundo (semente).
+## O menu escolhe o mundo (current_world_id, só solo/host) e o personagem
+## (current_character_id) antes de começar. Salva sozinho a cada AUTOSAVE_SECONDS, ao
+## fechar a janela e pelo menu de pausa.
+##
+## Saves da versão antiga (user://save/world.json e character.json) viram "Mundo 1" e
+## "Personagem 1" na primeira vez.
 
-const DIR := "user://save"
-const WORLD_PATH := "user://save/world.json"
-const CHARACTER_PATH := "user://save/character.json"
-const VERSION := 1
+const VERSION := 2
 const AUTOSAVE_SECONDS := 120.0
 
-## Escolhas do menu: carregar o mundo / o personagem salvos.
-var load_world := false
-var load_character := false
+## Pasta raiz dos saves (testes: --save-root=user://test_saves).
+var root := "user://"
+var current_world_id := ""
+var current_character_id := ""
 
 var _timer := AUTOSAVE_SECONDS
 
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--save-root="):
+			root = arg.get_slice("=", 1).trim_suffix("/") + "/"
+	_migrate_legacy()
 
 
 func _notification(what: int) -> void:
@@ -40,26 +48,86 @@ func _process(delta: float) -> void:
 		save_all()
 
 
-func has_world() -> bool:
-	return FileAccess.file_exists(WORLD_PATH)
+func characters_dir() -> String:
+	return root + "characters"
 
 
-func has_character() -> bool:
-	return FileAccess.file_exists(CHARACTER_PATH)
+func worlds_dir() -> String:
+	return root + "worlds"
 
 
-## Resumo para o menu ("Dia 9", "Nível 4 · Enfermeiro").
-func world_summary() -> String:
-	var data := _read(WORLD_PATH)
-	return "Dia %d" % int(data.get("day", 1)) if not data.is_empty() else ""
+func _character_path(id: String) -> String:
+	return characters_dir().path_join(id + ".json")
 
 
-func character_summary() -> String:
-	var data := _read(CHARACTER_PATH)
-	if data.is_empty():
-		return ""
-	var bg := str(GameData.get_entry("backgrounds", str(data.get("background", ""))).get("name", ""))
-	return "Nível %d%s" % [int(data.get("progression", {}).get("char_level", 1)), " · " + bg if bg != "" else ""]
+func _world_path(id: String) -> String:
+	return worlds_dir().path_join(id + ".json")
+
+
+# --- Listas, criar e excluir (menu) ---------------------------------------------------
+
+## Personagens: [{id, name, background, level, updated}], o mais recente primeiro.
+func list_characters() -> Array:
+	var out: Array = []
+	for id in _ids_in(characters_dir()):
+		var data := _read(_character_path(id))
+		if data.is_empty():
+			continue
+		out.append({"id": id, "name": str(data.get("name", id)), "background": str(data.get("background", "survivor")),
+			"level": int(data.get("progression", {}).get("char_level", 1)), "updated": int(data.get("updated", 0))})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.updated) > int(b.updated))
+	return out
+
+
+## Mundos: [{id, name, day, updated}], o mais recente primeiro.
+func list_worlds() -> Array:
+	var out: Array = []
+	for id in _ids_in(worlds_dir()):
+		var data := _read(_world_path(id))
+		if data.is_empty():
+			continue
+		out.append({"id": id, "name": str(data.get("name", id)), "day": int(data.get("day", 1)),
+			"started": int(data.get("seed", 0)) != 0, "updated": int(data.get("updated", 0))})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.updated) > int(b.updated))
+	return out
+
+
+func create_character(char_name: String, background: String) -> String:
+	var id := _new_id("char")
+	_write(_character_path(id), {"version": VERSION, "name": char_name.strip_edges().left(24), "background": background,
+		"updated": int(Time.get_unix_time_from_system())})
+	return id
+
+
+func create_world(world_name: String) -> String:
+	var id := _new_id("world")
+	_write(_world_path(id), {"version": VERSION, "name": world_name.strip_edges().left(32), "seed": 0,
+		"updated": int(Time.get_unix_time_from_system())})
+	return id
+
+
+func delete_character(id: String) -> void:
+	DirAccess.remove_absolute(_character_path(id))
+	if current_character_id == id:
+		current_character_id = ""
+
+
+func delete_world(id: String) -> void:
+	DirAccess.remove_absolute(_world_path(id))
+	if current_world_id == id:
+		current_world_id = ""
+
+
+func character_name() -> String:
+	return str(_read(_character_path(current_character_id)).get("name", "")) if current_character_id != "" else ""
+
+
+func character_background() -> String:
+	return str(_read(_character_path(current_character_id)).get("background", "survivor")) if current_character_id != "" else "survivor"
+
+
+func world_name() -> String:
+	return str(_read(_world_path(current_world_id)).get("name", "")) if current_world_id != "" else ""
 
 
 ## Salva o que esta máquina pode: o mundo (se for o servidor) e o personagem local.
@@ -67,22 +135,27 @@ func save_all() -> void:
 	var level := _world()
 	if level == null:
 		return
-	if multiplayer.is_server():
-		_write(WORLD_PATH, _capture_world(level))
+	if multiplayer.is_server() and current_world_id != "":
+		var data := _capture_world(level)
+		var old := _read(_world_path(current_world_id))
+		data.name = str(old.get("name", tr("Mundo")))
+		_write(_world_path(current_world_id), data)
 	var me := _local_player()
-	if me:
-		_write(CHARACTER_PATH, _capture_character(me, level))
+	if me and current_character_id != "":
+		var old := _read(_character_path(current_character_id))
+		_write(_character_path(current_character_id), _capture_character(me, level, old))
 
 
 # --- Mundo ------------------------------------------------------------------------------
 
-## Semente salva (0 = nenhuma), para gerar o mesmo terreno antes do _ready do nível.
+## Semente do mundo escolhido (0 = mundo novo, ainda sem semente).
 func saved_seed() -> int:
-	return int(_read(WORLD_PATH).get("seed", 0)) if load_world else 0
+	return int(_read(_world_path(current_world_id)).get("seed", 0)) if current_world_id != "" else 0
 
 
 func _capture_world(level: Node) -> Dictionary:
-	var data := {"version": VERSION, "seed": int(level.get("world_seed")) if "world_seed" in level else 0}
+	var data := {"version": VERSION, "seed": int(level.get("world_seed")) if "world_seed" in level else 0,
+		"updated": int(Time.get_unix_time_from_system())}
 	var dn := DayNight.find(get_tree())
 	if dn:
 		data.day = dn.day
@@ -121,8 +194,8 @@ func _capture_world(level: Node) -> Dictionary:
 
 ## Servidor, depois que o nível montou: recoloca o que foi salvo.
 func apply_world(level: Node) -> void:
-	var data := _read(WORLD_PATH)
-	if data.is_empty():
+	var data := _read(_world_path(current_world_id))
+	if data.is_empty() or int(data.get("seed", 0)) == 0:
 		return
 	var dn := DayNight.find(get_tree())
 	if dn:
@@ -141,29 +214,40 @@ func apply_world(level: Node) -> void:
 			if p.get("open", false):
 				piece._set_open(true)
 	for s: Dictionary in data.get("placed", []):
+		if GameData.get_item(str(s.get("id", ""))).is_empty():
+			continue
 		var node := Structures._spawn(str(s.id), _vec(s.pos), float(s.rot), float(s.get("dur", -1.0)))
 		if node is BaseUtility:
-			for stack: Dictionary in s.get("contents", []):
-				if not GameData.get_item(str(stack.get("id", ""))).is_empty():
-					stack.count = int(stack.count)
-					node.contents.append(stack)
+			node.contents.append_array(_valid_stacks(s.get("contents", [])))
 			node.water = int(s.get("water", 0))
 	for it: Dictionary in data.get("items", []):
 		if it.get("bag", false):
-			WorldItems.drop_bag(it.contents, _vec(it.pos), str(it.owner))
-		else:
+			WorldItems.drop_bag(_valid_stacks(it.get("contents", [])), _vec(it.pos), str(it.owner))
+		elif not GameData.get_item(str(it.get("id", ""))).is_empty():
 			WorldItems.spawn(str(it.id), int(it.count), _vec(it.pos) + Vector3.UP * 0.3, 0, it.get("extra", {}))
+
+
+## Pilhas de itens que ainda existem no jogo (itens removidos, como armas de fogo, somem).
+static func _valid_stacks(stacks: Array) -> Array:
+	var out: Array = []
+	for stack: Variant in stacks:
+		if stack is Dictionary and not GameData.get_item(str(stack.get("id", ""))).is_empty():
+			stack.count = int(stack.get("count", 1))
+			out.append(stack)
+	return out
 
 
 # --- Personagem -----------------------------------------------------------------------
 
-func _capture_character(p: Player, level: Node) -> Dictionary:
+func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 	var prog := p.progression
+	var seed_key := str(int(level.get("world_seed")) if "world_seed" in level else 0)
+	var positions: Dictionary = old.get("positions", {})
+	positions[seed_key] = {"pos": _v(p.global_position), "rot": p.rotation.y, "bed": _v(p._spawn_point) if p.has_bed else []}
 	return {
-		"version": VERSION, "background": Network.background,
-		"seed": int(level.get("world_seed")) if "world_seed" in level else 0,
-		"pos": _v(p.global_position), "rot": p.rotation.y,
-		"bed": _v(p._spawn_point) if p.has_bed else [],
+		"version": VERSION, "name": str(old.get("name", tr("Sobrevivente"))), "background": str(old.get("background", "survivor")),
+		"updated": int(Time.get_unix_time_from_system()),
+		"positions": positions,
 		"creative": p.creative,
 		"inventory": p.inventory.slots,
 		"equipment": p.equipment.to_save(),
@@ -176,19 +260,19 @@ func _capture_character(p: Player, level: Node) -> Dictionary:
 	}
 
 
-## Jogador local, no _ready: troca o kit inicial pelo personagem salvo. Retorna true se carregou.
+## Jogador local, no _ready: aplica o personagem escolhido. Retorna false se ele é novo
+## (nunca jogou): aí o Player dá o kit inicial e o bônus do passado.
 func apply_character(p: Player) -> bool:
-	if not load_character:
+	if current_character_id == "":
 		return false
-	var data := _read(CHARACTER_PATH)
-	if data.is_empty():
+	var data := _read(_character_path(current_character_id))
+	if data.is_empty() or not data.has("inventory"):
 		return false
-	Network.background = str(data.get("background", Network.background))
 	var slots: Array = data.get("inventory", [])
 	for i in mini(slots.size(), p.inventory.slots.size()):
 		var s: Dictionary = slots[i] if slots[i] is Dictionary else {}
 		if not s.is_empty() and GameData.get_item(str(s.get("id", ""))).is_empty():
-			s = {}  # item que não existe mais
+			s = {}  # item que não existe mais (ex.: armas de fogo)
 		elif not s.is_empty() and GameData.get_item(str(s.id)).get("type", "") == "spell":
 			p.progression.spells[str(s.id)] = maxi(int(p.progression.spells.get(str(s.id), 0)), 1)
 			s = {}  # feitiço como item (versão antiga): vira habilidade aprendida
@@ -223,13 +307,17 @@ func apply_character(p: Player) -> bool:
 	p.death_penalty.level = int(weak.get("level", 0))
 	p.death_penalty.time_left = float(weak.get("time_left", 0.0))
 	var level := _world()
-	if level and "world_seed" in level and int(data.get("seed", -1)) == int(level.world_seed):
-		p.global_position = _vec(data.pos) + Vector3.UP * 0.3
-		p.rotation.y = float(data.get("rot", 0.0))
-		if data.get("bed", []).size() == 3:
-			p._spawn_point = _vec(data.bed)
-			p._spawn_point_set = true
-			p.has_bed = true
+	if level and "world_seed" in level:
+		var here: Dictionary = data.get("positions", {}).get(str(int(level.world_seed)), {})
+		if here.is_empty() and int(data.get("seed", -1)) == int(level.world_seed):
+			here = {"pos": data.get("pos", []), "rot": data.get("rot", 0.0), "bed": data.get("bed", [])}  # versão 1
+		if not here.is_empty():
+			p.global_position = _vec(here.get("pos", [])) + Vector3.UP * 0.3
+			p.rotation.y = float(here.get("rot", 0.0))
+			if here.get("bed", []).size() == 3:
+				p._spawn_point = _vec(here.bed)
+				p._spawn_point_set = true
+				p.has_bed = true
 	# Vida: o servidor manda; pede um ajuste depois que tudo estiver de pé.
 	var hp := float(data.get("health", 100.0))
 	if hp < p.health.max_health and hp > 0.0:
@@ -254,8 +342,42 @@ func _local_player() -> Player:
 	return null
 
 
+func _ids_in(dir: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	if not DirAccess.dir_exists_absolute(dir):
+		return out
+	for file_name in DirAccess.get_files_at(dir):
+		if file_name.get_extension() == "json":
+			out.append(file_name.get_basename())
+	return out
+
+
+func _new_id(prefix: String) -> String:
+	return "%s_%d_%d" % [prefix, int(Time.get_unix_time_from_system()), randi() % 100000]
+
+
+## Saves da versão 1 (um mundo e um personagem só) viram o primeiro de cada lista.
+func _migrate_legacy() -> void:
+	var legacy_world := root + "save/world.json"
+	var legacy_char := root + "save/character.json"
+	if FileAccess.file_exists(legacy_world) and _ids_in(worlds_dir()).is_empty():
+		var data := _read(legacy_world)
+		if not data.is_empty():
+			data.name = "Mundo 1"
+			data.updated = int(FileAccess.get_modified_time(legacy_world))
+			_write(_world_path("world_legacy"), data)
+			DirAccess.rename_absolute(legacy_world, legacy_world + ".migrated")
+	if FileAccess.file_exists(legacy_char) and _ids_in(characters_dir()).is_empty():
+		var data := _read(legacy_char)
+		if not data.is_empty():
+			data.name = "Personagem 1"
+			data.updated = int(FileAccess.get_modified_time(legacy_char))
+			_write(_character_path("char_legacy"), data)
+			DirAccess.rename_absolute(legacy_char, legacy_char + ".migrated")
+
+
 func _write(path: String, data: Dictionary) -> void:
-	DirAccess.make_dir_recursive_absolute(DIR)
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var tmp := path + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:

@@ -61,7 +61,7 @@ func channel_fraction() -> float:
 
 
 func channel_label() -> String:
-	return "Golpe carregado"
+	return tr("Golpe carregado")
 
 
 func on_unequip() -> void:
@@ -139,7 +139,7 @@ func _hit_resource(reach: float) -> bool:
 
 
 func hud_text() -> String:
-	return "stamina %d" % int(stat("stamina_cost", 12.0))
+	return tr("stamina %d") % int(stat("stamina_cost", 12.0))
 
 
 func _swing(direction: float) -> void:

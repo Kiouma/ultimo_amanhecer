@@ -2,6 +2,7 @@ class_name ProgressionUI
 extends Control
 ## Painel do personagem (tecla P): nível, XP, proficiências, maestria de armas e,
 ## na coluna da direita, as trilhas de habilidades (GDD 4.1, 4.2 e 12).
+## O equipamento e os status ficam no inventário (EquipmentPanel).
 
 var player: Player
 
@@ -11,11 +12,6 @@ var _profs: VBoxContainer
 var _mastery: Label
 var _skills: VBoxContainer
 var _points: Label
-var _gear_buttons := {}
-var _gear_info: Label
-var _gear_menu: PopupMenu
-var _gear_menu_slot := ""
-var _gear_menu_indexes: Array = []
 
 
 func _ready() -> void:
@@ -52,12 +48,11 @@ func toggle() -> void:
 
 
 func _refresh() -> void:
-	_refresh_gear()
 	var prog := player.progression
-	_title.text = "Nível %d" % prog.char_level
+	_title.text = tr("Nível %d") % prog.char_level
 	_xp_bar.max_value = Progression.char_xp_to_next(prog.char_level)
 	_xp_bar.value = prog.char_xp
-	_xp_bar.tooltip_text = "%d / %d XP" % [int(prog.char_xp), int(_xp_bar.max_value)]
+	_xp_bar.tooltip_text = tr("%d / %d XP") % [int(prog.char_xp), int(_xp_bar.max_value)]
 	for c in _profs.get_children():
 		c.queue_free()
 	for id: String in GameData.get_all("proficiencies"):
@@ -66,7 +61,7 @@ func _refresh() -> void:
 		var row := VBoxContainer.new()
 		row.add_theme_constant_override("separation", 1)
 		var head := Label.new()
-		head.text = "%s · nível %d" % [data.get("name", id), level]
+		head.text = tr("%s · nível %d") % [data.get("name", id), level]
 		head.add_theme_font_size_override("font_size", 14)
 		row.add_child(head)
 		var bar := ProgressBar.new()
@@ -76,23 +71,23 @@ func _refresh() -> void:
 		bar.value = float(prog.xp.get(id, 0.0))
 		row.add_child(bar)
 		var info := Label.new()
-		info.text = "%s · sobe: %s" % [data.get("summary", ""), str(data.get("raised_by", "")).to_lower()]
+		info.text = tr("%s · sobe: %s") % [data.get("summary", ""), str(data.get("raised_by", "")).to_lower()]
 		info.add_theme_font_size_override("font_size", 11)
 		info.modulate = Color(0.75, 0.75, 0.72)
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(info)
 		_profs.add_child(row)
 	var parts: PackedStringArray = []
-	for t in ["bow", "firearm", "melee", "spell"]:
+	for t in ["bow", "melee", "spell", "thrown"]:
 		parts.append("%s %d" % [Progression.mastery_name(t).capitalize(), prog.mastery_level(t)])
-	_mastery.text = "Maestria (até +10% de dano): " + " · ".join(parts)
+	_mastery.text = tr("Maestria (até +10% de dano): ") + " · ".join(parts)
 	_refresh_skills()
 
 
 ## Coluna de habilidades, agrupadas por trilha.
 func _refresh_skills() -> void:
 	var prog := player.progression
-	_points.text = "Pontos de habilidade: %d (1 por nível do personagem)" % prog.skill_points
+	_points.text = tr("Pontos de habilidade: %d (1 por nível do personagem)") % prog.skill_points
 	for c in _skills.get_children():
 		c.queue_free()
 	var by_trail := {}
@@ -103,7 +98,7 @@ func _refresh_skills() -> void:
 		by_trail[trail].append(id)
 	for trail: String in by_trail:
 		var title := Label.new()
-		title.text = "Trilha do " + str(Progression.TRAIL_NAMES.get(trail, trail))
+		title.text = tr("Trilha do %s") % tr(str(Progression.TRAIL_NAMES.get(trail, trail)))
 		title.add_theme_font_size_override("font_size", 16)
 		title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.55))
 		_skills.add_child(title)
@@ -119,7 +114,7 @@ func _skill_row(id: String) -> Control:
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_label := Label.new()
 	var learned := prog.skills.has(id)
-	name_label.text = "%s%s (%d pt)" % ["✓ " if learned else "", data.get("name", id), int(data.get("cost", 1))]
+	name_label.text = tr("%s%s (%d pt)") % ["✓ " if learned else "", data.get("name", id), int(data.get("cost", 1))]
 	name_label.add_theme_font_size_override("font_size", 13)
 	if learned:
 		name_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.6))
@@ -129,7 +124,7 @@ func _skill_row(id: String) -> Control:
 	var req_parts: PackedStringArray = []
 	for prof: String in req:
 		req_parts.append("%s %d" % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])])
-	desc.text = "%s · requer %s" % [data.get("desc", ""), ", ".join(req_parts)]
+	desc.text = tr("%s · requer %s") % [data.get("desc", ""), ", ".join(req_parts)]
 	desc.add_theme_font_size_override("font_size", 11)
 	desc.modulate = Color(0.75, 0.75, 0.72)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -147,107 +142,31 @@ func _skill_row(id: String) -> Control:
 	return row
 
 
-# --- Equipamento ----------------------------------------------------------------------
+# --- Texto dos bônus (dicas de itens) ---------------------------------------------------
 
-func _build_gear(parent: Control) -> void:
-	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(290, 0)
-	parent.add_child(col)
-	var title := Label.new()
-	title.text = "Equipamento"
-	title.add_theme_font_size_override("font_size", 22)
-	col.add_child(title)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
-	col.add_child(grid)
-	for slot: String in Equipment.SLOTS:
-		var b := Button.new()
-		b.custom_minimum_size = Vector2(140, 52)
-		b.clip_text = true
-		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 11)
-		b.pressed.connect(_on_gear_pressed.bind(slot))
-		grid.add_child(b)
-		_gear_buttons[slot] = b
-	_gear_info = Label.new()
-	_gear_info.add_theme_font_size_override("font_size", 11)
-	_gear_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_gear_info.custom_minimum_size = Vector2(290, 0)
-	col.add_child(_gear_info)
-	var hint := Label.new()
-	hint.text = "Clique num slot vazio para vestir algo do inventário; num cheio, para tirar."
-	hint.add_theme_font_size_override("font_size", 10)
-	hint.modulate = Color(0.7, 0.7, 0.68)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(hint)
-	_gear_menu = PopupMenu.new()
-	_gear_menu.id_pressed.connect(_on_gear_menu)
-	add_child(_gear_menu)
+const BONUS_NAMES := {
+	"melee.damage": "Dano corpo a corpo", "ranged.damage": "Dano à distância", "magic.damage": "Dano mágico",
+	"thrown.damage": "Dano de arremesso", "ranged.draw_time": "Tempo de puxada do arco", "move_speed": "Velocidade de movimento",
+	"noise": "Barulho", "damage_taken": "Dano recebido", "max_stamina_add": "Stamina máxima", "max_mana_add": "Mana máxima",
+	"magic.mana": "Custo de mana", "magic.cooldown": "Recarga de feitiços", "melee.stamina_cost": "Stamina por golpe",
+	"sneak_damage": "Dano de ataque surpresa", "food": "Comida e bebida rendem", "heal": "Cura de bandagens e kits",
+	"ranged.recover_chance": "Recuperar flechas", "attack_speed": "Velocidade de ataque", "cooldown_reduction": "Redução de recarga",
+	"spell_resist": "Resistência a magia", "carry_weight_add": "Capacidade de carga", "loot_bonus": "Aumento de loot",
+	"headshot_damage": "Dano na cabeça", "magic.channel": "Força da canalização", "melee.channel": "Carga do golpe",
+	"ranged.arrow_speed": "Velocidade da flecha", "gather_yield": "Coleta de recursos", "craft_time": "Tempo de fabricação",
+}
 
 
-func _refresh_gear() -> void:
-	var eq := player.equipment
-	for slot: String in Equipment.SLOTS:
-		var item := eq.get_item(slot)
-		var b: Button = _gear_buttons[slot]
-		if item.is_empty():
-			b.text = "%s\n(vazio)" % Equipment.SLOT_NAMES[slot]
-			b.modulate = Color(0.75, 0.75, 0.75)
-		else:
-			var data := GameData.get_item(item.id)
-			var extra := ""
-			if Inventory.max_durability(item.id) > 0.0:
-				extra = " · %d/%d" % [ceili(Inventory.durability_of(item)), int(Inventory.max_durability_of(item))]
-			b.text = "%s\n%s%s" % [Equipment.SLOT_NAMES[slot], Inventory.display_name_of(item), extra]
-			b.modulate = Color(1, 0.55, 0.5) if Inventory.is_broken(item) else Color.WHITE
-			b.tooltip_text = _bonus_text(data.get("bonus", {}))
-	var lines: PackedStringArray = []
-	var armor := eq.armor_total()
-	lines.append("Proteção: %d (−%d%% de dano)" % [roundi(armor), roundi(100.0 * armor / (armor + 100.0))])
-	var counts := eq.set_counts()
-	for set_id: String in counts:
-		var data := GameData.get_entry("sets", set_id)
-		lines.append("Conjunto %s (%s): %d peças" % [data.get("name", set_id), data.get("style", ""), int(counts[set_id])])
-		var desc: Dictionary = data.get("desc", {})
-		for need: String in desc:
-			lines.append("   %s %s peças: %s" % ["✓" if int(counts[set_id]) >= int(need) else "·", need, desc[need]])
-	_gear_info.text = "\n".join(lines)
-
-
-func _on_gear_pressed(slot: String) -> void:
-	var eq := player.equipment
-	if not eq.get_item(slot).is_empty():
-		eq.unequip(slot)
-		_refresh()
-		return
-	_gear_menu.clear()
-	_gear_menu_indexes.clear()
-	_gear_menu_slot = slot
-	var inv := player.inventory
-	for i in inv.slots.size():
-		var s := inv.get_slot(i)
-		if not s.is_empty() and Equipment.fits(s.id, slot):
-			_gear_menu.add_item(Inventory.display_name_of(s), _gear_menu_indexes.size())
-			_gear_menu_indexes.append(i)
-	if _gear_menu_indexes.is_empty():
-		player.notify("Nada para %s no inventário" % str(Equipment.SLOT_NAMES[slot]).to_lower())
-		return
-	_gear_menu.position = Vector2i(get_global_mouse_position())
-	_gear_menu.popup()
-
-
-func _on_gear_menu(id: int) -> void:
-	player.equipment.equip_from_inventory(int(_gear_menu_indexes[id]), _gear_menu_slot)
-	_refresh()
-
-
-static func _bonus_text(bonus: Dictionary) -> String:
+## "Dano corpo a corpo +4%, Capacidade de carga +10 kg" (nomes no idioma atual).
+static func bonus_text(bonus: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	for key: String in bonus:
 		var v := float(bonus[key])
-		parts.append("%s %s" % [key, ("%+d" % roundi(v)) if key.ends_with("_add") else ("%+d%%" % roundi(v * 100.0))])
+		var label := TranslationServer.translate(str(BONUS_NAMES.get(key, key)))
+		var value := ("%+d" % roundi(v)) if key.ends_with("_add") else ("%+d%%" % roundi(v * 100.0))
+		if key == "carry_weight_add":
+			value += TranslationServer.translate(" kg")
+		parts.append("%s %s" % [label, value])
 	return ", ".join(parts)
 
 
@@ -258,7 +177,7 @@ func _build() -> void:
 	add_child(dim)
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(1240, 600)
+	panel.custom_minimum_size = Vector2(900, 600)
 	panel.position = -panel.custom_minimum_size * 0.5
 	add_child(panel)
 	var margin := MarginContainer.new()
@@ -269,7 +188,6 @@ func _build() -> void:
 	columns.add_theme_constant_override("separation", 18)
 	margin.add_child(columns)
 
-	_build_gear(columns)
 	var left := VBoxContainer.new()
 	left.custom_minimum_size = Vector2(400, 0)
 	columns.add_child(left)

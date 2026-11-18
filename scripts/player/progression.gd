@@ -5,7 +5,7 @@ extends Node
 ##   os "effects" do JSON (fração por nível; chaves terminadas em "_add" somam).
 ## - Nível do personagem: XP de abates, coleta, construção, fabricação (e um pouco de
 ##   toda XP de proficiência). Cada nível dá 1 ponto de habilidade (trilhas, GDD 4.2).
-## - Maestria de arma: usar um tipo de arma (arco, arma de fogo, melee, feitiço) dá
+## - Maestria de arma: usar um tipo de arma (arco, melee, feitiço, arremesso) dá
 ##   até +10% de dano com ele.
 ## Todos os bônus viram modificadores por chave ("melee.damage", "move_speed"...), que
 ## os sistemas consultam com mult()/apply(). Roda na máquina do dono do personagem;
@@ -33,7 +33,7 @@ var char_xp := 0.0
 var skill_points := 0
 ## Habilidades aprendidas (trilhas, GDD 4.2): id → true.
 var skills := {}
-## Usos por tipo de arma ("bow", "firearm", "melee", "spell").
+## Usos por tipo de arma ("bow", "melee", "spell", "thrown").
 var mastery_uses := {}
 ## Habilidades mágicas aprendidas (grimórios): id → nível (1 a MAX_SPELL_LEVEL).
 var spells := {"firebolt": 1}
@@ -75,6 +75,30 @@ func apply(key: String, value: float) -> float:
 	return value * mult(key)
 
 
+# --- Atributos derivados (painel de status e sistemas) --------------------------------
+## Redução de recarga (itens), velocidade de ataque (itens: 100% no golpe/arremesso,
+## 20% na puxada do arco), resistência a magia (itens) e capacidade de carga.
+
+const MAX_COOLDOWN_REDUCTION := 0.5
+const MAX_SPELL_RESIST := 0.75
+const BOW_ATTACK_SPEED_SHARE := 0.2
+
+
+static func cooldown_reduction(node: Node) -> float:
+	var prog := of(node)
+	return clampf(prog.add("cooldown_reduction"), 0.0, MAX_COOLDOWN_REDUCTION) if prog else 0.0
+
+
+static func attack_speed(node: Node) -> float:
+	var prog := of(node)
+	return maxf(prog.add("attack_speed"), -0.5) if prog else 0.0
+
+
+static func spell_resist(node: Node) -> float:
+	var prog := of(node)
+	return clampf(prog.add("spell_resist"), 0.0, MAX_SPELL_RESIST) if prog else 0.0
+
+
 ## Nível de maestria de um tipo de arma (0 a 10): raiz dos usos / 3.
 func mastery_level(weapon_type: String) -> int:
 	return mini(int(sqrt(float(mastery_uses.get(weapon_type, 0)) / 3.0)), MAX_MASTERY)
@@ -106,7 +130,7 @@ func gain(prof: String, amount: float) -> void:
 			xp[prof] = float(xp[prof]) - xp_to_next(level)
 			level += 1
 			levels[prof] = level
-			leveled.emit("%s subiu para o nível %d" % [GameData.get_entry("proficiencies", prof).get("name", prof), level])
+			leveled.emit(tr("%s subiu para o nível %d") % [GameData.get_entry("proficiencies", prof).get("name", prof), level])
 		_rebuild()
 	gain_character(amount * CHAR_SHARE, false)
 	changed.emit()
@@ -121,7 +145,7 @@ func gain_character(amount: float, emit := true) -> void:
 		char_xp -= char_xp_to_next(char_level)
 		char_level += 1
 		skill_points += 1
-		leveled.emit("Nível %d! +1 ponto de habilidade (P)" % char_level)
+		leveled.emit(tr("Nível %d! +1 ponto de habilidade (P)") % char_level)
 	if emit:
 		changed.emit()
 
@@ -132,28 +156,28 @@ func use_weapon(weapon_type: String) -> void:
 	var before := mastery_level(weapon_type)
 	mastery_uses[weapon_type] = int(mastery_uses.get(weapon_type, 0)) + 1
 	if mastery_level(weapon_type) > before:
-		leveled.emit("Maestria de %s: nível %d" % [mastery_name(weapon_type), mastery_level(weapon_type)])
+		leveled.emit(tr("Maestria de %s: nível %d") % [mastery_name(weapon_type), mastery_level(weapon_type)])
 		changed.emit()
 
 
 # --- Habilidades (trilhas, GDD 4.2) ------------------------------------------------
 
-const TRAIL_NAMES := {"shooter": "Atirador", "warrior": "Guerreiro", "arcane": "Arcano", "survivor": "Sobrevivente"}
+const TRAIL_NAMES := {"shooter": "Arqueiro", "warrior": "Guerreiro", "arcane": "Arcano", "survivor": "Sobrevivente"}
 
 
 ## Por que não dá para aprender ("" = dá).
 func learn_block_reason(skill_id: String) -> String:
 	var data := GameData.get_entry("skills", skill_id)
 	if data.is_empty():
-		return "Habilidade desconhecida"
+		return tr("Habilidade desconhecida")
 	if skills.has(skill_id):
-		return "Já aprendida"
+		return tr("Já aprendida")
 	var req: Dictionary = data.get("requires", {})
 	for prof: String in req:
 		if get_level(prof) < int(req[prof]):
-			return "Precisa de %s nível %d" % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])]
+			return tr("Precisa de %s nível %d") % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])]
 	if skill_points < int(data.get("cost", 1)):
-		return "Faltam pontos"
+		return tr("Faltam pontos")
 	return ""
 
 
@@ -163,7 +187,7 @@ func learn(skill_id: String) -> bool:
 	skill_points -= int(GameData.get_entry("skills", skill_id).get("cost", 1))
 	skills[skill_id] = true
 	_rebuild()
-	leveled.emit("Aprendeu: %s" % GameData.get_entry("skills", skill_id).get("name", skill_id))
+	leveled.emit(tr("Aprendeu: %s") % GameData.get_entry("skills", skill_id).get("name", skill_id))
 	changed.emit()
 	return true
 
@@ -200,7 +224,7 @@ func spell_level(spell_id: String) -> int:
 
 
 static func mastery_name(weapon_type: String) -> String:
-	return {"bow": "arco", "firearm": "armas de fogo", "melee": "armas brancas", "spell": "feitiços", "thrown": "arremesso"}.get(weapon_type, weapon_type)
+	return str({"bow": TranslationServer.translate("arco"), "melee": TranslationServer.translate("armas brancas"), "spell": TranslationServer.translate("feitiços"), "thrown": TranslationServer.translate("arremesso")}.get(weapon_type, weapon_type))
 
 
 ## Abate (vem do servidor): XP do personagem.
@@ -243,13 +267,13 @@ func _soft_cap(prof: String, amount: float) -> float:
 # --- Ganchos de combate -------------------------------------------------------------
 
 ## Antes de aplicar dano de um ataque do jogador: ataque surpresa (alvo que não está
-## caçando ninguém) dá bônus; dá XP. weapon_type: "bow", "firearm", "melee", "spell".
+## caçando ninguém) dá bônus; dá XP. weapon_type: "bow", "melee", "spell", "thrown".
 ## Retorna o dano final.
 static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: String, sneak_mult := 1.0) -> float:
 	var prog := of(attacker)
 	if prog == null or not prog.is_multiplayer_authority():
 		return amount
-	var prof: String = {"bow": "firearms", "firearm": "firearms", "thrown": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
+	var prof: String = {"bow": "firearms", "thrown": "firearms", "melee": "melee", "spell": "magic"}.get(weapon_type, "")
 	if weapon_type == "spell" and target is Zombie:
 		amount *= 1.0 - clampf(float(target.stats.get("magic_resist", 0.0)), 0.0, 0.9)
 	if target is Zombie and not target.is_dead():
@@ -300,6 +324,28 @@ func _apply_to_player() -> void:
 		if not has_meta(&"base_stamina"):
 			set_meta(&"base_stamina", stamina.max_value)
 		stamina.max_value = float(get_meta(&"base_stamina")) + add("max_stamina_add")
+	var inventory: Inventory = player.get_node_or_null(^"Inventory")
+	if inventory:
+		if not has_meta(&"base_weight"):
+			set_meta(&"base_weight", inventory.max_weight)
+		inventory.max_weight = float(get_meta(&"base_weight")) + add("carry_weight_add")
 	var health := Health.find_in(player)
 	if health and is_multiplayer_authority():
-		health.set_damage_taken_multiplier(mult("damage_taken"))
+		health.set_damage_taken_multiplier(mult("damage_taken"), 1.0 - spell_resist(player))
+	# Aumento de loot: os drops são sorteados no servidor, que precisa saber o bônus.
+	if is_multiplayer_authority():
+		var loot := clampf(add("loot_bonus"), 0.0, 2.0)
+		if multiplayer.is_server():
+			server_loot_bonus = loot
+		elif Network.is_online():
+			_report_loot_bonus.rpc_id(1, loot)
+
+
+## Servidor: aumento de loot do dono deste personagem (ver _drop_loot do zumbi).
+var server_loot_bonus := 0.0
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _report_loot_bonus(value: float) -> void:
+	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == get_multiplayer_authority():
+		server_loot_bonus = clampf(value, 0.0, 2.0)

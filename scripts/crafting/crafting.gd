@@ -67,7 +67,7 @@ static func give_result(inventory: Inventory, recipe: Dictionary, times: int) ->
 		if quality >= 4:
 			var player := inventory.get_parent()
 			if player.has_method(&"notify"):
-				player.notify("%s de qualidade %d!" % [GameData.get_item(id).get("name", id), quality])
+				player.notify(TranslationServer.translate("%s de qualidade %d!") % [GameData.get_item(id).get("name", id), quality])
 
 
 ## Chances base de Q1..Q5 (em %), sem proficiência.
@@ -115,13 +115,13 @@ static func _give(inventory: Inventory, id: String, count: int, extra: Dictionar
 ## Nome da estação para mostrar ("hands" → "mãos").
 static func station_name(station: String) -> String:
 	match station:
-		"hands": return "mãos"
-		"campfire": return "fogueira"
-		"workbench": return "bancada"
-		"forge": return "forja"
-		"weapon_bench": return "bancada de armas"
-		"arcane_table": return "mesa arcana"
-		"electric_bench": return "bancada elétrica"
+		"hands": return TranslationServer.translate("mãos")
+		"campfire": return TranslationServer.translate("fogueira")
+		"workbench": return TranslationServer.translate("bancada")
+		"forge": return TranslationServer.translate("forja")
+		"weapon_bench": return TranslationServer.translate("bancada de armas")
+		"arcane_table": return TranslationServer.translate("mesa arcana")
+		"electric_bench": return TranslationServer.translate("bancada elétrica")
 		_: return station
 
 

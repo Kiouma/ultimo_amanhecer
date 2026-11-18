@@ -33,7 +33,7 @@ func _draw() -> void:
 	var c := size * 0.5
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.1, 0.1, 0.12, 0.85))
 	if id == "":
-		draw_string(font, Vector2(6, 38), "sem\nmagia", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.5))
+		draw_string(font, Vector2(6, 38), tr("sem\nmagia"), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.5))
 		return
 	var color := school_color(id)
 	draw_circle(c, 22.0, Color(color, 0.85))
@@ -50,4 +50,4 @@ func _draw() -> void:
 		var frac := clampf(caster.cooldown / total, 0.0, 1.0)
 		draw_rect(Rect2(0, size.y * (1.0 - frac), size.x, size.y * frac), Color(0, 0, 0, 0.6))
 	draw_string(font, Vector2(3, 13), "Q", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1, 0.9, 0.5))
-	draw_string(font, Vector2(size.x - 26, size.y - 4), "Nv%d" % int(player.progression.spells.get(id, 1)), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
+	draw_string(font, Vector2(size.x - 26, size.y - 4), tr("Nv%d") % int(player.progression.spells.get(id, 1)), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)

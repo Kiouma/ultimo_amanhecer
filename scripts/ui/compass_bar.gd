@@ -58,7 +58,7 @@ func _draw() -> void:
 			var text: String = LABELS[deg]
 			var color := Color(1.0, 0.45, 0.35) if text == "N" else Color.WHITE
 			var size := 16 if text.length() == 1 else 12
-			draw_string(font, Vector2(x - 6.0 * text.length(), 17), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+			draw_string(font, Vector2(x - 6.0 * text.length(), 17), tr(text), HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 		else:
 			draw_line(Vector2(x, 4), Vector2(x, 12), Color(1, 1, 1, 0.5), 1.0)
 	draw_line(Vector2(WIDTH * 0.5, 0), Vector2(WIDTH * 0.5, 22), Color(1.0, 0.85, 0.3), 2.0)

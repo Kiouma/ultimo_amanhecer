@@ -12,6 +12,10 @@ const CATEGORIES: Array[String] = [
 ]
 
 var _db: Dictionary = {}
+## Textos originais (português) dos campos traduzíveis: "categoria/id/campo" -> texto.
+var _sources: Dictionary = {}
+## Campos de texto mostrados ao jogador (traduzidos no lugar ao trocar de idioma).
+const TRANSLATED_FIELDS := ["name", "desc", "summary", "raised_by", "style", "verb"]
 
 
 func _ready() -> void:
@@ -20,8 +24,32 @@ func _ready() -> void:
 
 func reload() -> void:
 	_db.clear()
+	_sources.clear()
 	for category in CATEGORIES:
 		_db[category] = _load_category(category)
+	retranslate()
+
+
+## Troca os textos dos dados (nomes, descrições...) para o idioma atual. Chamado pelo
+## Settings ao mudar de idioma. O original em português fica guardado em _sources.
+func retranslate() -> void:
+	for category: String in _db:
+		for id: String in _db[category]:
+			var entry: Dictionary = _db[category][id]
+			for field: String in TRANSLATED_FIELDS:
+				if not entry.has(field):
+					continue
+				var key := "%s/%s/%s" % [category, id, field]
+				if not _sources.has(key):
+					_sources[key] = entry[field].duplicate() if entry[field] is Dictionary else entry[field]
+				var source: Variant = _sources[key]
+				if source is String:
+					entry[field] = tr(source)
+				elif source is Dictionary:
+					var out := {}
+					for k: String in source:
+						out[k] = tr(str(source[k])) if source[k] is String else source[k]
+					entry[field] = out
 
 
 func get_entry(category: String, id: String) -> Dictionary:

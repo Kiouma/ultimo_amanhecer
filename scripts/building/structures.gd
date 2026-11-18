@@ -99,7 +99,7 @@ func _request_place(item_id: String, position: Vector3, rotation_y: float, durab
 	if player.global_position.distance_to(position) > MAX_PLACE_DISTANCE or not can_place_at(position):
 		var extra := {"dur": durability} if durability >= 0.0 else {}
 		(player.get_node(^"Inventory") as Inventory).grant(item_id, 1, extra)
-		_notify.rpc_id(multiplayer.get_remote_sender_id(), "Não deu para colocar aí (item devolvido)")
+		_notify.rpc_id(multiplayer.get_remote_sender_id(), tr("Não deu para colocar aí (item devolvido)"))
 		return
 	_spawn(item_id, position, rotation_y, durability)
 
@@ -140,10 +140,10 @@ func cost(piece_id: String, tier: String) -> Dictionary:
 func check_build(piece_id: String, key: String, rot: int, builder_pos: Vector3) -> String:
 	var data := GameData.get_entry("buildings", piece_id)
 	if data.is_empty() or _root == null:
-		return "Peça desconhecida"
+		return tr("Peça desconhecida")
 	var p := key.split(":")
 	if p.size() != 4:
-		return "Encaixe inválido"
+		return tr("Encaixe inválido")
 	var kind := p[0]
 	var i := int(p[1])
 	var j := int(p[2])
@@ -151,24 +151,24 @@ func check_build(piece_id: String, key: String, rot: int, builder_pos: Vector3) 
 	var slot := str(data.get("slot", "edge"))
 	var expected := {"center": ["c"], "ramp": ["r"], "edge": ["x", "z"]}
 	if not kind in expected.get(slot, []):
-		return "Encaixe inválido"
+		return tr("Encaixe inválido")
 	if kind == "x" and rot % 2 != 1 or kind == "z" and rot % 2 != 0:
-		return "Encaixe inválido"
+		return tr("Encaixe inválido")
 	if n < int(data.get("min_level", 0)) or n > int(data.get("max_level", BuildPiece.MAX_LEVEL)):
-		return "Fundação só no chão" if piece_id == "foundation" else "Altura inválida"
+		return tr("Fundação só no chão") if piece_id == "foundation" else tr("Altura inválida")
 	if piece_at(key):
-		return "Já tem uma peça aí"
+		return tr("Já tem uma peça aí")
 	# Escada ocupa o vão até o andar de cima: não convive com piso logo acima.
 	if kind == "c" and piece_at("r:%d:%d:%d" % [i, j, n - 1]) \
 			or kind == "r" and piece_at("c:%d:%d:%d" % [i, j, n + 1]):
-		return "A escada precisa desse espaço"
+		return tr("A escada precisa desse espaço")
 	if not _is_supported(kind, i, j, n):
-		return "Precisa de apoio (parede, piso ou fundação)"
+		return tr("Precisa de apoio (parede, piso ou fundação)")
 	var xform := BuildPiece.slot_transform(key, rot)
 	if builder_pos.distance_to(xform.origin + Vector3.UP * 1.0) > MAX_BUILD_DISTANCE:
-		return "Longe demais"
+		return tr("Longe demais")
 	if _is_obstructed(piece_id, xform):
-		return "Tem algo no caminho"
+		return tr("Tem algo no caminho")
 	return ""
 
 
@@ -268,7 +268,7 @@ func _collapse_unsupported() -> void:
 
 
 func _collapse_fx_all(count: int) -> void:
-	var text := "A construção desabou (%d peça%s)" % [count, "" if count == 1 else "s"]
+	var text := tr("A construção desabou (1 peça)") if count == 1 else tr("A construção desabou (%d peças)") % count
 	_notify(text)
 	if Network.is_online():
 		_notify.rpc(text)
@@ -359,7 +359,7 @@ func _request_build(piece_id: String, tier: String, key: String, rot: int) -> vo
 		var inventory := player.get_node(^"Inventory") as Inventory
 		for id: String in price:
 			inventory.grant(id, int(price[id]))
-		_notify.rpc_id(multiplayer.get_remote_sender_id(), "%s (material devolvido)" % reason)
+		_notify.rpc_id(multiplayer.get_remote_sender_id(), tr("%s (material devolvido)") % reason)
 		return
 	_spawn_piece(piece_id, tier, key, rot)
 
@@ -483,7 +483,7 @@ func _request_upgrade(key: String, paid: Dictionary) -> void:
 
 func _repair(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
 	if piece == null or not _in_reach(piece, player) or repair_amount(piece) <= 0.0:
-		_refund(player, paid, "Não deu para consertar")
+		_refund(player, paid, tr("Não deu para consertar"))
 		return
 	piece.health.heal(repair_amount(piece))
 
@@ -492,7 +492,7 @@ func _repair(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
 func _upgrade(piece: BuildPiece, player: Node3D, paid: Dictionary) -> void:
 	var next := next_tier(piece) if piece else ""
 	if next == "" or not _in_reach(piece, player):
-		_refund(player, paid, "Não deu para melhorar")
+		_refund(player, paid, tr("Não deu para melhorar"))
 		return
 	var key := piece.slot_key
 	var rot := piece.rot
@@ -511,9 +511,9 @@ func _refund(player: Node3D, paid: Dictionary, text: String) -> void:
 	for id in paid:
 		inventory.grant(str(id), int(paid[id]))
 	if player.is_multiplayer_authority():
-		player.notify(text + " (material devolvido)")
+		player.notify(text + tr(" (material devolvido)"))
 	else:
-		_notify.rpc_id(player.get_multiplayer_authority(), text + " (material devolvido)")
+		_notify.rpc_id(player.get_multiplayer_authority(), text + tr(" (material devolvido)"))
 
 
 # --- Rede ------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # Último Amanhecer
 
-Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por armas de fogo, melee ou magia. O design completo está em [docs/GDD.md](docs/GDD.md).
+Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arco e besta, corpo a corpo ou magia. O design completo está em [docs/GDD.md](docs/GDD.md).
 
 **Engine:** Godot 4.6 (Forward+, física Jolt) · **Linguagem:** GDScript
 
@@ -8,11 +8,11 @@ Jogo de sobrevivência zumbi 3D, co-op de até 5 jogadores, com combate por arma
 
 1. Abra o Godot 4.6.
 2. Clique em **Importar**, escolha a pasta deste projeto (`project.godot`) e abra.
-3. Aperte **F5**. Abre o menu (escolha o **passado** do personagem): **Jogar sozinho**, **Hospedar partida** ou **Entrar** (IP do host).
+3. Aperte **F5**. A tela inicial (um vale gerado na hora) tem **Singleplayer**, **Multiplayer**, **Personagens**, **Configurações** e **Sair do jogo**. Em **Personagens** você cria (nome + **passado**) e exclui personagens. Singleplayer e Hospedar pedem o **mundo** (criar, continuar ou excluir) e depois o **personagem** que entra nele; Entrar pede o IP e o personagem. O personagem leva inventário, equipamento, níveis e habilidades para qualquer mundo.
 
-Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha, Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
+Controles: WASD move, Shift corre (gasta stamina), Ctrl agacha (Shift e Ctrl podem ser "segurar" ou "alternar" em Configurações), Espaço pula, **V** troca 1ª/3ª pessoa, Esc solta o mouse (clique para capturar de novo).
 
-Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira, **R** recarrega, **Q** lança o 1º feitiço da hotbar.
+Hotbar: teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira, **Q** conjura a última habilidade.
 
 Itens: passar por cima pega sozinho; **E** pega o que está na mira; **Tab** abre inventário e fabricação nas mãos (ex.: flecha = pena + graveto). Fique de olho na **fome** e na **sede** (barras abaixo da vida).
 
@@ -22,13 +22,13 @@ Estações: fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e
 
 Construção: **B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Zumbis presos do lado de fora batem na peça mais fraca.
 
-Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Atirador, Guerreiro, Arcano, Sobrevivente).
+Progressão: **P** abre o personagem. As proficiências sobem pelo uso (golpear, atirar, conjurar, correr, levar dano, agachar perto de zumbis, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas (Arqueiro, Guerreiro, Arcano, Sobrevivente).
 
 Carga (segurar o botão esquerdo): **melee** carrega o golpe gastando stamina (até 2,5× de dano); o **cajado** canaliza a habilidade gastando mana (até 6× o custo, até 3× de dano/alcance); a **faca de arremesso** ganha força e a **adaga** dá muito mais dano em ataque surpresa. A barra de carga aparece acima da hotbar (inclusive puxando o arco).
 
-Equipamento (**P**): capacete, armadura, calça, botas, luvas, 2 anéis e colar. Quatro conjuntos, um por estilo: **Caçador** (atirador), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade). Vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras. Fabricados na bancada ou achados (casas, posto militar, ruínas). Clique numa peça na hotbar para vestir.
+Equipamento (**Tab**, à esquerda do inventário, arrumado como um corpo): capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot ou clique no slot. Embaixo, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade). Vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras. Fabricados na bancada ou achados (casas, posto militar, ruínas). Clique numa peça na hotbar para vestir.
 
-Magia: **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5; mais mana, mais dano e alcance). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. **Q** tocado conjura a última; **Q segurado** abre a roda de habilidades (mova o mouse e solte). O ícone à esquerda da hotbar mostra a última. Com o **cajado** na mão, o clique também conjura. A bancada copia grimórios com cristal arcano.
+Magia: **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5; mais mana, mais dano e alcance). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. **Q** tocado conjura a última; **Q segurado** abre a roda de habilidades (mova o mouse e solte para **escolher**, sem conjurar). O ícone à esquerda da hotbar mostra a última. Com o **cajado** na mão, o clique também conjura; segurar canaliza e queima toda a mana da barra (mais mana, efeito até 3×). A mana regenera 4× mais rápido depois de 3 s sem conjurar nem atacar. A bancada copia grimórios com cristal arcano.
 
 Mapa (**M**): só mostra o que você já explorou; botão direito marca um ponto. A **bússola** no topo mostra a direção, as marcações e os outros jogadores com a distância. **Ctrl** agacha e levanta (alterna).
 
@@ -36,7 +36,9 @@ Clima: chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) 
 
 Hordas: a cada **7 dias**, ao anoitecer, uma horda ataca em ondas (o relógio mostra quantos dias faltam; o céu fica vermelho na tarde da horda). Sobreviver dá recompensa. **F9** (host) chama uma horda agora, para testar.
 
-Salvamento: o jogo salva sozinho a cada 2 minutos, ao fechar a janela e pelo menu de pausa (**Esc**). O host salva o mundo (construções, itens no chão, dia, clima); cada jogador salva o próprio personagem (inventário, progressão), que pode ser levado para o mundo de um amigo. No menu, marque **Continuar mundo/personagem salvo**.
+Salvamento: o jogo salva sozinho a cada 2 minutos, ao fechar a janela e pelo menu de pausa (**Esc**). O host salva o mundo (construções, itens no chão, dia, clima); cada jogador salva o próprio personagem (inventário, progressão), que pode ser levado para o mundo de um amigo. Saves ficam em `user://worlds/` e `user://characters/` (o save antigo vira "Mundo 1" e "Personagem 1").
+
+Idiomas (**Esc → Configurações**, com bandeira): português, inglês, chinês simplificado e russo. As traduções ficam em `data/i18n/<idioma>.json` (texto em português → tradução).
 
 Morte: a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
@@ -47,7 +49,7 @@ Dia e noite: um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noi
 1. No editor: *Depurar > Personalizar instâncias de execução*, ative **Ativar várias instâncias** e escolha 2 (ou mais).
 2. Aperte F5. Numa janela clique **Hospedar partida**; na outra, **Entrar** com `127.0.0.1`.
 
-Atalhos de linha de comando (pulam o menu): `godot -- --host`, `godot -- --join=IP`, `godot -- --solo`.
+Atalhos de linha de comando (pulam o menu): `godot -- --host`, `godot -- --join=IP`, `godot -- --solo` (usam o personagem e o mundo mais recentes; `--new` cria um mundo novo, `--world=<id>` e `--character=<id>` escolhem, `--save-root=user://pasta` isola os saves para testes).
 
 Entre PCs: na mesma rede use o IP local do host (ex.: `192.168.0.10`). Pela internet, o host libera a porta **7777 UDP** no roteador (ou usa uma VPN como Tailscale/ZeroTier/Radmin).
 

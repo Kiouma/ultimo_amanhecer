@@ -69,7 +69,7 @@ func unequip(slot: String) -> bool:
 	if item.is_empty():
 		return false
 	if inventory().room_for(item.id) <= 0:
-		get_parent().notify("Inventário cheio")
+		get_parent().notify(tr("Inventário cheio"))
 		return false
 	items.erase(slot)
 	_return_to_inventory(item)
@@ -92,7 +92,7 @@ func wear_on_hit() -> void:
 			if inventory().wear(item, 1.0) <= 0.0:
 				broke = true
 	if broke:
-		get_parent().notify("Uma peça de equipamento quebrou: repare na bancada")
+		get_parent().notify(tr("Uma peça de equipamento quebrou: repare na bancada"))
 		_changed()
 
 

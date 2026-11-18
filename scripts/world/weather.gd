@@ -68,7 +68,7 @@ static func hunger_factor(tree: SceneTree, position: Vector3) -> float:
 
 
 func display_name() -> String:
-	return str(STATES[state].name)
+	return tr(str(STATES[state].name))
 
 
 func _ready() -> void:

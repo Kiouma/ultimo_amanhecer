@@ -24,6 +24,8 @@ const MAX_HEAL_PER_USE := 100.0
 var current: float
 ## Multiplicador do dano recebido (Resistência). O dono pede; o servidor guarda.
 var damage_taken_multiplier := 1.0
+## Multiplicador do dano mágico recebido (resistência a magia dos itens). Soma com o de cima.
+var spell_taken_multiplier := 1.0
 ## Não recebe dano (jogador no modo criativo). O dono pede; o servidor guarda.
 var invulnerable := false
 var is_dead := false
@@ -33,11 +35,12 @@ func _ready() -> void:
 	current = max_health
 
 
-func take_damage(amount: float, source: Node = null) -> void:
+## magic: dano mágico/elemental (ácido, feitiços): a resistência a magia também reduz.
+func take_damage(amount: float, source: Node = null, magic := false) -> void:
 	if is_dead or invulnerable or amount <= 0.0 or _ignores(source):
 		return
 	if multiplayer.is_server():
-		amount *= _taken_factor(source)
+		amount *= _taken_factor(source, magic)
 		_apply(maxf(current - amount, 0.0), amount, source)
 	elif Network.is_online():
 		_request_damage.rpc_id(1, amount, source.get_path() if source else NodePath())
@@ -103,21 +106,25 @@ static func find_in(node: Node) -> Health:
 # --- Interno ---------------------------------------------------------------------
 
 ## Fome/sede (fonte = o próprio dono) não são reduzidas pela Resistência.
-func _taken_factor(source: Node) -> float:
-	return 1.0 if source == get_parent() else damage_taken_multiplier
+func _taken_factor(source: Node, magic := false) -> float:
+	if source == get_parent():
+		return 1.0
+	return damage_taken_multiplier * (spell_taken_multiplier if magic else 1.0)
 
 
 ## Chamado pelo dono (Progression). Num cliente, avisa o servidor.
-func set_damage_taken_multiplier(value: float) -> void:
+func set_damage_taken_multiplier(value: float, spell := 1.0) -> void:
 	damage_taken_multiplier = clampf(value, 0.25, 1.0)
+	spell_taken_multiplier = clampf(spell, 0.25, 1.0)
 	if not multiplayer.is_server() and Network.is_online():
-		_request_taken_multiplier.rpc_id(1, damage_taken_multiplier)
+		_request_taken_multiplier.rpc_id(1, damage_taken_multiplier, spell_taken_multiplier)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_taken_multiplier(value: float) -> void:
+func _request_taken_multiplier(value: float, spell: float) -> void:
 	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
 		damage_taken_multiplier = clampf(value, 0.25, 1.0)
+		spell_taken_multiplier = clampf(spell, 0.25, 1.0)
 
 
 func set_invulnerable(on: bool) -> void:

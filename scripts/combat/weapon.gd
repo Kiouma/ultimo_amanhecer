@@ -93,7 +93,7 @@ func wear(amount := 1.0) -> void:
 	if float(data.get("durability", 0.0)) <= 0.0 or slot.is_empty() or user == null:
 		return
 	if user.inventory.wear(slot, amount) <= 0.0:
-		user.notify("%s quebrou: repare na bancada" % display_name())
+		user.notify(tr("%s quebrou: repare na bancada") % display_name())
 
 
 ## Tentou usar quebrada: avisa (no máximo a cada 2 s).
@@ -101,11 +101,11 @@ func warn_broken() -> void:
 	var now := Time.get_ticks_msec()
 	if now - _last_broken_warning > 2000:
 		_last_broken_warning = now
-		user.notify("%s está quebrado(a): repare na bancada" % display_name())
+		user.notify(tr("%s está quebrado(a): repare na bancada") % display_name())
 
 
 func display_name() -> String:
-	return str(data.get("name", data.get("id", "?")))
+	return tr(str(data.get("name", data.get("id", "?"))))
 
 
 ## Chamado todo frame enquanto a arma está equipada. just_pressed = clicou agora.
@@ -143,6 +143,11 @@ func stat(key: String, default: float) -> float:
 	var prog := user.progression if user else null
 	if prog:
 		value = prog.apply(category() + "." + key, value)
+		# Velocidade de ataque (itens): golpe e arremesso 100%, puxada do arco 20%.
+		if key == "attack_time":
+			value /= 1.0 + Progression.attack_speed(user)
+		elif key == "draw_time":
+			value /= 1.0 + Progression.BOW_ATTACK_SPEED_SHARE * Progression.attack_speed(user)
 		if key == "damage":
 			value *= prog.mastery_mult(weapon_type())
 	return value
@@ -157,15 +162,15 @@ func channel_label() -> String:
 	return ""
 
 
-## "bow", "firearm", "melee", "spell" (maestria).
+## "bow", "melee", "spell", "thrown" (maestria).
 func weapon_type() -> String:
 	return str(data.get("type", "melee"))
 
 
-## Grupo dos modificadores: "ranged" (arco e arma de fogo), "melee" ou "magic".
+## Grupo dos modificadores: "ranged" (arco e besta), "melee", "thrown" ou "magic".
 func category() -> String:
 	match weapon_type():
-		"bow", "firearm": return "ranged"
+		"bow": return "ranged"
 		"spell", "focus": return "magic"
 		"thrown": return "thrown"
 	return "melee"

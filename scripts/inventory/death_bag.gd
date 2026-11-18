@@ -54,7 +54,7 @@ func item_total() -> int:
 
 
 func get_prompt() -> String:
-	return "[E] Pegar tudo da %s" % _title()
+	return tr("[E] Pegar tudo da %s") % _title()
 
 
 func interact(player: Node3D) -> void:
@@ -62,4 +62,4 @@ func interact(player: Node3D) -> void:
 
 
 func _title() -> String:
-	return "bag de %s (%d itens)" % [owner_name, item_total()]
+	return tr("bag de %s (%d itens)") % [owner_name, item_total()]

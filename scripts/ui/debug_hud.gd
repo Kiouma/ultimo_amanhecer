@@ -71,6 +71,16 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_inventory(player)
 	_bind_survival(player)
 	_bind_death_penalty(player)
+	_bind_overload(player)
+	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
+	_bus(Settings.changed, func() -> void:
+		_update_hotbar()
+		_update_weapon()
+		if _inventory_ui and _inventory_ui.visible:
+			_inventory_ui._refresh()
+			_inventory_ui._equipment.refresh()
+		if _progression_ui and _progression_ui.visible:
+			_progression_ui._refresh())
 	_bind_notifications(player)
 	var channel := ChannelBar.new()
 	channel.player = player
@@ -162,8 +172,8 @@ func _bind_survival(player: Player) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	health_bar.get_parent().add_child(row)
-	var hunger := _labeled_bar(row, "Fome", Color(0.85, 0.55, 0.2))
-	var thirst := _labeled_bar(row, "Sede", Color(0.3, 0.75, 0.9))
+	var hunger := _labeled_bar(row, tr("Fome"), Color(0.85, 0.55, 0.2))
+	var thirst := _labeled_bar(row, tr("Sede"), Color(0.3, 0.75, 0.9))
 	var update := func(h: float, t: float) -> void:
 		hunger.value = h
 		thirst.value = t
@@ -197,6 +207,26 @@ func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
 	return bar
 
 
+## Peso acima da capacidade: aviso acima da vida (fica lento, inclusive correndo).
+func _bind_overload(player: Player) -> void:
+	var label := Label.new()
+	label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.4))
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 4)
+	var box := health_bar.get_parent()
+	box.add_child(label)
+	box.move_child(label, 0)
+	var update := func() -> void:
+		var inv := player.inventory
+		label.visible = inv.is_overloaded()
+		if label.visible:
+			label.text = tr("Sobrecarregado: %.0f / %.0f kg (lento)") % [inv.total_weight(), inv.max_weight]
+	player.inventory.changed.connect(update)
+	player.progression.changed.connect(update)
+	update.call()
+
+
 ## Fraqueza pós-morte: rótulo acima da vida com nível, tempo e efeitos.
 func _bind_death_penalty(player: Player) -> void:
 	var label := Label.new()
@@ -216,7 +246,7 @@ func _on_weakness_changed(level: int, time_left: float, penalty: DeathPenalty) -
 	_weakness_label.visible = level > 0
 	if level <= 0:
 		return
-	_weakness_label.text = "Fraqueza %d · %d:%02d  (−%d%% vel. · −%d%% dano · stamina lenta)" % [
+	_weakness_label.text = tr("Fraqueza %d · %d:%02d  (−%d%% vel. · −%d%% dano · stamina lenta)") % [
 		level, int(time_left) / 60, int(time_left) % 60,
 		roundi((1.0 - penalty.speed_factor()) * 100), roundi((1.0 - penalty.damage_factor()) * 100)]
 
@@ -272,8 +302,8 @@ func _on_queue_changed(queue: CraftQueue) -> void:
 	var job: Dictionary = queue.jobs[0]
 	var item_name := str(GameData.get_item(str(job.recipe.result)).get("name", ""))
 	var paused := not queue.is_station_ok(job.recipe)
-	_queue_label.text = "Fabricando %s (faltam %d) %s" % [item_name, int(job.left),
-		"· pausado: volte à %s" % Crafting.station_name(str(job.recipe.station)) if paused else "%d%%" % int(float(job.progress) * 100)]
+	_queue_label.text = tr("Fabricando %s (faltam %d) %s") % [item_name, int(job.left),
+		tr("· pausado: volte à %s") % Crafting.station_name(str(job.recipe.station)) if paused else "%d%%" % int(float(job.progress) * 100)]
 	_queue_label.modulate = Color(1, 0.6, 0.5) if paused else Color(0.85, 0.85, 0.8)
 
 
@@ -308,29 +338,29 @@ func _build_clock() -> void:
 		var h := Horde.find(get_tree())
 		if h and h.is_horde_day(d):
 			return  # a faixa da horda ocupa o lugar
-		show_banner.call("Noite %d\nos mortos estão mais rápidos" % d, Color(0.75, 0.8, 1.0)))
+		show_banner.call(tr("Noite %d\nos mortos estão mais rápidos") % d, Color(0.75, 0.8, 1.0)))
 	_bus(EventBus.day_started, func(d: int) -> void:
 		var h := Horde.find(get_tree())
 		if h and h.is_horde_day(d):
-			show_banner.call("Dia %d\na horda vem esta noite: preparem a base" % d, Color(1.0, 0.55, 0.4))
+			show_banner.call(tr("Dia %d\na horda vem esta noite: preparem a base") % d, Color(1.0, 0.55, 0.4))
 		else:
-			show_banner.call("Dia %d" % d, Color(1.0, 0.9, 0.6)))
+			show_banner.call(tr("Dia %d") % d, Color(1.0, 0.9, 0.6)))
 	_bus(EventBus.weather_changed, func(state: String) -> void:
-		var texts := {"rain": "Começou a chover\nos sons ficam abafados", "fog": "A neblina baixou\nninguém enxerga longe",
-			"storm": "Tempestade!\nraios por toda parte", "cold": "Frio extremo\nfique perto de uma fogueira"}
+		var texts := {"rain": tr("Começou a chover\nos sons ficam abafados"), "fog": tr("A neblina baixou\nninguém enxerga longe"),
+			"storm": tr("Tempestade!\nraios por toda parte"), "cold": tr("Frio extremo\nfique perto de uma fogueira")}
 		if texts.has(state):
 			show_banner.call(texts[state], Color(0.8, 0.88, 1.0)))
 	_bus(EventBus.horde_started, func(n: int) -> void:
-		show_banner.call("A HORDA %d CHEGOU" % n, Color(1.0, 0.3, 0.25)))
+		show_banner.call(tr("A HORDA %d CHEGOU") % n, Color(1.0, 0.3, 0.25)))
 	_bus(EventBus.horde_ended, func(n: int, survived: bool) -> void:
-		show_banner.call("Horda %d vencida!\nrecompensa no inventário" % n if survived else "A horda %d passou" % n,
+		show_banner.call(tr("Horda %d vencida!\nrecompensa no inventário") % n if survived else tr("A horda %d passou") % n,
 			Color(0.6, 1.0, 0.6)))
 
 	var day_night := DayNight.find(get_tree())
 	if day_night == null:
 		return
 	var update := func(d: int, h: float) -> void:
-		clock.text = "%s %d · %s" % ["Noite" if day_night.is_night() else "Dia", d, day_night.clock_text()]
+		clock.text = "%s %d · %s" % [tr("Noite") if day_night.is_night() else tr("Dia"), d, day_night.clock_text()]
 		var color := Color(0.75, 0.8, 1.0) if day_night.is_night() else Color(1.0, 0.95, 0.85)
 		var weather := Weather.find(get_tree())
 		if weather and weather.state != "clear":
@@ -423,7 +453,7 @@ func _update_boss_bar() -> void:
 	box.visible = boss != null
 	if boss:
 		var h := Health.find_in(boss)
-		_boss_label.text = str(boss.stats.get("name", "Chefe"))
+		_boss_label.text = str(boss.stats.get("name", tr("Chefe")))
 		_boss_bar.max_value = h.max_health
 		_boss_bar.value = h.current
 
@@ -441,6 +471,6 @@ func _update_weapon() -> void:
 func _on_health_changed(current: float, maximum: float) -> void:
 	health_bar.max_value = maximum
 	health_bar.value = current
-	health_label.text = "Vida %d / %d" % [ceili(current), ceili(maximum)]
+	health_label.text = tr("Vida %d / %d") % [ceili(current), ceili(maximum)]
 	if current > 0.0:
 		death_label.visible = false

@@ -29,7 +29,7 @@ func host(port := DEFAULT_PORT) -> Error:
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_server(port, MAX_PLAYERS - 1)
 	if err != OK:
-		connection_failed.emit("Não foi possível abrir a porta %d (%s)." % [port, error_string(err)])
+		connection_failed.emit(tr("Não foi possível abrir a porta %d (%s).") % [port, error_string(err)])
 		return err
 	multiplayer.multiplayer_peer = peer
 	hosted.emit()
@@ -41,7 +41,7 @@ func join(address: String, port := DEFAULT_PORT) -> Error:
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_client(address, port)
 	if err != OK:
-		connection_failed.emit("Endereço inválido: %s (%s)." % [address, error_string(err)])
+		connection_failed.emit(tr("Endereço inválido: %s (%s).") % [address, error_string(err)])
 		return err
 	multiplayer.multiplayer_peer = peer
 	return OK
@@ -57,7 +57,7 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(joined.emit)
 	multiplayer.connection_failed.connect(func() -> void:
 		leave()
-		connection_failed.emit("Não conectou. Confira o IP e se o host está esperando."))
+		connection_failed.emit(tr("Não conectou. Confira o IP e se o host está esperando.")))
 	multiplayer.server_disconnected.connect(func() -> void:
 		leave()
 		server_closed.emit())

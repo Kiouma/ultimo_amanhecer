@@ -98,7 +98,7 @@ func toggle() -> void:
 	if not visible:
 		_world = get_tree().get_first_node_in_group("world")
 		if _world == null:
-			player.notify("Sem mapa nesta área")
+			player.notify(tr("Sem mapa nesta área"))
 			return
 		if _image_rect.texture == null:
 			_image_rect.texture = _render_biomes()
@@ -111,7 +111,7 @@ func toggle() -> void:
 func _process(_delta: float) -> void:
 	if visible and _world:
 		var pos := player.global_position
-		_region.text = "Você está em: %s" % _world.BIOME_NAMES.get(_world.biome_at(pos.x, pos.z), "?")
+		_region.text = tr("Você está em: %s") % tr(_world.BIOME_NAMES.get(_world.biome_at(pos.x, pos.z), "?"))
 		_overlay.queue_redraw()
 
 
@@ -179,7 +179,7 @@ func _draw_markers() -> void:
 			"military": color = Color(0.6, 0.9, 0.5)
 			"ruins": color = Color(0.85, 0.6, 1.0)
 		_overlay.draw_circle(p, 4.0, color)
-		var label := str(poi.name)
+		var label := tr(str(poi.name))
 		if named.has(label):
 			continue  # vilarejo: um nome só
 		named[label] = true

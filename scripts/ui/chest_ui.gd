@@ -32,8 +32,8 @@ func _ready() -> void:
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", 24)
 	box.add_child(cols)
-	_left = _column(cols, "Baú (clique para pegar)")
-	_right = _column(cols, "Seu inventário (clique para guardar)")
+	_left = _column(cols, tr("Baú (clique para pegar)"))
+	_right = _column(cols, tr("Seu inventário (clique para guardar)"))
 	var hint := Label.new()
 	hint.text = "E, Tab ou Esc fecha"
 	hint.modulate = Color(0.7, 0.7, 0.7)
@@ -97,7 +97,7 @@ func _process(_delta: float) -> void:
 func _refresh() -> void:
 	if not is_instance_valid(_chest):
 		return
-	_title.text = "Baú · %d/%d pilhas" % [_chest.contents.size(), BaseUtility.MAX_STACKS]
+	_title.text = tr("Baú · %d/%d pilhas") % [_chest.contents.size(), BaseUtility.MAX_STACKS]
 	for c in _left.get_children():
 		c.queue_free()
 	for c in _right.get_children():

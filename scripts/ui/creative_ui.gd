@@ -5,7 +5,7 @@ extends Control
 ## Catálogo: clique esquerdo dá 1, direito dá uma pilha cheia. Qualidade e refino
 ## escolhidos valem para armas, ferramentas e equipamentos.
 
-const TYPE_ORDER := ["melee", "thrown", "bow", "firearm", "tool", "focus", "armor", "ammo", "consumable", "grimoire", "resource", "station", "trap"]
+const TYPE_ORDER := ["melee", "thrown", "bow", "tool", "focus", "armor", "ammo", "consumable", "grimoire", "resource", "station", "trap"]
 
 var player: Player
 var _grid: GridContainer
@@ -159,16 +159,16 @@ func _button(parent: Control, text: String, action: Callable) -> void:
 
 
 static func _type_name(t: String) -> String:
-	return {"melee": "Corpo a corpo", "thrown": "Arremesso", "bow": "Arcos e bestas", "firearm": "Armas de fogo", "tool": "Ferramentas", "focus": "Cajados", "armor": "Equipamentos",
-		"ammo": "Munição", "consumable": "Consumíveis", "grimoire": "Grimórios", "resource": "Recursos",
-		"station": "Estações e base", "trap": "Armadilhas"}.get(t, t)
+	return {"melee": TranslationServer.translate("Corpo a corpo"), "thrown": TranslationServer.translate("Arremesso"), "bow": TranslationServer.translate("Arcos e bestas"), "tool": TranslationServer.translate("Ferramentas"), "focus": TranslationServer.translate("Cajados"), "armor": TranslationServer.translate("Equipamentos"),
+		"ammo": TranslationServer.translate("Munição"), "consumable": TranslationServer.translate("Consumíveis"), "grimoire": TranslationServer.translate("Grimórios"), "resource": TranslationServer.translate("Recursos"),
+		"station": TranslationServer.translate("Estações e base"), "trap": TranslationServer.translate("Armadilhas")}.get(t, t)
 
 
 # --- Atualização --------------------------------------------------------------------------
 
 func _refresh_info() -> void:
 	var prog := player.progression
-	_level_label.text = "Nível %d · %d ponto(s) de habilidade" % [prog.char_level, prog.skill_points]
+	_level_label.text = tr("Nível %d · %d ponto(s) de habilidade") % [prog.char_level, prog.skill_points]
 	_fly.set_pressed_no_signal(player.flying)
 
 
@@ -214,7 +214,7 @@ func _item_button(data: Dictionary) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_font_size_override("font_size", 11)
 	b.text = str(data.get("name", id))
-	b.tooltip_text = "%s\n%s · pilha de %d" % [b.text, _type_name(str(data.get("type", ""))), GameData.max_stack(id)]
+	b.tooltip_text = tr("%s\n%s · pilha de %d") % [b.text, _type_name(str(data.get("type", ""))), GameData.max_stack(id)]
 	var tier := clampi(int(data.get("tier", 0)), 0, Inventory.MAX_QUALITY)
 	if Inventory.max_durability(id) > 0.0:
 		tier = _quality.selected + 1
@@ -246,7 +246,7 @@ func _give(id: String, count: int) -> void:
 	var left := player.inventory.add_item(id, count, extra)
 	var item_name := str(GameData.get_item(id).get("name", id))
 	if left >= count:
-		player.notify("Inventário cheio")
+		player.notify(tr("Inventário cheio"))
 	else:
 		player.notify("+%d %s" % [count - left, item_name])
 
@@ -267,7 +267,7 @@ func _boost_proficiencies() -> void:
 		prog.xp[prof] = 0.0
 	prog._rebuild()
 	prog.changed.emit()
-	player.notify("Proficiências +10")
+	player.notify(tr("Proficiências +10"))
 
 
 func _learn_all_spells() -> void:
@@ -281,7 +281,7 @@ func _learn_all_spells() -> void:
 	for spell_id: String in prog.spells:
 		prog.spells[spell_id] = Progression.MAX_SPELL_LEVEL
 	prog.changed.emit()
-	player.notify("Todas as habilidades no nível %d (roda do Q)" % Progression.MAX_SPELL_LEVEL)
+	player.notify(tr("Todas as habilidades no nível %d (roda do Q)") % Progression.MAX_SPELL_LEVEL)
 
 
 func _refill() -> void:
@@ -289,4 +289,4 @@ func _refill() -> void:
 	player.survival.refill()
 	player.stamina.refill()
 	player.mana.refill()
-	player.notify("Tudo cheio")
+	player.notify(tr("Tudo cheio"))

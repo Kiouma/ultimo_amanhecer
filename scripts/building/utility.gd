@@ -28,9 +28,9 @@ func _ready() -> void:
 
 func get_prompt() -> String:
 	match station:
-		"chest": return "[E] Abrir baú (%d/%d)" % [contents.size(), MAX_STACKS]
-		"bed": return "[E] Dormir aqui (renascer nesta cama)"
-		"collector": return "[E] Encher garrafas (%d de água limpa)" % water
+		"chest": return tr("[E] Abrir baú (%d/%d)") % [contents.size(), MAX_STACKS]
+		"bed": return tr("[E] Dormir aqui (renascer nesta cama)")
+		"collector": return tr("[E] Encher garrafas (%d de água limpa)") % water
 	return super()
 
 
@@ -66,7 +66,7 @@ func _collect(player: Node3D) -> void:
 	var inv := player.get_node(^"Inventory") as Inventory
 	var want := mini(inv.count_of("empty_bottle"), water)
 	if want <= 0:
-		player.notify("Precisa de garrafas vazias" if water > 0 else "O coletor ainda está vazio")
+		player.notify(tr("Precisa de garrafas vazias") if water > 0 else tr("O coletor ainda está vazio"))
 		return
 	inv.remove_item("empty_bottle", want)
 	if multiplayer.is_server():
@@ -164,7 +164,7 @@ func _put(stack: Dictionary, from: Node3D) -> void:
 		var who := from if from else _local_player()
 		if who:
 			(who.get_node(^"Inventory") as Inventory).grant(id, count, extra)
-			who.notify("Baú cheio")
+			who.notify(tr("Baú cheio"))
 	_contents_changed()
 
 

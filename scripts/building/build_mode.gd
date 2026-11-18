@@ -132,7 +132,7 @@ func place() -> bool:
 ## Desmonta a peça na mira.
 func demolish() -> void:
 	if _aimed == null:
-		user.notify("Mire numa peça para desmontar")
+		user.notify(tr("Mire numa peça para desmontar"))
 		return
 	Structures.demolish(_aimed, user)
 	_aimed = null
@@ -180,10 +180,10 @@ func hammer_repair(slot_index: int) -> bool:
 		return false
 	var price := Structures.repair_cost(piece)
 	if price.is_empty():
-		user.notify("%s já está inteira" % piece.display_name())
+		user.notify(tr("%s já está inteira") % piece.display_name())
 		return false
 	if not _has(price):
-		user.notify("Falta material: " + Repair.describe(price))
+		user.notify(tr("Falta material: ") + Repair.describe(price))
 		return false
 	_pay(price)
 	Structures.repair(piece, user, price)
@@ -200,11 +200,11 @@ func hammer_upgrade(slot_index: int) -> bool:
 		return false
 	var next := Structures.next_tier(piece)
 	if next == "":
-		user.notify("%s já é do melhor material" % piece.display_name())
+		user.notify(tr("%s já é do melhor material") % piece.display_name())
 		return false
 	var price := Structures.cost(piece.piece_id, next)
 	if not _has(price):
-		user.notify("Falta material: " + Repair.describe(price))
+		user.notify(tr("Falta material: ") + Repair.describe(price))
 		return false
 	_pay(price)
 	Structures.upgrade(piece, user, price)
@@ -216,10 +216,10 @@ func hammer_upgrade(slot_index: int) -> bool:
 
 func _hammer_ok(slot_index: int, piece: BuildPiece) -> bool:
 	if Inventory.is_broken(user.inventory.get_slot(slot_index)):
-		user.notify("Martelo quebrado: repare na bancada")
+		user.notify(tr("Martelo quebrado: repare na bancada"))
 		return false
 	if piece == null:
-		user.notify("Mire numa peça de construção")
+		user.notify(tr("Mire numa peça de construção"))
 		return false
 	return true
 
@@ -228,14 +228,14 @@ func _hammer_ok(slot_index: int, piece: BuildPiece) -> bool:
 func hammer_text() -> String:
 	var piece := aimed_piece()
 	if piece == null:
-		return "mire numa construção"
+		return tr("mire numa construção")
 	var parts: PackedStringArray = ["%s %d/%d" % [piece.display_name(), ceili(piece.health.current), int(piece.health.max_health)]]
 	var price := Structures.repair_cost(piece)
 	if not price.is_empty():
-		parts.append("[Clique] consertar (%s)" % Repair.describe(price))
+		parts.append(tr("[Clique] consertar (%s)") % Repair.describe(price))
 	var next := Structures.next_tier(piece)
 	if next != "":
-		parts.append("[R] melhorar p/ %s (%s)" % [BuildPiece.TIER_NAMES.get(next, next), Repair.describe(Structures.cost(piece.piece_id, next))])
+		parts.append(tr("[R] melhorar p/ %s (%s)") % [tr(BuildPiece.TIER_NAMES.get(next, next)), Repair.describe(Structures.cost(piece.piece_id, next))])
 	return "\n".join(parts)
 
 
@@ -245,18 +245,18 @@ func status_text() -> String:
 		return ""
 	var data := GameData.get_entry("buildings", piece_id())
 	var lines: PackedStringArray = []
-	lines.append("CONSTRUÇÃO · %s de %s" % [data.get("name", piece_id()), BuildPiece.TIER_NAMES.get(tier(), tier())])
+	lines.append(tr("CONSTRUÇÃO · %s de %s") % [data.get("name", piece_id()), tr(BuildPiece.TIER_NAMES.get(tier(), tier()))])
 	var price := Structures.cost(piece_id(), tier())
 	var parts: PackedStringArray = []
 	for id: String in price:
 		parts.append("%s %d/%d" % [GameData.get_item(id).get("name", id), user.inventory.count_of(id), int(price[id])])
-	lines.append("Custo: " + " · ".join(parts))
+	lines.append(tr("Custo: ") + " · ".join(parts))
 	if _reason != "":
-		lines.append("Não dá: " + _reason)
+		lines.append(tr("Não dá: ") + _reason)
 	if _aimed:
-		lines.append("Na mira: %s %d/%d · [Botão direito] desmontar (devolve %s)" % [_aimed.display_name(),
+		lines.append(tr("Na mira: %s %d/%d · [Botão direito] desmontar (devolve %s)") % [_aimed.display_name(),
 			ceili(_aimed.health.current), int(_aimed.health.max_health), Repair.describe(Structures.demolish_refund(_aimed))])
-	lines.append("[Roda] peça  [T] material  [R] girar  [Clique] construir  [B] sair")
+	lines.append(tr("[Roda] peça  [T] material  [R] girar  [Clique] construir  [B] sair"))
 	return "\n".join(lines)
 
 
@@ -284,7 +284,7 @@ func _update_target() -> void:
 	_pick_slot(point, normal)
 	_reason = Structures.check_build(piece_id(), _slot_key, _rot, user.global_position)
 	if _reason == "" and not can_afford():
-		_reason = "Falta material"
+		_reason = tr("Falta material")
 	_update_ghost()
 
 

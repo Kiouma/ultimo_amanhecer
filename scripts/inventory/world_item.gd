@@ -6,7 +6,6 @@ const TYPE_COLORS := {
 	"resource": Color(0.55, 0.42, 0.28),
 	"ammo": Color(0.75, 0.6, 0.2),
 	"consumable": Color(0.85, 0.85, 0.85),
-	"firearm": Color(0.2, 0.2, 0.22),
 	"melee": Color(0.5, 0.52, 0.55),
 	"tool": Color(0.6, 0.35, 0.15),
 	"grimoire": Color(0.45, 0.2, 0.6),
@@ -72,7 +71,7 @@ func display_text() -> String:
 
 ## Texto do aviso na tela quando o jogador olha para o item.
 func get_prompt() -> String:
-	return "[E] Pegar %s" % display_text()
+	return tr("[E] Pegar %s") % display_text()
 
 
 func interact(player: Node3D) -> void:
