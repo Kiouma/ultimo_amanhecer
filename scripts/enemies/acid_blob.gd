@@ -57,6 +57,8 @@ func _splash(direct: Object) -> void:
 		piece.health.take_damage(damage * structure_multiplier, source)
 	elif direct is Node and Health.find_in(direct):
 		Health.find_in(direct).take_damage(damage, source, true)
+		if direct is Player:
+			StatusEffects.give(direct, "poison")
 		hit_ids[direct.get_instance_id()] = true
 	# Respingo em jogadores perto.
 	for p: Node3D in get_tree().get_nodes_in_group("player"):
@@ -66,6 +68,7 @@ func _splash(direct: Object) -> void:
 			var h := Health.find_in(p)
 			if h:
 				h.take_damage(damage * 0.5, source, true)
+				StatusEffects.give(p, "poison")
 
 
 ## Poça que some sozinha.

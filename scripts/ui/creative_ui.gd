@@ -91,6 +91,9 @@ func _build() -> void:
 	_button(left, "+1 nível de personagem", func() -> void: _add_levels(1))
 	_button(left, "+10 níveis de personagem", func() -> void: _add_levels(10))
 	_button(left, "+10 em todas as proficiências", _boost_proficiencies)
+	_button(left, "+1000 de ouro", func() -> void:
+		player.inventory.add_gold(1000)
+		player.notify(tr("+1000 de ouro")))
 	_button(left, "Todas as habilidades no nível máximo", _learn_all_spells)
 	_button(left, "Encher vida, stamina e mana", _refill)
 	_fly = CheckButton.new()

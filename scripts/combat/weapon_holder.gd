@@ -169,8 +169,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_q_down = Time.get_ticks_msec()
 
 
-## Usa o item selecionado (consumíveis): cura na hora ("heals", poções) ou regeneração
-## temporária ("regen" vida/s por "regen_time" s, comida). Não gasta se não ajudar em
+## Usa o item selecionado (consumíveis): cura na hora ("heals", poções) ou um buff
+## temporário ("effect", comida: data/effects). Não gasta se não ajudar em
 ## nada. Cura passa pelo servidor (Health.heal).
 func use_selected() -> void:
 	var s := selected_item()
@@ -207,8 +207,12 @@ func use_selected() -> void:
 	var prog := user.progression
 	var heals := float(data.get("heals", 0.0)) * prog.mult("heal")
 	var can_heal := heals > 0.0 and user.health.current < user.health.cap()
-	var regen := float(data.get("regen", 0.0)) * prog.mult("heal")
-	var regenerates := regen > 0.0 and user.survival.add_food_regen(regen, float(data.get("regen_time", 10.0)))
+	# Comida: buff temporário (data/effects), ex.: frutas regeneram vida por 10 s. Não
+	# gasta com a vida cheia. A cura de comida também cresce com "heal".
+	var effect_id := str(data.get("effect", ""))
+	var regenerates := effect_id != "" and user.health.current < user.health.cap()
+	if regenerates:
+		user.effects.apply(effect_id, -1.0, prog.mult("heal"))
 	if not can_heal and not regenerates:
 		user.notify(tr("Vida cheia"))
 		return  # nada a ganhar: não desperdiça

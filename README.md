@@ -81,7 +81,11 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 - **Ascendência** (aba de P): no nível 30 escolha uma das 2 da sua classe (definitivo); bônus fixo e 4 pontos (níveis 30, 45, 60, 75) para 4 dos 6 nós dela. Para testar rápido: modo criativo, "+10 níveis".
 - **Auras (C):** bônus em área para você e aliados próximos, pagos com reserva de mana. Clique num ícone para ver o nível, a descrição e a barra de reserva (1% a 35%, o efeito cresce junto); o interruptor embaixo (verde/vermelho) liga e desliga. Sobem de nível com o tempo ligadas, mas só com a reserva no máximo (35%). A mesma aura de dois jogadores não soma. O **Pacto de Sangue** (nó da Vanguarda ou do Rompe-Ossos) converte até 50% da reserva de mana em vida; eficiência de reserva de mana e de vida vem da árvore.
 
-**Morte:** a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
+**Morte:** nada cai no chão; você perde **15% da XP** rumo ao próximo nível e **15% do ouro** carregado, e renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
+
+**Ouro:** cai de cada monstro e é dividido entre os jogadores vivos por perto (40 m). Aparece no inventário.
+
+**Buffs e debuffs:** ícones acima da hotbar com o tempo restante (debuffs com borda vermelha). Frutas regeneram vida por 10 s; ficar 10 s perto de uma **fogueira** dá **Descansado** (3 min de regeneração maior e +10% de velocidade). Monstros aplicam **veneno** (ácido), **queimadura** (explosão) e **lentidão** (golpe gelado).
 
 ## Construção
 

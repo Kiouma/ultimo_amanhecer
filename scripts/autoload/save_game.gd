@@ -275,6 +275,7 @@ func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 		"positions": positions,
 		"creative": p.creative,
 		"inventory": p.inventory.slots,
+		"gold": p.inventory.gold,
 		"equipment": p.equipment.to_save(),
 		"exploration": (p.get_node(^"Exploration") as Exploration).to_save() if p.has_node(^"Exploration") else {},
 		"health": p.health.current,
@@ -307,6 +308,7 @@ func apply_character(p: Player) -> bool:
 			s.count = int(s.count)
 		p.inventory.slots[i] = s
 	p.inventory.changed.emit()
+	p.inventory.gold = maxi(int(data.get("gold", 0)), 0)
 	var prog := p.progression
 	var pd: Dictionary = data.get("progression", {})
 	for key: String in pd.get("levels", {}):

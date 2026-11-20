@@ -305,7 +305,12 @@ Cada passo termina jogável:
 2. ✅ **Auras (feito):** interface nova (1), eficiências separadas (3), Pacto de Sangue conversor liberado por ascendência (2). Pacto liberado pela Vanguarda e pelo Rompe-Ossos (7º nó de cada), custo próprio de 10% de vida.
 3. ✅ **Telas e controles (feito):** inventário menor e equipamentos separados (V), câmera no F1, Alt e mouse livre com hotbar e botões do minimapa clicáveis (5, 7). O círculo de magia em área no mouse livre fica para a etapa das habilidades (6).
 4. ✅ **HUD (feito):** esferas de vida (com escudo de energia e reserva) e mana, arco de stamina perto da mira (some quando cheio), números, opção de vida/mana em arcos "( )", ícones de buff (por enquanto as auras recebidas), engrenagem ao lado da hotbar com editor de posição/tamanho, salvo nas Configurações (8.2, 8.3). A barra da party (8.1) fica para a etapa 9.
-5. **Ouro, morte sem bag, buffs temporários e debuffs, fogueira "Descansado"** (13, 10, 4, 15).
+5. ✅ **Ouro, morte, buffs/debuffs e fogueira (feito)** (13, 10, 4, 15):
+   - **Ouro:** cai de cada abate (vida máxima do monstro ÷ 8, ± 20%, com o aumento de loot de quem matou), dividido igualmente entre os jogadores vivos a até 40 m. Aparece no inventário; salvo no personagem. Modo criativo tem "+1000 de ouro".
+   - **Morte:** nada cai no chão; perde 15% da XP rumo ao próximo nível e 15% do ouro; Fraqueza continua.
+   - **Buffs e debuffs temporários** (`data/effects`, nó `Effects` do jogador): duração, acúmulos, modificadores e dano por segundo. Debuffs prontos: **veneno** (acumula; o ácido do xamã aplica), **queimadura** (renova; a explosão do diabrete aplica), **sangramento** (dobra andando), **lentidão** (o golpe gelado do draugr agora é esse debuff) e **vulnerável** (+25% de dano recebido). Ícones na barra de buffs com os segundos restantes e os acúmulos; debuffs com borda vermelha.
+   - **Comida como buff:** frutas silvestres dão "Frutas silvestres" (3 de vida/s por 10 s, até 3 acúmulos).
+   - **Fogueira:** 10 s perto dá **Descansado** por 3 min (+1 de vida/s, +50% de regeneração de mana e stamina, +10% de velocidade), renovando enquanto ficar perto.
 6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5); debuffs e mecânicas (puxão, empurrão, stun, roubo de vida/mana, transferência de mana) nas habilidades (15).
 7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).
 8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops; magic find em grupo; monstros com debuffs (9, 13, 15).

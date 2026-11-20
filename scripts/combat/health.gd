@@ -206,7 +206,7 @@ func _taken_factor(source: Node, magic := false) -> float:
 
 ## Chamado pelo dono (Progression). Num cliente, avisa o servidor.
 func set_damage_taken_multiplier(value: float, spell := 1.0) -> void:
-	damage_taken_multiplier = clampf(value, 0.25, 1.0)
+	damage_taken_multiplier = clampf(value, 0.25, 3.0)
 	spell_taken_multiplier = clampf(spell, 0.25, 1.0)
 	if not multiplayer.is_server() and Network.is_online():
 		_request_taken_multiplier.rpc_id(1, damage_taken_multiplier, spell_taken_multiplier)
@@ -215,7 +215,7 @@ func set_damage_taken_multiplier(value: float, spell := 1.0) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func _request_taken_multiplier(value: float, spell: float) -> void:
 	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
-		damage_taken_multiplier = clampf(value, 0.25, 1.0)
+		damage_taken_multiplier = clampf(value, 0.25, 3.0)
 		spell_taken_multiplier = clampf(spell, 0.25, 1.0)
 
 

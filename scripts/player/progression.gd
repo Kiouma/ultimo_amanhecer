@@ -77,6 +77,8 @@ var last_spell := ""
 var _mods := {}
 ## Bônus de auras recebidos agora (o nó Auras calcula pela distância dos aliados).
 var _aura_mods := {}
+## Buffs/debuffs temporários ativos (nó Effects).
+var _effect_mods := {}
 ## Atributos vindos da árvore e dos itens (calculado no _rebuild).
 var _attr_bonus := {}
 var _recent := {}  # proficiência → [início da janela (s), XP na janela]
@@ -425,6 +427,15 @@ func apply_background(background_id: String) -> void:
 	changed.emit()
 
 
+## Buffs/debuffs temporários (o nó Effects chama quando mudam).
+func set_effect_mods(mods: Dictionary) -> void:
+	if mods == _effect_mods:
+		return
+	_effect_mods = mods
+	_rebuild()
+	changed.emit()
+
+
 ## Auras: bônus recebidos agora (o nó Auras chama quando mudam).
 func set_aura_mods(mods: Dictionary) -> void:
 	if mods == _aura_mods:
@@ -534,6 +545,7 @@ func _rebuild() -> void:
 		for node_id: String in asc_nodes:
 			sources.append(ascendancy_node(node_id).get("effects", {}))
 	sources.append(_aura_mods)
+	sources.append(_effect_mods)
 	for effects: Dictionary in sources:
 		for key: String in effects:
 			mods[key] = float(mods.get(key, 0.0)) + float(effects[key])

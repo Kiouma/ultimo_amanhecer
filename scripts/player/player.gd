@@ -59,9 +59,6 @@ var net_crouching := false
 var _crouch_on := false
 ## Correr no modo alternado (Shift liga/desliga; parar de andar ou acabar a stamina desliga).
 var _sprint_on := false
-## Frio do Congelado: fator de velocidade e tempo restante.
-var _chill_factor := 1.0
-var _chill_time := 0.0
 var net_sprinting := false
 var net_on_floor := true
 ## Segurando uma tocha acesa (luz visível para todos).
@@ -121,6 +118,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 ## Proficiências, nível e habilidades (criado no _ready, em todas as máquinas).
 var progression: Progression
 var auras: Auras
+var effects: StatusEffects
 ## Capacete, armadura, calça, botas, luvas, anéis e colar.
 var equipment: Equipment
 ## Roda de habilidades do HUD (Q segurado); o HUD preenche.
@@ -187,6 +185,9 @@ func _ready() -> void:
 	auras = Auras.new()
 	auras.name = "Auras"
 	add_child(auras)
+	effects = StatusEffects.new()
+	effects.name = "Effects"
+	add_child(effects)
 	equipment.changed.connect(_update_outfit)
 	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
 	model.set_held_item(net_held)
@@ -525,9 +526,8 @@ func _on_died(_source: Node) -> void:
 	EventBus.player_died.emit(self)
 	if not is_local():
 		return
-	# Regras de morte (GDD 7): a mochila vai para uma bag aqui; a hotbar (9 slots,
-	# o que está "equipado") fica com o jogador. Depois, Fraqueza e perda de XP.
-	WorldItems.drop_bag(_empty_backpack(), global_position, display_name())
+	# Regras de morte (PROXIMOS_PASSOS, seção 13): nada cai no chão; perde 15% da XP
+	# rumo ao próximo nível e 15% do ouro, e ganha Fraqueza.
 	death_penalty.on_died()
 	await get_tree().create_timer(respawn_delay, false).timeout
 	global_position = _spawn_point
@@ -553,25 +553,30 @@ func set_respawn_point(at: Vector3) -> void:
 	notify(tr("Você vai renascer nesta cama"))
 
 
-## Golpe gelado: lento por um tempo. Vem do servidor; vale na máquina do dono.
+## Golpe gelado: debuff Lentidão (factor 0,6 = 40% mais lento). Vem do servidor.
 func apply_chill(factor: float, duration: float) -> void:
+	StatusEffects.give(self, "slow", duration, clampf(1.0 - factor, 0.0, 0.8))
+
+
+## Ouro de um abate (vem do servidor, já dividido entre quem estava perto).
+func give_gold(amount: int) -> void:
 	if is_local():
-		_chill(factor, duration)
+		_receive_gold(amount)
 	elif Network.is_online():
-		_remote_chill.rpc_id(get_multiplayer_authority(), factor, duration)
+		_remote_gold.rpc_id(get_multiplayer_authority(), amount)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _remote_chill(factor: float, duration: float) -> void:
+func _remote_gold(amount: int) -> void:
 	if multiplayer.get_remote_sender_id() == 1:
-		_chill(factor, duration)
+		_receive_gold(clampi(amount, 0, 100000))
 
 
-func _chill(factor: float, duration: float) -> void:
-	if _chill_time <= 0.0:
-		notify(tr("Congelando: você está mais lento"))
-	_chill_factor = clampf(factor, 0.2, 1.0)
-	_chill_time = maxf(_chill_time, duration)
+func _receive_gold(amount: int) -> void:
+	if amount <= 0:
+		return
+	inventory.add_gold(amount)
+	notify(tr("+%d de ouro") % amount)
 
 
 ## Mostra um aviso curto no HUD (só faz sentido no jogador local).
@@ -638,11 +643,7 @@ func _wants_sprint(crouching: bool) -> bool:
 
 
 func _current_speed(crouching: bool) -> float:
-	if _chill_time > 0.0:
-		_chill_time -= get_physics_process_delta_time()
-		if _chill_time <= 0.0:
-			_chill_factor = 1.0
-	var bonus := progression.mult("move_speed") * _chill_factor
+	var bonus := progression.mult("move_speed")
 	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor() * bonus
 	if crouching:
 		return crouch_speed * factor

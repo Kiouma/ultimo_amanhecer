@@ -29,6 +29,8 @@ const CREATIVE_COUNT := 999
 signal changed
 ## Recebeu itens de fora (coletou, pegou do chão, recompensa): o HUD mostra "+1 Madeira".
 signal received(id: String, count: int)
+## Ouro mudou (valor novo e quanto mudou).
+signal gold_changed(amount: int, delta: int)
 
 const HOTBAR_SIZE := 9
 
@@ -39,6 +41,8 @@ const HOTBAR_SIZE := 9
 var slots: Array[Dictionary] = []
 ## Modo criativo (ver Player.creative): itens não se gastam nem se desgastam.
 var creative := false
+## Ouro carregado (moeda; sem peso). Cai de monstros, dividido entre quem está perto.
+var gold := 0
 
 
 func _ready() -> void:
@@ -342,3 +346,19 @@ func _receive(id: String, count: int, extra: Dictionary = {}) -> void:
 	if left > 0:
 		var player := get_parent() as Node3D
 		WorldItems.drop(id, left, player.global_position + Vector3.UP * 0.3, player, extra)
+
+
+# --- Ouro ---------------------------------------------------------------------------------
+
+func add_gold(amount: int) -> void:
+	if amount == 0:
+		return
+	gold = maxi(gold + amount, 0)
+	gold_changed.emit(gold, amount)
+
+
+## Perde uma fração do ouro (morte). Retorna quanto perdeu.
+func lose_gold_fraction(fraction: float) -> int:
+	var lost := int(floor(gold * clampf(fraction, 0.0, 1.0)))
+	add_gold(-lost)
+	return lost

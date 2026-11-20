@@ -1,3 +1,3 @@
 [
-  {"id":"berries","name":"Frutas silvestres","type":"consumable","weight":0.05,"stack":30,"regen":3,"regen_time":10}
+  {"id":"berries","name":"Frutas silvestres","type":"consumable","weight":0.05,"stack":30,"effect":"meal_berries"}
 ]

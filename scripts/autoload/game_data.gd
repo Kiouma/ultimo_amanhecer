@@ -8,7 +8,7 @@ extends Node
 
 const DATA_ROOT := "res://data"
 const CATEGORIES: Array[String] = [
-	"items", "recipes", "zombies", "spells", "proficiencies", "backgrounds", "nodes", "buildings", "passives", "ascendancies", "auras", "loot", "sets",
+	"items", "recipes", "zombies", "spells", "proficiencies", "backgrounds", "nodes", "buildings", "passives", "ascendancies", "auras", "effects", "loot", "sets",
 ]
 
 var _db: Dictionary = {}

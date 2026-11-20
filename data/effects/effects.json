@@ -1,0 +1,9 @@
+[
+  {"id":"rested","name":"Descansado","kind":"buff","color":"#f2b14a","duration":180,"max_stacks":1,"desc":"Descansou perto de uma fogueira: regenera tudo mais rápido e anda mais rápido.","mods":{"life_regen_add":1.0,"mana_regen":0.5,"stamina_regen":0.5,"move_speed":0.1}},
+  {"id":"meal_berries","name":"Frutas silvestres","kind":"buff","color":"#c2416b","duration":10,"max_stacks":3,"desc":"Regenera vida por alguns segundos.","mods":{"life_regen_add":3.0}},
+  {"id":"poison","name":"Veneno","kind":"debuff","color":"#6fbf3a","duration":6,"max_stacks":5,"dps":2.0,"desc":"Perde vida a cada segundo. Acumula.","mods":{}},
+  {"id":"burn","name":"Queimadura","kind":"debuff","color":"#ef6a22","duration":4,"max_stacks":1,"dps":5.0,"desc":"Perde vida a cada segundo. Não acumula: renova a duração.","mods":{}},
+  {"id":"bleed","name":"Sangramento","kind":"debuff","color":"#b3202a","duration":6,"max_stacks":3,"dps":1.5,"moving_mult":2.0,"desc":"Perde vida a cada segundo, o dobro andando. Acumula.","mods":{}},
+  {"id":"slow","name":"Lentidão","kind":"debuff","color":"#7fb6e8","duration":3,"max_stacks":1,"power":0.4,"desc":"Anda e ataca mais devagar.","mods":{"move_speed":-1.0,"attack_speed":-0.5}},
+  {"id":"vulnerable","name":"Vulnerável","kind":"debuff","color":"#a05ad6","duration":5,"max_stacks":1,"power":0.25,"desc":"Recebe mais dano.","mods":{"damage_taken":1.0}}
+]

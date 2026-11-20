@@ -486,6 +486,8 @@ func _explode() -> void:
 		var h := Health.find_in(body)
 		if h and not h.is_dead and d <= EXPLOSION_RADIUS:
 			h.take_damage(damage * (1.0 - 0.6 * d / EXPLOSION_RADIUS), self)
+			if body is Player:
+				StatusEffects.give(body, "burn")
 	for piece in Structures.pieces():
 		var d := piece.nearest_point(center).distance_to(center)
 		if d <= EXPLOSION_RADIUS:
@@ -538,6 +540,8 @@ func _far_from_players() -> bool:
 func _on_died(source: Node) -> void:
 	if multiplayer.is_server() and source is Player:
 		source.progression.send_kill_xp(maxf(health.max_health / 5.0, 5.0))
+	if multiplayer.is_server():
+		_share_gold(source)
 	# Explosivo morto antes de chegar perto também explode (pune quem luta colado).
 	if stats.get("explodes", false) and not _exploded and multiplayer.is_server():
 		_explode.call_deferred()
@@ -553,6 +557,26 @@ func _on_died(source: Node) -> void:
 
 ## Servidor: sorteia os "drops" do tipo (ex.: Pedra de refino, que só vem de inimigos).
 ## Quem matou com "aumento de loot" (itens) aumenta as chances e quantidades.
+## Ouro do abate: cerca de vida máxima ÷ 8 (± 20%), com o aumento de loot de quem
+## matou, dividido igualmente entre os jogadores vivos a até GOLD_SHARE_RADIUS.
+const GOLD_SHARE_RADIUS := 40.0
+
+
+func _share_gold(killer: Node) -> void:
+	var prog := Progression.of(killer)
+	var total := roundi(maxf(health.max_health / 8.0, 2.0) * randf_range(0.8, 1.2) * (1.0 + (prog.server_loot_bonus if prog else 0.0)))
+	var near: Array = []
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		var player := p as Player
+		if player and not player.health.is_dead and player.global_position.distance_to(global_position) <= GOLD_SHARE_RADIUS:
+			near.append(player)
+	if near.is_empty() or total <= 0:
+		return
+	var each := ceili(float(total) / near.size())
+	for player: Player in near:
+		player.give_gold(each)
+
+
 func _drop_loot(killer: Node = null) -> void:
 	var drops: Dictionary = stats.get("drops", {})
 	var prog := Progression.of(killer)

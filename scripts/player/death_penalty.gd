@@ -5,7 +5,8 @@ extends Node
 ## - Ao morrer: se a Fraqueza ainda estava ativa, sobe um nível (até max_level);
 ##   senão, começa no nível 1. A duração recomeça: base + extra por nível.
 ## - Cada nível: mais lento, menos dano causado, stamina recupera mais devagar.
-## - XP: perde xp_loss_fraction quando existir progressão (Fase 6, nó "Progression").
+## - XP: perde xp_loss_fraction da XP rumo ao próximo nível (não desce de nível).
+## - Ouro: perde gold_loss_fraction do ouro carregado (o banqueiro, no futuro, protege).
 ## Números provisórios; vão para as opções de dificuldade.
 ## Roda na máquina do dono do personagem (como Survival).
 
@@ -17,8 +18,9 @@ signal changed(level: int, time_left: float)
 @export var speed_penalty_per_level := 0.07
 @export var damage_penalty_per_level := 0.10
 @export var stamina_penalty_per_level := 0.15
-## Fração do XP perdida a cada morte (aplicada quando a progressão existir).
-@export var xp_loss_fraction := 0.10
+## Fração do XP e do ouro perdida a cada morte.
+@export var xp_loss_fraction := 0.15
+@export var gold_loss_fraction := 0.15
 
 var level := 0
 var time_left := 0.0
@@ -43,6 +45,11 @@ func on_died() -> void:
 	level = mini(level + 1, max_level) if is_active() else 1
 	time_left = base_duration + extra_duration_per_level * (level - 1)
 	_lose_xp()
+	var inventory := get_parent().get_node_or_null(^"Inventory") as Inventory
+	if inventory:
+		var lost := inventory.lose_gold_fraction(gold_loss_fraction)
+		if lost > 0 and get_parent().has_method(&"notify"):
+			get_parent().notify(tr("Perdeu %d de ouro") % lost)
 	changed.emit(level, time_left)
 
 

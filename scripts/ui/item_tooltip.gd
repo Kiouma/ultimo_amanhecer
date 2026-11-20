@@ -33,9 +33,9 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 	var power := Inventory.quality_multiplier(s) * Inventory.refine_multiplier(s) if data.has("durability") else 1.0
 	if float(data.get("heals", 0.0)) > 0.0:
 		lines.append(t("Recupera %d de vida") % roundi(float(data.heals)))
-	if float(data.get("regen", 0.0)) > 0.0:
-		var secs := float(data.get("regen_time", 10.0))
-		lines.append(t("Regenera %d de vida em %d s") % [roundi(float(data.regen) * secs), roundi(secs)])
+	if str(data.get("effect", "")) != "":
+		var fx := GameData.get_entry("effects", str(data.effect))
+		lines.append(t("%s (%d s): %s") % [fx.get("name", ""), int(fx.get("duration", 0)), ProgressionUI.bonus_text(fx.get("mods", {}))])
 	var category := str(data.get("category", ""))
 	if category != "":
 		lines.append(t("Categoria: %s") % t(str({"heavy": "Pesado", "light": "Leve", "magic": "Mágico"}.get(category, category))))

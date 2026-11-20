@@ -36,6 +36,9 @@ func bind(p: Player) -> void:
 	if not _built:
 		_build()
 	player.inventory.changed.connect(_refresh)
+	player.inventory.gold_changed.connect(func(_g: int, _d: int) -> void:
+		if visible:
+			_refresh())
 	player.craft_queue.changed.connect(_refresh_queue)
 	_refresh()
 
@@ -90,7 +93,7 @@ func _refresh() -> void:
 		slot.refresh()
 	var inv := player.inventory
 	var weight := inv.total_weight()
-	_weight_label.text = tr("Peso: %.1f / %.0f kg%s") % [weight, inv.max_weight, tr("  (sobrecarregado: lento)") if inv.is_overloaded() else ""]
+	_weight_label.text = tr("Ouro: %d   ·   Peso: %.1f / %.0f kg%s") % [inv.gold, weight, inv.max_weight, tr("  (sobrecarregado: lento)") if inv.is_overloaded() else ""]
 	_weight_label.add_theme_color_override("font_color", Color(1, 0.45, 0.35) if inv.is_overloaded() else Color(0.85, 0.85, 0.8))
 	_weight_bar.max_value = inv.max_weight
 	_weight_bar.value = minf(weight, inv.max_weight)
