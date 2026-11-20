@@ -206,7 +206,7 @@ Os sistemas abaixo criam pressão sem tornar o jogo cansativo. Todos são ajust�
 
 **Morte:**
 
-- Os itens do inventário caem em uma **bag** no local da morte, exceto os itens equipados e as 9 hotkeys principais.
+- Os itens do inventário caem em uma **bag** no local da morte, exceto os itens equipados e as 9 hotkeys principais. *(Vai mudar: sem bag; perde 15% da XP e 15% do ouro. Ver [PROXIMOS_PASSOS.md](PROXIMOS_PASSOS.md), seção 13.)*
 - O personagem perde parte do XP.
 - Mortes consecutivas aplicam um **debuff temporário** que escala a cada morte e some com o tempo.
 

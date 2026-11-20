@@ -15,6 +15,9 @@ var _prompt: Label
 var _inventory_ui: InventoryUI
 var _progression_ui: ProgressionUI
 var _aura_ui: AuraUI
+## Telas cheias (inventário, bancada, personagem, auras, mapa, criativo, baú, pausa):
+## com alguma aberta, o minimapa some.
+var _screens: Array[Control] = []
 var _health: Health
 var _map_ui: MapUI
 var _creative_ui: CreativeUI
@@ -182,6 +185,7 @@ func _bind_inventory(player: Player) -> void:
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.bind(player)
+	_screens = [_inventory_ui, crafting_ui, _progression_ui, _aura_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
 
 
 ## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
@@ -276,10 +280,31 @@ func _bind_minimap(player: Player) -> void:
 	_minimap.custom_minimum_size = Vector2.ONE * MINIMAP_SIZE
 	_minimap.player = player
 	_minimap.world = world
-	_minimap.zoom = 1.1
+	_minimap.zoom = clampf(Settings.minimap_zoom, MapView.MIN_ZOOM, MapView.MAX_ZOOM)
 	_minimap.show_labels = false
 	_minimap.round_dots = 0.8
-	_minimap_frame.add_child(_minimap)
+	var minimap_box := VBoxContainer.new()
+	minimap_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	minimap_box.add_theme_constant_override("separation", 3)
+	_minimap_frame.add_child(minimap_box)
+	minimap_box.add_child(_minimap)
+	# Zoom do minimapa: botões +/- embaixo dele (clicáveis com o mouse livre).
+	var zoom_row := HBoxContainer.new()
+	zoom_row.alignment = BoxContainer.ALIGNMENT_END
+	zoom_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	minimap_box.add_child(zoom_row)
+	for z: Array in [["−", 1.0 / 1.25], ["+", 1.25]]:
+		var b := Button.new()
+		b.text = z[0]
+		b.custom_minimum_size = Vector2(26, 22)
+		b.add_theme_font_size_override("font_size", 13)
+		b.focus_mode = Control.FOCUS_NONE
+		b.mouse_filter = Control.MOUSE_FILTER_STOP
+		var factor: float = z[1]
+		b.pressed.connect(func() -> void:
+			_minimap.zoom_at(_minimap.size * 0.5, factor)
+			Settings.remember("minimap_zoom", _minimap.zoom))
+		zoom_row.add_child(b)
 	_minimap_frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
 	var exploration := player.get_node_or_null(^"Exploration") as Exploration
 	if exploration:
@@ -293,7 +318,7 @@ func _apply_minimap_setting() -> void:
 		return
 	_minimap_frame.visible = Settings.show_minimap
 	if _clock:
-		_clock.offset_top = (MINIMAP_SIZE + 30.0) if Settings.show_minimap else 20.0
+		_clock.offset_top = (MINIMAP_SIZE + 58.0) if Settings.show_minimap else 20.0
 		_clock.offset_bottom = _clock.offset_top + 50.0
 
 
@@ -585,8 +610,9 @@ func _process(delta: float) -> void:
 		_update_boss_bar()
 	_minimap_timer -= delta
 	if _minimap:
-		# Telas abertas (mouse solto: inventário, bancada, mapa, pausa) escondem o minimapa.
-		_minimap_frame.visible = Settings.show_minimap and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		# Telas cheias abertas escondem o minimapa; só o mouse solto não (dá para clicar
+		# nos botões de zoom dele).
+		_minimap_frame.visible = Settings.show_minimap and not _screens.any(func(s: Control) -> bool: return is_instance_valid(s) and s.visible)
 	if _minimap and _minimap_frame.visible and _minimap_timer <= 0.0:
 		_minimap_timer = 0.15
 		_minimap.queue_redraw()

@@ -126,13 +126,12 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 - `Inventory.HOTBAR_SIZE` e a ideia de hotbar como parte do inventário; `weapon_holder.gd` (a mão passa a segurar a arma do slot fixo, não o item da hotbar).
 - `Progression.spells`, a roda do Q, os grimórios atuais e `MAX_SPELL_LEVEL` (5 → 20).
 - `inventory_ui.gd` e `equipment_panel.gd` (separar em duas telas), `ui_tabs.gd` (aba nova "Equipamentos (V)"), `project.godot` (V e F1).
-- Regra de morte: hoje a hotbar fica com o jogador e a mochila cai na bag. Com a hotbar só de habilidades, decidir o que fica protegido (ver abaixo).
+- Regra de morte: a bag deixa de existir (ver "Morte" na seção 13).
 - Dados novos: habilidades por classe (`data/skills/` voltando com outro formato: classe, nível de desbloqueio, custo em ouro por nível, recurso de chefe a cada 5).
 
 **A decidir:**
 
 - Quais são as habilidades de cada classe e em que níveis elas abrem.
-- Na morte, o que não cai na bag (antes eram as 9 da hotbar). Sugestão: equipamento vestido, arma e ferramentas nunca caem.
 - As teclas Q e F (habilidade rápida e segunda habilidade hoje) saem ou ganham outra função?
 
 ---
@@ -257,7 +256,13 @@ Ver [GDD 8.4](GDD.md): 6 slots (3 prefixos, 3 sufixos) nos equipamentos fabricá
 
 ## 13. Sistemas novos que as decisões pedem
 
-- **Ouro:** moeda nova. Cai de inimigos (escala com o nível) e paga desbloqueio e evolução de habilidades. No futuro: compra e venda com NPCs (peixes, itens). Precisa de: contador no inventário, salvar no personagem, cair na morte ou não (a decidir), entrar no trade.
+- **Ouro:** moeda nova. Cai de inimigos (escala com o nível) e paga desbloqueio e evolução de habilidades. **Dividido igualmente entre os aliados na mesma área** quando cai. No futuro: compra e venda com NPCs (peixes, itens) e um **NPC banqueiro** para guardar o ouro (o que está no banco não se perde ao morrer). Precisa de: contador no inventário, salvar no personagem, entrar no trade.
+- **Morte (decidido):**
+  - **Não cai mais nada:** acaba a bag no chão. Inventário, equipamento, arma e ferramentas ficam com o personagem.
+  - Em troca, o personagem **perde 15% da XP do personagem** e **15% do ouro** que carrega.
+  - O XP perdido é o acumulado rumo ao próximo nível (não desce de nível), como hoje.
+  - **O que muda:** `death_penalty.gd` (perda de 15% em vez de 10%, mais o ouro), `player.gd` (`_empty_backpack` e `WorldItems.drop_bag` deixam de ser chamados), `death_bag.gd` e o salvamento das bags no mundo (`save_game.gd`) saem; saves antigos com bags no chão continuam abrindo.
+  - **A decidir:** a **Fraqueza** (debuff temporário que piora com mortes seguidas) continua junto? Sugestão: sim, mais curta.
 - **Drops de chefe com % de chance:** grimórios exclusivos, recursos de evolução de habilidade (níveis 5, 10, 15, 20) e materiais de upgrade de ferramenta. Precisa de tabela de drops por chefe em `data/` e de chefes fixos no mundo.
 - **Buffs temporários:** ver seção 10.
 - **NPCs vendedores** (futuro): onde vendem peixes e outros itens.
@@ -272,7 +277,7 @@ Cada passo termina jogável:
 2. **Auras:** interface nova (1), eficiências separadas (3), Pacto de Sangue conversor liberado por ascendência (2).
 3. **Telas e controles:** inventário e equipamentos separados (V), câmera no F1, Alt e mouse livre (5, 7).
 4. **HUD:** esferas, arco de stamina, números, ícones de buff, engrenagem e layout (8.2, 8.3).
-5. **Ouro, buffs temporários e fogueira "Descansado"** (13, 10, 4).
+5. **Ouro, morte sem bag, buffs temporários e fogueira "Descansado"** (13, 10, 4).
 6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5).
 7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).
 8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops (9, 13).

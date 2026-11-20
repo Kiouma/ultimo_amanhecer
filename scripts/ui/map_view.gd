@@ -19,9 +19,16 @@ var round_dots := 1.0
 var _need_more := false
 
 
+func _init() -> void:
+	# No _init (e não no _ready): quem cria pode trocar antes de pôr na árvore. O mapa do M
+	# usa STOP para receber roda, arrasto e cliques; no _ready isso era desfeito.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
 func _ready() -> void:
 	clip_contents = true
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Blocos do terreno e névoa ampliados sem serrilhado.
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func exploration() -> Exploration:

@@ -40,6 +40,14 @@ func _ready() -> void:
 		_view.follow = true
 		_view.queue_redraw())
 	top.add_child(center_button)
+	for z: Array in [["−", 1.0 / ZOOM_STEP], ["+", ZOOM_STEP]]:
+		var zoom_button := Button.new()
+		zoom_button.text = z[0]
+		zoom_button.custom_minimum_size = Vector2(32, 0)
+		zoom_button.focus_mode = Control.FOCUS_NONE
+		var factor: float = z[1]
+		zoom_button.pressed.connect(func() -> void: _view.zoom_at(_view.size * 0.5, factor))
+		top.add_child(zoom_button)
 	_view = MapView.new()
 	_view.custom_minimum_size = MAP_SIZE
 	_view.zoom = 1.2
@@ -48,7 +56,7 @@ func _ready() -> void:
 	box.add_child(_view)
 	UITabs.attach(self, "map", box)
 	var hint := Label.new()
-	hint.text = "Roda: zoom · arrastar: mover · botão direito: marcar / desmarcar · [M] fechar"
+	hint.text = "Roda ou +/−: zoom · arrastar: mover · botão direito: marcar / desmarcar · [M] fechar"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.modulate = Color(0.7, 0.7, 0.7)
 	box.add_child(hint)

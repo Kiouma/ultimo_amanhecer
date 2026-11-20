@@ -29,6 +29,8 @@ var sprint_toggle := false
 var crouch_toggle := true
 ## Minimapa no canto superior direito.
 var show_minimap := true
+## Zoom do minimapa (pixels por metro; botões +/- embaixo dele).
+var minimap_zoom := 1.1
 ## Contador de FPS no canto superior esquerdo.
 var show_fps := false
 ## Sincronia vertical (limita o FPS à taxa do monitor, evita "rasgos" na imagem).
@@ -45,6 +47,7 @@ func _ready() -> void:
 	crouch_toggle = bool(cfg.get_value("controls", "crouch_toggle", crouch_toggle))
 	show_minimap = bool(cfg.get_value("interface", "show_minimap", show_minimap))
 	show_fps = bool(cfg.get_value("interface", "show_fps", show_fps))
+	minimap_zoom = float(cfg.get_value("interface", "minimap_zoom", minimap_zoom))
 	vsync = bool(cfg.get_value("video", "vsync", vsync))
 	_apply_vsync()
 	volume = float(cfg.get_value("audio", "volume", volume))
@@ -69,6 +72,16 @@ func set_value(key: String, value: Variant) -> void:
 	save()
 
 
+## Guarda um valor sem avisar (changed refaz vários textos do HUD; não precisa para
+## coisas como o zoom do minimapa).
+func remember(key: String, value: Variant) -> void:
+	set(key, value)
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value("interface", key, value)
+	cfg.save(PATH)
+
+
 func save() -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(PATH)
@@ -79,6 +92,7 @@ func save() -> void:
 	cfg.set_value("audio", "volume", volume)
 	cfg.set_value("interface", "show_minimap", show_minimap)
 	cfg.set_value("interface", "show_fps", show_fps)
+	cfg.set_value("interface", "minimap_zoom", minimap_zoom)
 	cfg.set_value("video", "vsync", vsync)
 	cfg.save(PATH)
 	changed.emit()
