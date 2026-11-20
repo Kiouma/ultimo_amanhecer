@@ -1,6 +1,6 @@
 [
-  {"id":"warrior","name":"Guerreiro","desc":"Melee 4 · conjunto inicial: Armadura de pedra (pedra, madeira e presas de ogro)","bonus":{"melee":3}},
-  {"id":"archer","name":"Arqueiro","desc":"Arquearia 4 · conjunto inicial: Traje de patrulheiro (couro de goblins)","bonus":{"firearms":3}},
-  {"id":"mage","name":"Mago","desc":"Magia 4 e conhece Dardo de fogo · conjunto inicial: Manto do aprendiz (tecido e pó arcano)","bonus":{"magic":3},"spells":["firebolt"]},
-  {"id":"brawler","name":"Pugilista","desc":"Pugilismo 4 · luta de mãos vazias · conjunto inicial: Trajes de pugilista (tendões de carniçais)","bonus":{"unarmed":3}}
+  {"id":"warrior","name":"Guerreiro","tree_start":"start_warrior","desc":"Começa à esquerda da árvore passiva (corpo a corpo, vida, defesa) · conjunto inicial: Armadura de pedra (pedra, madeira e presas de ogro)"},
+  {"id":"archer","name":"Arqueiro","tree_start":"start_archer","desc":"Começa embaixo da árvore passiva (arco, arremesso, velocidade) · conjunto inicial: Traje de patrulheiro (couro de goblins)"},
+  {"id":"mage","name":"Mago","tree_start":"start_mage","desc":"Começa à direita da árvore passiva (magia, mana, auras) e conhece Dardo de fogo · conjunto inicial: Manto do aprendiz (tecido e pó arcano)","spells":["firebolt"]},
+  {"id":"brawler","name":"Pugilista","tree_start":"start_brawler","desc":"Começa no topo da árvore passiva (mãos vazias, ritmo, regeneração) · conjunto inicial: Trajes de pugilista (tendões de carniçais)"}
 ]

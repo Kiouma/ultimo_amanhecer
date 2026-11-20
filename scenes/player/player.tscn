@@ -42,6 +42,9 @@ properties/7/replication_mode = 2
 properties/8/path = NodePath(".:net_outfit")
 properties/8/spawn = true
 properties/8/replication_mode = 2
+properties/9/path = NodePath(".:net_auras")
+properties/9/spawn = true
+properties/9/replication_mode = 2
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 2

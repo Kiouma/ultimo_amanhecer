@@ -18,6 +18,8 @@ const CHANNEL_REGEN := 0.25
 const OUT_OF_ACTION := 3.0
 
 var current: float
+## Fração reservada por auras (0 a 0,9): o recurso não passa de cap().
+var reserved := 0.0
 var channeling := false
 var _since_spent := 0.0
 var _since_action := 0.0
@@ -32,11 +34,11 @@ func _process(delta: float) -> void:
 	_since_action += delta
 	if channeling:
 		_since_action = 0.0
-		if current < max_value:
-			current = minf(current + regen_per_second * CHANNEL_REGEN * delta, max_value)
+		if current < cap():
+			current = minf(current + regen_per_second * CHANNEL_REGEN * delta, cap())
 			changed.emit(current, max_value)
-	elif _since_spent >= regen_delay and current < max_value:
-		current = minf(current + regen_rate() * delta, max_value)
+	elif _since_spent >= regen_delay and current < cap():
+		current = minf(current + regen_rate() * delta, cap())
 		changed.emit(current, max_value)
 
 
@@ -76,10 +78,21 @@ func drain(amount: float) -> void:
 
 ## Devolve (ex.: canalização cancelada devolve o custo já pago).
 func restore(amount: float) -> void:
-	current = minf(current + amount, max_value)
+	current = minf(current + amount, cap())
+	changed.emit(current, max_value)
+
+
+## Máximo utilizável (sem a parte reservada por auras).
+func cap() -> float:
+	return max_value * (1.0 - reserved)
+
+
+func set_reserved(fraction: float) -> void:
+	reserved = clampf(fraction, 0.0, 0.9)
+	current = minf(current, cap())
 	changed.emit(current, max_value)
 
 
 func refill() -> void:
-	current = max_value
+	current = cap()
 	changed.emit(current, max_value)

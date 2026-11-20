@@ -55,40 +55,35 @@ O jogo não tem atributos. O personagem evolui pelo uso: cada proficiência sobe
 
 **Como está implementado (Fase 6):** XP para subir do nível N = 10·N^1,4. Acima de 60 XP por minuto numa proficiência, o ganho cai para 20% (anti-abuso). Cada nível dá um bônus pequeno (ex.: Melee +0,5% de dano e −0,4% de stamina por nível; Resistência −0,25% de dano recebido por nível, até −25% no 100; Atletismo +0,2% de velocidade). Pontaria (nome no jogo de "Armas de fogo") cobre arcos e armas de fogo. Metade da XP de proficiência vai para o nível do personagem; abates dão vida máxima do inimigo ÷ 5 (andarilho 20, Colosso 500). A morte tira 10% da XP acumulada rumo aos próximos níveis (sem perder nível). **Maestria de arma:** cada tipo (arco, arma de fogo, armas brancas, feitiços) sobe com o uso, até +10% de dano. Painel na tecla **P**.
 
-### 4.2 Trilhas de habilidades
+### 4.2 Árvore passiva, ascendência e auras
 
-O jogador gasta pontos de habilidade livremente em qualquer trilha, mas cada habilidade exige um nível mínimo da proficiência ligada a ela (por exemplo, golpe giratório pede Melee nível 5). Especializar-se dá bônus fortes; misturar dá flexibilidade.
+O sistema de classes segue a ideia dos ARPGs de árvore passiva grande: **a classe inicial só define o ponto de partida na árvore**; a especialização de verdade vem dos nós escolhidos e, no nível 30, da **ascendência**. As antigas trilhas de habilidades (Atirador, Guerreiro, Arcano, Sobrevivente) saíram; os efeitos delas viraram nós da árvore.
 
-**Implementado:** 20 habilidades passivas em 4 trilhas (Atirador, Guerreiro, Arcano, Sobrevivente), de 1 ou 2 pontos, com nível mínimo de proficiência. Dados em `data/skills/skills.json`; os efeitos são modificadores (ex.: `ranged.draw_time`, `melee.damage`, `max_mana_add`). Ganha-se 1 ponto por nível do personagem.
+#### 4.2.1 Árvore passiva (implementado)
 
-**Trilha do Atirador (arcos e armas de fogo)**
+- **393 nós:** 340 pequenos, 41 notáveis, 8 pedras angulares e 4 inícios de classe. Dados em `data/passives/passive_tree.json`, **gerado** por `tools/gen_passive_tree.py` (nomes e efeitos ficam em tabelas no script; posições e ligações são calculadas). Para mudar a árvore, edite o script e rode `py tools/gen_passive_tree.py`.
+- **Formato:** radial. No centro, o notável *Último Amanhecer* ligado às 4 classes por raios de 3 nós. Anel interno com os inícios: **Guerreiro** à esquerda (corpo a corpo, vida, defesa), **Pugilista** em cima (mãos vazias, ritmo, regeneração), **Mago** à direita (magia, mana, auras) e **Arqueiro** embaixo (arco, arremesso, velocidade). Cada classe tem 3 ramos com 2 clusters (anel de 6 nós pequenos com um notável no meio) e termina em notável (laterais) ou pedra angular (meio). Entre as classes ficam 4 setores híbridos (Monge, Arcano-arqueiro, Caçador, Bárbaro), ligados aos vizinhos por pontes.
+- **Tipos de nó:** pequeno (+3 a 5% de algo), notável (bônus maior e combinado, ~3×) e **pedra angular** (efeito forte com um custo, ex.: *Fúria Imprudente*: +40% de dano corpo a corpo e +15% de dano recebido).
+- **Regras:** 1 ponto por nível do personagem (nível máximo 100 → 99 pontos para 389 nós, então é preciso escolher). Só se aloca um nó ligado a outro já alocado (ou ao início da sua classe). O início de outra classe não pode ser alocado nem atravessado; o anel interno e as ligações entre os primeiros nós dos ramos permitem chegar a qualquer setor por fora. **Botão direito devolve** o ponto, se nenhum outro nó depender dele; "Devolver tudo" limpa a árvore. Por enquanto devolver é grátis (no futuro pode custar um recurso).
+- **Efeitos** são os mesmos modificadores do resto do jogo (`melee.damage`, `max_mana_add`...) mais os novos: `max_health_add` (vida máxima), `life_regen_add` (vida/s, sempre ligada), `mana_regen` e `stamina_regen` (multiplicam a regeneração), `aura_effect`, `aura_radius` e `reservation_efficiency` (auras).
+- **Tela:** Personagem (P) → aba *Árvore passiva*. Arrastar move, roda dá zoom, a busca destaca nós pelo nome ou efeito, passar o mouse mostra o nó, o efeito e se dá para alocar.
 
-- **Arcos** são a arma de longe do dia a dia: baratos, silenciosos, flechas fabricadas com pena + graveto e às vezes recuperáveis.
-- **Armas de fogo** (pistolas, rifles, escopetas, armas de precisão) são equipamento de **alto custo**, para momentos de extrema necessidade: hordas e chefes.
-- Habilidades: puxada mais rápida, tiro na cabeça com bônus de dano, recuperar flechas, flechas especiais, recarga rápida, munição reaproveitada (chance de não gastar bala), silenciador, tiro penetrante.
-- Ponto forte: dano à distância e controle de zumbis perigosos.
-- Ponto fraco: flechas têm queda e pedem prática; balas são caras e o tiro atrai hordas.
+#### 4.2.2 Ascendência (implementado)
 
-**Trilha do Guerreiro (melee)**
+- Escolhida a partir do **nível 30**, uma das 2 da classe, **definitiva**. Dá um bônus fixo na hora e **pontos de ascendência** nos níveis 30, 45, 60 e 75 (4 no total) para desbloquear 4 dos 6 nós dela (livres, sem ordem).
+- Guerreiro: **Vanguarda** (tanque e auras de grupo) ou **Carniceiro** (ofensiva com armas). Arqueiro: **Sentinela** (precisão) ou **Andarilho** (mobilidade, arremesso, coleta). Mago: **Arcanista** (poder mágico) ou **Oráculo** (suporte: auras mais fortes, maiores e mais baratas). Pugilista: **Asceta** (socos rápidos e regeneração) ou **Rompe-Ossos** (força bruta).
+- Dados em `data/ascendancies/ascendancies.json`. Tela: Personagem (P) → aba *Ascendência*.
 
-- Facas, machados, marretas, lanças, bastões e espadas improvisadas.
-- Habilidades: golpe giratório, defesa/aparar, golpe pesado carregado, execução silenciosa, resistência a dano.
-- Ponto forte: silencioso, sem munição, ótimo em corredores e portas.
-- Ponto fraco: exige proximidade e gasta stamina.
+#### 4.2.3 Auras (implementado)
 
-**Trilha do Arcano (magia)**
+- **Bônus em área** para o jogador e os aliados próximos (raio base 12 m), pagos com uma **reserva de mana** (ou de vida, no *Pacto de Sangue*) enquanto ficam ligadas. A parte reservada não pode ser usada: com 40% de mana reservada, a barra só enche até 60%.
+- **Tela (tecla C):** quadrados com as auras; clique liga/desliga. Passar o mouse mostra embaixo o **nível da aura como título**, a descrição e o efeito atual, e a **barra de reserva** com a % no topo: o jogador escolhe de **1% a 35%** e o efeito cresce na mesma proporção (os efeitos do JSON são por 1% reservado). A soma reservada de cada recurso vai até 90%.
+- **Nível 1 a 20:** sobe com o tempo ligada (90·N^1,3 segundos para o próximo); cada nível dá +4% de efeito.
+- **Não acumula:** a mesma aura de dois jogadores não soma, vale a mais forte. Auras diferentes somam.
+- **9 auras:** Brasa da Guerra (dano corpo a corpo e desarmado), Olhar do Caçador (dano à distância e arremesso), Maré Arcana (dano mágico e regeneração de mana), Égide de Pedra (menos dano recebido, nível 5), Fôlego Coletivo (stamina, nível 8), Vento Ligeiro (velocidade de movimento e ataque, nível 10), Fonte Vital (regeneração de vida e cura, nível 12), Véu Antimágico (resistência a magia, nível 15) e Pacto de Sangue (todo dano; reserva vida, nível 20). Dados em `data/auras/auras.json`.
+- **Rede:** o dono publica as auras ligadas em `Player.net_auras` ("id,força,raio;..."), replicado pelo MultiplayerSynchronizer; cada máquina calcula só o que o próprio jogador recebe (com limites de força e raio). Quem tem aura ligada aparece com um anel colorido nos pés. O HUD lista as auras recebidas ("Auras: Brasa da Guerra (Fulano)").
 
-- Escolas de magia: **Fogo** (dano em área), **Gelo** (controle e lentidão), **Raio** (cadeia entre inimigos), **Vida/Espírito** (cura, escudos, aliados), **Terra** (muros e armadilhas mágicas).
-- Habilidades: aumentar mana, reduzir custo de feitiços, combinar elementos, invocações temporárias e especialização em suporte (Curandeiro): buffs de grupo, cura em área, escudos e auras.
-- Ponto forte: poder em área e utilidade (cura, iluminação, construção rápida).
-- Ponto fraco: depende de mana, que regenera devagar e exige itens raros para crescer.
-
-**Trilha do Sobrevivente (utilidade)**
-
-- Coleta, culinária, medicina, furtividade, arrombamento, mecânica.
-- Habilidades: rendimento maior ao coletar, comida que dá bônus, kits médicos melhores, menos ruído ao andar.
-
-### 4.2.1 Equipamento (implementado)
+### 4.2.4 Equipamento (implementado)
 
 Oito slots: capacete, armadura, calça, botas, luvas, 2 anéis e colar. Cada peça dá **proteção** (armadura A reduz o dano em A/(A+100)) e um bônus próprio. Quatro **conjuntos** de 7 peças (5 de armadura + anel + colar), um por estilo: Caçador (atirador), Guerreiro (melee/tanque, mais proteção e um pouco mais lento), Arcano (mana e dano mágico) e Sombra (silêncio, ataque surpresa e arremesso). 2, 4 e 6 peças do mesmo conjunto liberam bônus extras. Peças gastam durabilidade ao levar golpes e quebradas não protegem até o conserto. Dados em `data/items/gear.json` e `data/sets/sets.json`.
 
@@ -96,18 +91,18 @@ Oito slots: capacete, armadura, calça, botas, luvas, 2 anéis e colar. Cada pe�
 
 | Build | Combinação | Estilo de jogo |
 | --- | --- | --- |
-| **Franco-atirador** | Armas de fogo + Furtividade | Mata de longe, usa a base como torre |
-| **Tanque de machado** | Melee + Resistência | Entra na horda e segura portas |
-| **Mago de campo** | Magia | Controla áreas, usa fogo e gelo |
-| **Cavaleiro arcano** | Melee + Magia | Melee com armas encantadas |
-| **Engenheiro** | Crafting e construção + Armas de fogo | Armadilhas, torretas e rifles |
-| **Curandeiro** | Resistência + Magia (Vida) | Sustenta o grupo (útil no co-op) |
+| **Franco-atirador** | Arqueiro → Sentinela; setor Caçador e pedra *Tiro Certeiro* | Mata de longe, tiros na cabeça |
+| **Tanque de machado** | Guerreiro → Vanguarda; clusters de vida e defesa | Entra no meio dos monstros e segura portas |
+| **Mago de campo** | Mago → Arcanista; pedra *Pacto Arcano* | Feitiços fortes, usa fogo e gelo |
+| **Cavaleiro arcano** | Guerreiro indo pelo centro até o setor do Mago | Corpo a corpo com magia de apoio |
+| **Monge** | Pugilista → Asceta; setor Monge e aura Brasa da Guerra | Socos rápidos, regeneração e aura |
+| **Curandeiro / suporte** | Mago → Oráculo; *Coração das Auras* e várias auras ligadas | Sustenta o grupo com auras (útil no co-op) |
 
 ### 4.4 Criação de personagem
 
 O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus iniciais) e começa com todas as proficiências no nível 1. Exemplos de passado: Ex-militar (Armas de fogo mais alta, começa com arco e flechas extras; arma de fogo só achando ou fabricando), Lenhador (Melee mais alta, começa com machado), Estudante de ocultismo (Magia mais alta, começa com um grimório simples), Enfermeiro (Resistência mais alta, kit médico).
 
-**Implementado:** o passado é escolhido no menu inicial e dá +3 níveis na proficiência dele e itens extras: Sobrevivente comum (nada), Ex-militar (Pontaria; flechas e bandagens), Lenhador (Melee; picareta e madeira), Estudante de ocultismo (Magia; Grimório da vida), Enfermeiro (Resistência; kit médico e bandagens) e Carpinteiro (Crafting e construção; madeira e pedra). Aparência ainda não é escolhível. Dados em `data/backgrounds/backgrounds.json`.
+**Implementado:** a **classe** (Guerreiro, Arqueiro, Mago, Pugilista) é escolhida no menu inicial e define **só o início na árvore passiva** (seção 4.2); não dá mais níveis de proficiência. Cada classe tem um conjunto inicial fabricável e o Mago já conhece *Dardo de fogo* (sem isso não teria o que conjurar). Aparência ainda não é escolhível. Dados em `data/backgrounds/backgrounds.json` (campo `tree_start`).
 
 ## 5. Sistema de combate
 
@@ -248,6 +243,18 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 
 **Durabilidade zero não destrói o item:** ele fica 0/máx no inventário, sem poder ser usado, até ser reparado (vale também para a tocha).
 
+### 8.4 Próximo: afixos e Upgrading Machine (planejado)
+
+Ainda não implementado; custos e valores serão definidos depois.
+
+- **Slots de atributos adicionais:** todo equipamento fabricável terá **6 slots de afixo**: **3 prefixos** e **3 sufixos** (no estilo dos ARPGs: prefixos tendem a dano e vida/mana; sufixos a velocidades, resistências e utilidade). Os slots nascem **bloqueados**.
+- **Ao fabricar**, o item já vem com **1 a 6 slots desbloqueados** (sorteio; a proficiência de Crafting e a qualidade podem puxar para cima). Cada slot desbloqueado recebe um afixo sorteado do grupo dele (prefixo ou sufixo), com valor dentro de uma faixa.
+- **Upgrading Machine:** nova estação de fabricação, específica para melhorar equipamento. Três categorias:
+  1. **Slots:** desbloquear os slots fechados (e sortear o afixo do slot aberto).
+  2. **Refino:** o refino +1 a +12 que hoje fica na bancada passa para cá.
+  3. **Qualidade:** aumentar a qualidade (Q1 a Q5) de um item já fabricado.
+- **A definir:** recursos gastos por ação, chance de falha (se houver), se é possível re-sortear um afixo, faixas de valores por nível do item, como os afixos aparecem na dica do item e no painel de status. Os afixos devem usar as mesmas chaves de modificador da árvore passiva (`melee.damage`, `max_health_add`, `aura_effect`...), somadas pelo Equipment.
+
 **Refino (+1 a +12):** feito na bancada com **Pedra de refino**, que cai **exclusivamente de inimigos** (campo `drops` em zombies.json; andarilho 15%, bruto 60%...). Cada nível dá +5% de dano e de eficiência de coleta (+12 = +60%); na tocha, mais alcance de luz. Custo por nível: +1 a +3 = 1 pedra, +4 a +6 = 2, +7 a +9 = 3, +10 a +12 = 4 (30 no total). Sempre dá certo (sem chance de falha, por enquanto). Multiplica com a qualidade: Q5 +12 ≈ 2,4× o dano de Q1 +0.
 
 ## 9. Construção e base
@@ -321,7 +328,7 @@ Chuva, neblina, tempestade e frio extremo. O clima afeta visão, barulho (chuva 
 
 ## 12. Progressão
 
-- **Nível do personagem:** vem de experiência por matar, coletar, construir e fabricar. Cada nível dá pontos de habilidade; as proficiências (seção 4.1) sobem pelo uso, sem pontos a distribuir.
+- **Nível do personagem (1 a 100):** vem de experiência por matar, coletar, construir e fabricar. Cada nível dá 1 ponto na árvore passiva; no 30 libera a ascendência (seção 4.2). As proficiências (seção 4.1) sobem pelo uso, sem pontos a distribuir.
 - **Maestria de arma:** usar um tipo de arma melhora aquele tipo (mais dano, menos recuo, menos stamina).
 - **Descoberta de receitas e feitiços:** parte da progressão vem de achar livros, plantas e grimórios no mundo.
 - **Evolução da base:** desbloqueia materiais, estações e defesas melhores.
@@ -352,7 +359,8 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Feitiço rápido | Q / F (configurável) |
 | Câmera 1ª / 3ª pessoa | V |
 | Modo construção | B (roda = peça, T = material, R = girar, clique = construir, botão direito = desmontar) |
-| Personagem (proficiências e habilidades) | P |
+| Personagem (árvore passiva, ascendência, proficiências) | P |
+| Auras | C |
 | Mapa | M |
 
 Suporte a controle (gamepad) planejado para depois.
@@ -492,6 +500,14 @@ Respostas do dono do projeto às perguntas da versão 0.1. Elas guiam o resto do
 7. Armas à distância: o **arco** é a arma inicial e do dia a dia; flecha = pena + graveto. **Armas de fogo** são equipamento de alto custo, para momentos de extrema necessidade (hordas, chefes).
 
 ## 22. Próximos passos
+
+**Atual:**
+
+1. **Afixos e Upgrading Machine** (seção 8.4): 6 slots (3 prefixos, 3 sufixos) nos equipamentos fabricáveis, de 1 a 6 desbloqueados ao fabricar; estação Upgrading Machine com as categorias slots, refino e qualidade. Definir custos e valores.
+2. **Balancear a árvore passiva e as auras** jogando: valores dos nós, custo de devolver pontos, curva de XP até o nível 30 (ascendência).
+3. Traduzir os textos novos (árvore, ascendência, auras) em `data/i18n`.
+
+**Do início do projeto (concluídos):**
 
 1. Revisar este documento e responder às perguntas em aberto (seção 21).
 2. Escolher a engine e instalar.

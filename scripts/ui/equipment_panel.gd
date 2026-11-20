@@ -151,8 +151,9 @@ static func primary_stats(p: Player) -> Array:
 	var mana := p.mana
 	var out: Array = []
 	out.append([tr_static(TranslationServer.translate("Vida")), "%d" % ceili(p.health.max_health)])
-	out.append([tr_static(TranslationServer.translate("Regeneração de vida")), "%.2f/s" % p.survival.regen_per_second,
-		tr_static(TranslationServer.translate("Só com fome e sede acima de %d%%")) % int(p.survival.well_fed_threshold)])
+	var life_regen := maxf(prog.add("life_regen_add"), 0.0)
+	out.append([tr_static(TranslationServer.translate("Regeneração de vida")), "%.2f/s" % (p.survival.regen_per_second + life_regen),
+		tr_static(TranslationServer.translate("%.2f/s com fome e sede acima de %d%%; %.2f/s sempre (árvore, ascendência e auras)")) % [p.survival.regen_per_second, int(p.survival.well_fed_threshold), life_regen]])
 	out.append([tr_static(TranslationServer.translate("Stamina")), "%d" % roundi(stamina.max_value)])
 	out.append([tr_static(TranslationServer.translate("Regeneração de stamina")), "%.1f/s" % stamina.regen_per_second])
 	out.append([tr_static(TranslationServer.translate("Mana")), "%d" % roundi(mana.max_value)])
@@ -170,6 +171,7 @@ static func primary_stats(p: Player) -> Array:
 	out.append([tr_static(TranslationServer.translate("Dano à distância")), "%+d%%" % roundi((prog.mult("ranged.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Dano mágico")), "%+d%%" % roundi((prog.mult("magic.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Dano de arremesso")), "%+d%%" % roundi((prog.mult("thrown.damage") - 1.0) * 100.0)])
+	out.append([tr_static(TranslationServer.translate("Dano desarmado")), "%+d%%" % roundi((prog.mult("unarmed.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Custo de mana")), "%+d%%" % roundi((prog.mult("magic.mana") - 1.0) * 100.0)])
 	return out
 
@@ -192,6 +194,9 @@ static func secondary_stats(p: Player) -> Array:
 		[tr_static(TranslationServer.translate("Recuperar flechas")), pct.call("ranged.recover_chance")],
 		[tr_static(TranslationServer.translate("Força da canalização")), pct.call("magic.channel")],
 		[tr_static(TranslationServer.translate("Carga do golpe")), pct.call("melee.channel")],
+		[tr_static(TranslationServer.translate("Efeito das auras")), pct.call("aura_effect")],
+		[tr_static(TranslationServer.translate("Raio das auras")), pct.call("aura_radius")],
+		[tr_static(TranslationServer.translate("Eficiência de reserva das auras")), "%+d%%" % roundi(clampf(prog.add("reservation_efficiency"), 0.0, 0.6) * 100.0), tr_static(TranslationServer.translate("Reserva menos mana/vida pelo mesmo efeito. Máximo 60%."))],
 	]
 
 

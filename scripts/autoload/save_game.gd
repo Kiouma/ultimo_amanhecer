@@ -281,8 +281,10 @@ func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 		"health": p.health.current, "hunger": p.survival.hunger, "thirst": p.survival.thirst,
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
 		"progression": {"levels": prog.levels, "xp": prog.xp, "char_level": prog.char_level, "char_xp": prog.char_xp,
-			"skill_points": prog.skill_points, "skills": prog.skills, "mastery_uses": prog.mastery_uses,
+			"class": prog.char_class, "passives": prog.passives.keys(), "ascendancy": prog.ascendancy,
+			"asc_nodes": prog.asc_nodes.keys(), "mastery_uses": prog.mastery_uses,
 			"spells": prog.spells, "last_spell": prog.last_spell},
+		"auras": p.auras.to_save() if p.auras else {},
 	}
 
 
@@ -314,8 +316,20 @@ func apply_character(p: Player) -> bool:
 		prog.xp[key] = float(pd.xp[key])
 	prog.char_level = int(pd.get("char_level", 1))
 	prog.char_xp = float(pd.get("char_xp", 0.0))
-	prog.skill_points = int(pd.get("skill_points", 0))
-	prog.skills = pd.get("skills", {})
+	# Classe: a salva ou a vocação do personagem. Saves antigos (trilhas de habilidades)
+	# não têm "passives": os pontos voltam todos livres para a árvore.
+	prog.char_class = str(pd.get("class", data.get("background", "")))
+	prog.passives = {}
+	for id: Variant in pd.get("passives", []):
+		prog.passives[str(id)] = true
+	prog.validate_passives()
+	prog.ascendancy = str(pd.get("ascendancy", ""))
+	if GameData.get_entry("ascendancies", prog.ascendancy).is_empty():
+		prog.ascendancy = ""
+	prog.asc_nodes = {}
+	for id: Variant in pd.get("asc_nodes", []):
+		if not prog.ascendancy_node(str(id)).is_empty():
+			prog.asc_nodes[str(id)] = true
 	for key: String in pd.get("spells", {}):
 		prog.spells[key] = int(pd.spells[key])
 	prog.last_spell = str(pd.get("last_spell", prog.last_spell))
@@ -323,6 +337,8 @@ func apply_character(p: Player) -> bool:
 		prog.mastery_uses[key] = int(pd.mastery_uses[key])
 	prog._rebuild()
 	prog.changed.emit()
+	if p.auras:
+		p.auras.from_save(data.get("auras", {}))
 	if p.has_node(^"Exploration") and data.has("exploration"):
 		(p.get_node(^"Exploration") as Exploration).from_save(data.exploration)
 	p.equipment.from_save(data.get("equipment", {}))
@@ -346,8 +362,8 @@ func apply_character(p: Player) -> bool:
 				p.has_bed = true
 	# Vida: o servidor manda; pede um ajuste depois que tudo estiver de pé.
 	var hp := float(data.get("health", 100.0))
-	if hp < p.health.max_health and hp > 0.0:
-		p.health.take_damage.call_deferred(p.health.max_health - hp, p)
+	if hp < p.health.cap() and hp > 0.0:
+		p.health.take_damage.call_deferred(p.health.cap() - hp, p)
 	return true
 
 

@@ -1,0 +1,74 @@
+[
+  {"id":"vanguard","name":"Vanguarda","class":"warrior","desc":"A linha de frente que não cai: aguenta golpes e fortalece o grupo com auras.","effects":{"damage_taken":-0.08,"max_health_add":30},
+   "nodes":[
+    {"id":"vanguard_1","name":"Baluarte","effects":{"damage_taken":-0.06,"max_health_add":20}},
+    {"id":"vanguard_2","name":"Estandarte de Guerra","effects":{"aura_effect":0.2,"aura_radius":0.3}},
+    {"id":"vanguard_3","name":"Pulmões de Aço","effects":{"max_stamina_add":40,"stamina_regen":0.25}},
+    {"id":"vanguard_4","name":"Carne Teimosa","effects":{"life_regen_add":2.0}},
+    {"id":"vanguard_5","name":"Escudo do Grupo","effects":{"reservation_efficiency":0.15,"aura_effect":0.1}},
+    {"id":"vanguard_6","name":"Inquebrável","effects":{"spell_resist":0.12,"damage_taken":-0.04}}
+  ]},
+  {"id":"butcher","name":"Carniceiro","class":"warrior","desc":"Ofensiva pura com armas: golpes rápidos, carregados e sem cansaço.","effects":{"melee.damage":0.2,"melee.attack_time":-0.08},
+   "nodes":[
+    {"id":"butcher_1","name":"Frenesi","effects":{"attack_speed":0.1}},
+    {"id":"butcher_2","name":"Golpe Devastador","effects":{"melee.channel":0.5,"melee.damage":0.1}},
+    {"id":"butcher_3","name":"Lâmina Faminta","effects":{"melee.damage":0.2,"damage_taken":0.05}},
+    {"id":"butcher_4","name":"Sem Cansaço","effects":{"melee.stamina_cost":-0.3}},
+    {"id":"butcher_5","name":"Instinto Assassino","effects":{"sneak_damage":0.4}},
+    {"id":"butcher_6","name":"Sede de Batalha","effects":{"life_regen_add":1.5,"melee.damage":0.08}}
+  ]},
+  {"id":"sentinel","name":"Sentinela","class":"archer","desc":"Precisão absoluta com o arco: tiros na cabeça e flechas que voltam.","effects":{"ranged.damage":0.2,"headshot_damage":0.3},
+   "nodes":[
+    {"id":"sentinel_1","name":"Tiro Perfurante","effects":{"ranged.damage":0.15}},
+    {"id":"sentinel_2","name":"Mira Firme","effects":{"ranged.draw_time":-0.15}},
+    {"id":"sentinel_3","name":"Flecha Veloz","effects":{"ranged.arrow_speed":0.3,"headshot_damage":0.2}},
+    {"id":"sentinel_4","name":"Recuperação Total","effects":{"ranged.recover_chance":0.5}},
+    {"id":"sentinel_5","name":"Olhar do Grupo","effects":{"aura_effect":0.15,"aura_radius":0.25}},
+    {"id":"sentinel_6","name":"Paciência","effects":{"sneak_damage":0.35,"noise":-0.15}}
+  ]},
+  {"id":"wanderer","name":"Andarilho","class":"archer","desc":"Mobilidade e sobrevivência: anda rápido, carrega muito e vive do mundo.","effects":{"move_speed":0.08,"thrown.damage":0.2},
+   "nodes":[
+    {"id":"wanderer_1","name":"Vento nos Pés","effects":{"move_speed":0.05,"sprint_stamina":-0.2}},
+    {"id":"wanderer_2","name":"Facas Gêmeas","effects":{"thrown.damage":0.2,"thrown.attack_time":-0.1}},
+    {"id":"wanderer_3","name":"Mochileiro","effects":{"carry_weight_add":25}},
+    {"id":"wanderer_4","name":"Coletor","effects":{"gather_yield":0.2,"loot_bonus":0.1}},
+    {"id":"wanderer_5","name":"Esquiva Rápida","effects":{"damage_taken":-0.06,"attack_speed":0.05}},
+    {"id":"wanderer_6","name":"Sobrevivente Nato","effects":{"food":0.2,"heal":0.2}}
+  ]},
+  {"id":"arcanist","name":"Arcanista","class":"mage","desc":"Poder mágico bruto: feitiços mais fortes, rápidos e baratos.","effects":{"magic.damage":0.2,"max_mana_add":30},
+   "nodes":[
+    {"id":"arcanist_1","name":"Conjuração Fluida","effects":{"magic.cast_time":-0.15,"magic.cooldown":-0.1}},
+    {"id":"arcanist_2","name":"Poder Bruto","effects":{"magic.damage":0.18}},
+    {"id":"arcanist_3","name":"Canal Profundo","effects":{"magic.channel":0.4}},
+    {"id":"arcanist_4","name":"Mana Infinita","effects":{"mana_regen":0.4,"magic.mana":-0.1}},
+    {"id":"arcanist_5","name":"Barreira Arcana","effects":{"spell_resist":0.15,"max_health_add":20}},
+    {"id":"arcanist_6","name":"Sobrecarga","effects":{"magic.damage":0.15,"magic.mana":0.1}}
+  ]},
+  {"id":"oracle","name":"Oráculo","class":"mage","desc":"Suporte do grupo: auras mais fortes, maiores e mais baratas.","effects":{"aura_effect":0.2,"reservation_efficiency":0.1},
+   "nodes":[
+    {"id":"oracle_1","name":"Voz que Ecoa","effects":{"aura_radius":0.5}},
+    {"id":"oracle_2","name":"Bênção Ampliada","effects":{"aura_effect":0.2}},
+    {"id":"oracle_3","name":"Disciplina Mental","effects":{"reservation_efficiency":0.15}},
+    {"id":"oracle_4","name":"Fonte Partilhada","effects":{"mana_regen":0.3,"max_mana_add":30}},
+    {"id":"oracle_5","name":"Mãos que Curam","effects":{"heal":0.3,"life_regen_add":1.0}},
+    {"id":"oracle_6","name":"Proteção Divina","effects":{"damage_taken":-0.05,"spell_resist":0.1}}
+  ]},
+  {"id":"ascetic","name":"Asceta","class":"brawler","desc":"Corpo e espírito em equilíbrio: socos rápidos, regeneração e auras.","effects":{"unarmed.damage":0.25,"life_regen_add":1.0},
+   "nodes":[
+    {"id":"ascetic_1","name":"Mil Punhos","effects":{"attack_speed":0.1,"unarmed.attack_time":-0.1}},
+    {"id":"ascetic_2","name":"Corpo Templo","effects":{"max_health_add":30,"damage_taken":-0.04}},
+    {"id":"ascetic_3","name":"Respiração","effects":{"stamina_regen":0.3,"unarmed.stamina_cost":-0.2}},
+    {"id":"ascetic_4","name":"Chi","effects":{"aura_effect":0.15,"mana_regen":0.2}},
+    {"id":"ascetic_5","name":"Passo do Vento","effects":{"move_speed":0.06}},
+    {"id":"ascetic_6","name":"Toque Vital","effects":{"life_regen_add":2.0}}
+  ]},
+  {"id":"bonebreaker","name":"Rompe-Ossos","class":"brawler","desc":"Força bruta de mãos vazias: socos que derrubam e um corpo que aguenta.","effects":{"unarmed.damage":0.3,"sneak_damage":0.2},
+   "nodes":[
+    {"id":"bonebreaker_1","name":"Soco Esmagador","effects":{"unarmed.damage":0.2}},
+    {"id":"bonebreaker_2","name":"Pele de Couro","effects":{"damage_taken":-0.06}},
+    {"id":"bonebreaker_3","name":"Fúria Contida","effects":{"attack_speed":0.08}},
+    {"id":"bonebreaker_4","name":"Brutamontes","effects":{"max_health_add":40,"carry_weight_add":15}},
+    {"id":"bonebreaker_5","name":"Emboscador","effects":{"sneak_damage":0.4,"noise":-0.1}},
+    {"id":"bonebreaker_6","name":"Recuperação Feroz","effects":{"stamina_regen":0.25,"max_stamina_add":25}}
+  ]}
+]

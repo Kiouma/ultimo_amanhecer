@@ -201,7 +201,7 @@ func use_selected() -> void:
 		return
 	var prog := user.progression
 	var heals := float(data.get("heals", 0.0)) * prog.mult("heal")
-	var can_heal := heals > 0.0 and user.health.current < user.health.max_health
+	var can_heal := heals > 0.0 and user.health.current < user.health.cap()
 	var fed := user.survival.consume(float(data.get("food", 0.0)) * prog.mult("food"), float(data.get("water", 0.0)) * prog.mult("food"))
 	if not can_heal and not fed:
 		return  # nada a ganhar: não desperdiça

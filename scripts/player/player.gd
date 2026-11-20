@@ -73,6 +73,10 @@ var net_torch := false:
 
 var _torch_light: OmniLight3D
 
+## Auras ligadas pelo dono ("id,força,raio;..."), replicadas: aliados perto recebem o
+## bônus (ver Auras).
+var net_auras := ""
+
 ## Peças de traje vestidas (nomes separados por vírgula), replicadas: todos veem a roupa.
 var net_outfit := "":
 	set(value):
@@ -102,6 +106,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var craft_queue: CraftQueue = $CraftQueue
 ## Proficiências, nível e habilidades (criado no _ready, em todas as máquinas).
 var progression: Progression
+var auras: Auras
 ## Capacete, armadura, calça, botas, luvas, anéis e colar.
 var equipment: Equipment
 ## Roda de habilidades do HUD (Q segurado); o HUD preenche.
@@ -165,6 +170,9 @@ func _ready() -> void:
 	progression.name = "Progression"
 	add_child(progression)
 	progression.leveled.connect(notify)
+	auras = Auras.new()
+	auras.name = "Auras"
+	add_child(auras)
 	equipment.changed.connect(_update_outfit)
 	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
@@ -381,7 +389,7 @@ func _give_starter_kit() -> void:
 	inventory.changed.emit()
 
 
-## Passado escolhido no menu: proficiência inicial e itens extras.
+## Classe escolhida no menu: início da árvore passiva e itens extras.
 func _apply_background(background_id: String) -> void:
 	var data := GameData.get_entry("backgrounds", background_id)
 	if data.is_empty():

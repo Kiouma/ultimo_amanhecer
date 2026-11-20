@@ -3,8 +3,13 @@ extends Node
 ## Progressão do personagem (GDD 4.1 e 12), no jogador (nó "Progression").
 ## - Proficiências (data/proficiencies): sobem pelo uso, nível 1 a 100. Cada nível dá
 ##   os "effects" do JSON (fração por nível; chaves terminadas em "_add" somam).
-## - Nível do personagem: XP de abates, coleta, construção, fabricação (e um pouco de
-##   toda XP de proficiência). Cada nível dá 1 ponto de habilidade (trilhas, GDD 4.2).
+## - Nível do personagem (1 a 100): XP de abates, coleta, construção, fabricação (e um
+##   pouco de toda XP de proficiência). Cada nível dá 1 ponto passivo (GDD 4.2).
+## - Árvore passiva (data/passives): a classe só define o nó de início; aloca-se um nó
+##   ligado a outro já alocado. Botão direito devolve o ponto (se não desligar outros).
+## - Ascendência (data/ascendancies): no nível 30 escolhe-se uma das 2 da classe; dá um
+##   bônus fixo e pontos de ascendência (níveis 30, 45, 60 e 75) para os nós dela.
+## - Auras (nó Auras): os bônus recebidos de auras próximas entram como modificadores.
 ## - Maestria de arma: usar um tipo de arma (arco, melee, feitiço, arremesso) dá
 ##   até +10% de dano com ele.
 ## Todos os bônus viram modificadores por chave ("melee.damage", "move_speed"...), que
@@ -18,6 +23,10 @@ signal leveled(text: String)
 signal hit_confirmed(surprise: bool)
 
 const MAX_LEVEL := 100
+const MAX_CHAR_LEVEL := 100
+## Nível em que a ascendência é escolhida e níveis que dão pontos de ascendência.
+const ASCENDANCY_LEVEL := 30
+const ASCENDANCY_POINT_LEVELS := [30, 45, 60, 75]
 const MAX_MASTERY := 10
 ## XP por minuto de cada proficiência acima da qual o ganho cai para SOFT_CAP_FACTOR
 ## (evita subir pulando em loop, GDD 4.1).
@@ -30,9 +39,17 @@ var levels := {}   # proficiência → nível
 var xp := {}       # proficiência → XP rumo ao próximo nível
 var char_level := 1
 var char_xp := 0.0
-var skill_points := 0
-## Habilidades aprendidas (trilhas, GDD 4.2): id → true.
-var skills := {}
+## Classe (id de data/backgrounds): define o nó de início da árvore passiva.
+var char_class := ""
+## Nós da árvore passiva alocados: id → true (o nó de início não entra).
+var passives := {}
+## Ascendência escolhida ("" = nenhuma) e nós dela desbloqueados (id → true).
+var ascendancy := ""
+var asc_nodes := {}
+## Pontos passivos livres: 1 por nível acima do 1, menos os nós alocados.
+var skill_points: int:
+	get:
+		return maxi(char_level - 1 - passives.size(), 0)
 ## Usos por tipo de arma ("bow", "melee", "spell", "thrown").
 var mastery_uses := {}
 ## Habilidades mágicas aprendidas (grimórios): id → nível (1 a MAX_SPELL_LEVEL).
@@ -41,6 +58,8 @@ var spells := {}
 var last_spell := ""
 
 var _mods := {}
+## Bônus de auras recebidos agora (o nó Auras calcula pela distância dos aliados).
+var _aura_mods := {}
 var _recent := {}  # proficiência → [início da janela (s), XP na janela]
 
 
@@ -136,18 +155,27 @@ func gain(prof: String, amount: float) -> void:
 	changed.emit()
 
 
-## XP do personagem (abates, horda...). Cada nível dá 1 ponto de habilidade.
+## XP do personagem (abates, horda...). Cada nível dá 1 ponto passivo.
 func gain_character(amount: float, emit := true) -> void:
-	if amount <= 0.0 or not is_multiplayer_authority():
+	if amount <= 0.0 or not is_multiplayer_authority() or char_level >= MAX_CHAR_LEVEL:
 		return
 	char_xp += amount
-	while char_xp >= char_xp_to_next(char_level):
+	while char_level < MAX_CHAR_LEVEL and char_xp >= char_xp_to_next(char_level):
 		char_xp -= char_xp_to_next(char_level)
-		char_level += 1
-		skill_points += 1
-		leveled.emit(tr("Nível %d! +1 ponto de habilidade (P)") % char_level)
+		_on_level_up()
+	if char_level >= MAX_CHAR_LEVEL:
+		char_xp = 0.0
 	if emit:
 		changed.emit()
+
+
+func _on_level_up() -> void:
+	char_level += 1
+	leveled.emit(tr("Nível %d! +1 ponto passivo (P)") % char_level)
+	if char_level == ASCENDANCY_LEVEL:
+		leveled.emit(tr("Ascendência liberada! Escolha a sua em Personagem (P)"))
+	elif char_level in ASCENDANCY_POINT_LEVELS:
+		leveled.emit(tr("+1 ponto de ascendência (P)"))
 
 
 func use_weapon(weapon_type: String) -> void:
@@ -160,48 +188,172 @@ func use_weapon(weapon_type: String) -> void:
 		changed.emit()
 
 
-# --- Habilidades (trilhas, GDD 4.2) ------------------------------------------------
+# --- Árvore passiva (GDD 4.2) --------------------------------------------------------
 
-const TRAIL_NAMES := {"shooter": "Arqueiro", "warrior": "Guerreiro", "arcane": "Arcano", "survivor": "Sobrevivente", "brawler": "Pugilista"}
-
-
-## Por que não dá para aprender ("" = dá).
-func learn_block_reason(skill_id: String) -> String:
-	var data := GameData.get_entry("skills", skill_id)
-	if data.is_empty():
-		return tr("Habilidade desconhecida")
-	if skills.has(skill_id):
-		return tr("Já aprendida")
-	var req: Dictionary = data.get("requires", {})
-	for prof: String in req:
-		if get_level(prof) < int(req[prof]):
-			return tr("Precisa de %s nível %d") % [GameData.get_entry("proficiencies", prof).get("name", prof), int(req[prof])]
-	if skill_points < int(data.get("cost", 1)):
-		return tr("Faltam pontos")
+## Nó de início da classe (o de data/backgrounds; classe desconhecida: o da primeira).
+func start_node() -> String:
+	var start := str(GameData.get_entry("backgrounds", char_class).get("tree_start", ""))
+	if start != "" and not PassiveTree.node(start).is_empty():
+		return start
+	for id: String in GameData.get_all("backgrounds"):
+		start = str(GameData.get_entry("backgrounds", id).get("tree_start", ""))
+		if start != "":
+			return start
 	return ""
 
 
-func learn(skill_id: String) -> bool:
-	if learn_block_reason(skill_id) != "":
+func is_allocated(id: String) -> bool:
+	return passives.has(id) or id == start_node()
+
+
+## Por que não dá para alocar ("" = dá).
+func allocate_block_reason(id: String) -> String:
+	var data := PassiveTree.node(id)
+	if data.is_empty():
+		return tr("Nó desconhecido")
+	if is_allocated(id):
+		return tr("Já alocado")
+	if str(data.get("kind", "")) == "start":
+		return tr("Início de outra classe")
+	if skill_points <= 0:
+		return tr("Sem pontos passivos")
+	for other: String in PassiveTree.neighbors(id):
+		if is_allocated(other):
+			return ""
+	return tr("Precisa estar ligado a um nó alocado")
+
+
+func allocate(id: String) -> bool:
+	if allocate_block_reason(id) != "":
 		return false
-	skill_points -= int(GameData.get_entry("skills", skill_id).get("cost", 1))
-	skills[skill_id] = true
+	passives[id] = true
 	_rebuild()
-	leveled.emit(tr("Aprendeu: %s") % GameData.get_entry("skills", skill_id).get("name", skill_id))
 	changed.emit()
 	return true
 
 
-## Passado (GDD 4.4): níveis iniciais mais altos. Os itens o Player entrega.
+## Por que não dá para devolver ("" = dá): não pode deixar nós soltos da árvore.
+func refund_block_reason(id: String) -> String:
+	if not passives.has(id):
+		return tr("Não alocado")
+	var rest := passives.duplicate()
+	rest.erase(id)
+	if PassiveTree.connected_from(start_node(), rest).size() - 1 < rest.size():
+		return tr("Outros nós dependem deste")
+	return ""
+
+
+func refund(id: String) -> bool:
+	if refund_block_reason(id) != "":
+		return false
+	passives.erase(id)
+	_rebuild()
+	changed.emit()
+	return true
+
+
+## Devolve todos os pontos passivos.
+func reset_passives() -> void:
+	passives.clear()
+	_rebuild()
+	changed.emit()
+
+
+## Tira nós que não existem mais ou ficaram soltos (dados mudaram, save antigo).
+func validate_passives() -> void:
+	var valid := {}
+	for id: String in passives:
+		var data := PassiveTree.node(id)
+		if not data.is_empty() and str(data.get("kind", "")) != "start":
+			valid[id] = true
+	var connected := PassiveTree.connected_from(start_node(), valid)
+	passives = {}
+	for id: String in valid:
+		if connected.has(id):
+			passives[id] = true
+	if passives.size() > maxi(char_level - 1, 0):
+		passives.clear()  # mais nós que pontos (save inconsistente): devolve tudo
+
+
+# --- Ascendência ----------------------------------------------------------------------
+
+## Ascendências da classe deste personagem.
+func ascendancy_options() -> Array:
+	var out: Array = []
+	for id: String in GameData.get_all("ascendancies"):
+		if str(GameData.get_entry("ascendancies", id).get("class", "")) == char_class:
+			out.append(id)
+	return out
+
+
+func ascendancy_points_total() -> int:
+	var total := 0
+	for level: int in ASCENDANCY_POINT_LEVELS:
+		if char_level >= level:
+			total += 1
+	return total
+
+
+func ascendancy_points() -> int:
+	return maxi(ascendancy_points_total() - asc_nodes.size(), 0) if ascendancy != "" else 0
+
+
+func choose_block_reason(asc_id: String) -> String:
+	if ascendancy != "":
+		return tr("Ascendência já escolhida")
+	if char_level < ASCENDANCY_LEVEL:
+		return tr("Disponível no nível %d") % ASCENDANCY_LEVEL
+	if asc_id not in ascendancy_options():
+		return tr("Não é da sua classe")
+	return ""
+
+
+func choose_ascendancy(asc_id: String) -> bool:
+	if choose_block_reason(asc_id) != "":
+		return false
+	ascendancy = asc_id
+	asc_nodes.clear()
+	_rebuild()
+	leveled.emit(tr("Ascendência: %s") % GameData.get_entry("ascendancies", asc_id).get("name", asc_id))
+	changed.emit()
+	return true
+
+
+## Nó da ascendência escolhida ({} se não for dela).
+func ascendancy_node(node_id: String) -> Dictionary:
+	for n: Dictionary in GameData.get_entry("ascendancies", ascendancy).get("nodes", []):
+		if str(n.get("id", "")) == node_id:
+			return n
+	return {}
+
+
+func unlock_asc_node(node_id: String) -> bool:
+	if ascendancy_node(node_id).is_empty() or asc_nodes.has(node_id) or ascendancy_points() <= 0:
+		return false
+	asc_nodes[node_id] = true
+	_rebuild()
+	changed.emit()
+	return true
+
+
+# --- Classe ---------------------------------------------------------------------------
+
+## Classe escolhida no menu: define só o início da árvore passiva. O Mago já conhece a
+## habilidade inicial (sem ela não teria o que conjurar). Os itens o Player entrega.
 func apply_background(background_id: String) -> void:
-	var bonus: Dictionary = GameData.get_entry("backgrounds", background_id).get("bonus", {})
-	for prof: String in bonus:
-		if levels.has(prof):
-			levels[prof] = clampi(get_level(prof) + int(bonus[prof]), 1, MAX_LEVEL)
-	# Vocação que já sabe magia (Mago): habilidades iniciais.
+	char_class = background_id
 	for spell: String in GameData.get_entry("backgrounds", background_id).get("spells", []):
 		learn_spell(spell)
 		last_spell = spell
+	_rebuild()
+	changed.emit()
+
+
+## Auras: bônus recebidos agora (o nó Auras chama quando mudam).
+func set_aura_mods(mods: Dictionary) -> void:
+	if mods == _aura_mods:
+		return
+	_aura_mods = mods
 	_rebuild()
 	changed.emit()
 
@@ -298,8 +450,15 @@ func _rebuild() -> void:
 		var effects: Dictionary = GameData.get_entry("proficiencies", prof).get("effects", {})
 		for key: String in effects:
 			mods[key] = float(mods.get(key, 0.0)) + float(effects[key]) * (get_level(prof) - 1)
-	for skill_id: String in skills:
-		var effects: Dictionary = GameData.get_entry("skills", skill_id).get("effects", {})
+	var sources: Array = []  # dicionários de efeitos que somam
+	for id: String in passives:
+		sources.append(PassiveTree.node(id).get("effects", {}))
+	if ascendancy != "":
+		sources.append(GameData.get_entry("ascendancies", ascendancy).get("effects", {}))
+		for node_id: String in asc_nodes:
+			sources.append(ascendancy_node(node_id).get("effects", {}))
+	sources.append(_aura_mods)
+	for effects: Dictionary in sources:
 		for key: String in effects:
 			mods[key] = float(mods.get(key, 0.0)) + float(effects[key])
 	# Equipamento vestido (peças e conjuntos).
@@ -317,12 +476,15 @@ func _apply_to_player() -> void:
 	var player := get_parent()
 	if player == null:
 		return
+	var auras := player.get_node_or_null(^"Auras") as Auras
 	var mana: StatPool = player.get_node_or_null(^"Mana")
 	if mana:
 		if not has_meta(&"base_mana"):
 			set_meta(&"base_mana", mana.max_value)
-		mana.max_value = float(get_meta(&"base_mana")) + add("max_mana_add")
-		mana.changed.emit(mana.current, mana.max_value)
+			set_meta(&"base_mana_regen", mana.regen_per_second)
+		mana.max_value = maxf(float(get_meta(&"base_mana")) + add("max_mana_add"), 1.0)
+		mana.regen_per_second = float(get_meta(&"base_mana_regen")) * mult("mana_regen")
+		mana.set_reserved(auras.reserved_fraction("mana") if auras else 0.0)
 	var stamina: StatPool = player.get_node_or_null(^"Stamina")
 	if stamina:
 		if not has_meta(&"base_stamina"):
@@ -336,6 +498,12 @@ func _apply_to_player() -> void:
 	var health := Health.find_in(player)
 	if health and is_multiplayer_authority():
 		health.set_damage_taken_multiplier(mult("damage_taken"), 1.0 - spell_resist(player))
+		if not has_meta(&"base_health"):
+			set_meta(&"base_health", health.max_health)
+		var vitals := Vector2(float(get_meta(&"base_health")) + add("max_health_add"), auras.reserved_fraction("life") if auras else 0.0)
+		if vitals != _sent_vitals:  # evita um RPC a cada recálculo
+			_sent_vitals = vitals
+			health.set_owner_vitals(vitals.x, vitals.y)
 	# Aumento de loot: os drops são sorteados no servidor, que precisa saber o bônus.
 	if is_multiplayer_authority():
 		var loot := clampf(add("loot_bonus"), 0.0, 2.0)
@@ -347,6 +515,8 @@ func _apply_to_player() -> void:
 
 ## Servidor: aumento de loot do dono deste personagem (ver _drop_loot do zumbi).
 var server_loot_bonus := 0.0
+## Última vida máxima / reserva enviada ao Health.
+var _sent_vitals := Vector2(-1, -1)
 
 
 @rpc("any_peer", "call_remote", "reliable")

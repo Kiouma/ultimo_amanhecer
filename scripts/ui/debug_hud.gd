@@ -14,6 +14,8 @@ var _hotbar_slots: Array[InventorySlotUI] = []
 var _prompt: Label
 var _inventory_ui: InventoryUI
 var _progression_ui: ProgressionUI
+var _aura_ui: AuraUI
+var _health: Health
 var _map_ui: MapUI
 var _creative_ui: CreativeUI
 var _weakness_label: Label
@@ -59,6 +61,7 @@ func _on_player_spawned(player: Node) -> void:
 	if not player.is_multiplayer_authority():
 		return
 	var health := Health.find_in(player)
+	_health = health
 	if health and not health.changed.is_connected(_on_health_changed):
 		health.changed.connect(_on_health_changed)
 		_on_health_changed(health.current, health.max_health)
@@ -84,7 +87,9 @@ func _on_player_spawned(player: Node) -> void:
 			_inventory_ui._refresh()
 			_inventory_ui._equipment.refresh()
 		if _progression_ui and _progression_ui.visible:
-			_progression_ui._refresh())
+			_progression_ui._refresh()
+		if _aura_ui and _aura_ui.visible:
+			_aura_ui._refresh())
 	_bind_notifications(player)
 	var channel := ChannelBar.new()
 	channel.player = player
@@ -157,6 +162,10 @@ func _bind_inventory(player: Player) -> void:
 	_progression_ui = ProgressionUI.new()
 	add_child(_progression_ui)
 	_progression_ui.bind(player)
+
+	_aura_ui = AuraUI.new()
+	add_child(_aura_ui)
+	_aura_ui.bind(player)
 
 	_map_ui = MapUI.new()
 	add_child(_map_ui)
@@ -539,7 +548,7 @@ func _build_clock() -> void:
 
 ## Troca de tela pelas abas (Inventário / Personagem / Mapa).
 func open_panel(which: String) -> void:
-	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "map": _map_ui, "creative": _creative_ui}
+	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "auras": _aura_ui, "map": _map_ui, "creative": _creative_ui}
 	var target: Control = panels.get(which)
 	if target == null:
 		return
@@ -652,5 +661,7 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	health_bar.max_value = maximum
 	health_bar.value = current
 	health_label.text = tr("Vida %d / %d") % [ceili(current), ceili(maximum)]
+	if _health and _health.reserved > 0.0:
+		health_label.text += "  " + tr("(%d reservada)") % roundi(maximum * _health.reserved)
 	if current > 0.0:
 		death_label.visible = false

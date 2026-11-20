@@ -16,14 +16,14 @@ Ao entrar num mundo aparece uma **tela de carregamento** (barra de progresso, et
 
 Personagem novo começa só com **1 tocha, 2 garrafas de água e 3 frutas silvestres**: o resto se coleta, acha ou fabrica (machado e picareta de pedra, lança e cajado saem nas mãos). Perto de onde se nasce há **pedras soltas** (E: +1 pedra) e galhos para começar. Itens recebidos aparecem à direita da tela ("+1 Graveto").
 
-Cada vocação tem um **conjunto inicial** de 5 peças feito na bancada com recursos naturais e drops de monstros:
+A **classe** (Guerreiro, Arqueiro, Mago, Pugilista) só define onde você começa na **árvore passiva**; a especialização vem dos pontos e, no nível 30, da **ascendência**. Cada classe tem um **conjunto inicial** de 5 peças feito na bancada com recursos naturais e drops de monstros:
 
 - **Armadura de pedra** (Guerreiro): muita pedra + presas de ogro.
 - **Traje de patrulheiro** (Arqueiro): couro de goblins.
 - **Manto do aprendiz** (Mago): tecido + pó arcano, moído do cristal arcano na bancada.
 - **Trajes de pugilista** (Pugilista): tendões de carniçais.
 
-O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). O Pugilista luta de mãos vazias: proficiência **Pugilismo**, trilha própria e bônus de dano desarmado.
+O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). O Pugilista luta de mãos vazias: proficiência **Pugilismo** e um setor próprio da árvore com dano desarmado.
 
 Recursos e saques são raros (galhos e pedras são a exceção). Mouse em cima de um item mostra o que ele faz (ex.: "Recupera 40 de sede"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
 
@@ -33,7 +33,7 @@ Recursos e saques são raros (galhos e pedras são a exceção). Mouse em cima d
 - **Hotbar:** teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
 - **E** pega o que está na mira e interage (portas, baús, estações); passar por cima de itens pega sozinho.
-- **Tab** inventário, **P** personagem, **M** mapa, **B** modo construção.
+- **Tab** inventário, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
 - **F8** (host) adianta 1 hora; **F10** (host) troca o clima.
 
 O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
@@ -66,7 +66,11 @@ Fique de olho na **fome** e na **sede** (barras abaixo da vida). Água: beber a 
 
 **Magia:** **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. O ícone à esquerda da hotbar mostra a última. A mana regenera 4× mais rápido depois de 3 s sem conjurar nem atacar. A bancada copia grimórios com cristal arcano.
 
-**Progressão (P):** as proficiências sobem pelo uso (golpear, atirar, conjurar, lutar desarmado, correr, levar dano, agachar perto de monstros, coletar, fabricar), cada tipo de arma ganha maestria, e cada nível do personagem dá 1 ponto para as habilidades das trilhas.
+**Progressão (P):** as proficiências sobem pelo uso (golpear, atirar, conjurar, lutar desarmado, correr, levar dano, agachar perto de monstros, coletar, fabricar) e cada tipo de arma ganha maestria.
+
+- **Árvore passiva** (aba de P): 393 nós em formato radial; cada nível do personagem (até 100) dá 1 ponto. Aloca-se um nó ligado a outro já alocado, a partir do início da sua classe. Nós pequenos, **notáveis** (bônus maiores) e **pedras angulares** (efeito forte com custo). Clique aloca, botão direito devolve, arrastar move, roda dá zoom, busca por nome ou efeito. A árvore é gerada por `tools/gen_passive_tree.py` → `data/passives/passive_tree.json`.
+- **Ascendência** (aba de P): no nível 30 escolha uma das 2 da sua classe (definitivo); bônus fixo e 4 pontos (níveis 30, 45, 60, 75) para 4 dos 6 nós dela. Para testar rápido: modo criativo, "+10 níveis".
+- **Auras (C):** bônus em área para você e aliados próximos, pagos com reserva de mana (ou vida). Passe o mouse num quadrado para ver o nível, o efeito e a barra de reserva (1% a 35%, o efeito cresce junto); clique liga/desliga. Sobem de nível com o tempo ligadas. A mesma aura de dois jogadores não soma.
 
 **Morte:** a mochila cai numa **bag** onde você morreu (a hotbar fica com você) e você renasce com **Fraqueza** temporária, que piora se morrer de novo antes de passar.
 
@@ -121,8 +125,10 @@ assets/        Arte e som (veja assets/README.md e assets/LICENSES.md)
   models/      environment/nature (Nature MegaKit), props/fantasy (Fantasy Props),
                buildings/village (Medieval Village), characters/outfits (trajes)
 data/          Conteúdo do jogo em JSON: itens, receitas, monstros (data/zombies), feitiços,
-               proficiências, vocações (data/backgrounds), conjuntos, saques e
-               traduções (data/i18n). Carregado pelo autoload GameData.
+               proficiências, classes (data/backgrounds), árvore passiva (data/passives),
+               ascendências, auras, conjuntos, saques e traduções (data/i18n).
+               Carregado pelo autoload GameData.
+tools/         gen_passive_tree.py: gera data/passives/passive_tree.json
 scenes/        Cenas .tscn, separadas por módulo
   main.tscn    Cena inicial: menu, tela de carregamento e contêiner do nível
   levels/      world.tscn (mundo infinito) e test_arena.tscn
@@ -152,5 +158,7 @@ Os arquivos `.json` de `data/` não entram na exportação por padrão. Em *Proj
 ## Roadmap
 
 Concluídas: **1. Núcleo** (monstros que perseguem, arco/machado/dardo de fogo, co-op em rede), **2. Sobrevivência** (inventário e hotbar, coleta, fome e sede, dia/noite, morte com bag e Fraqueza), **3. Crafting** (estações, fila com tempo, durabilidade, reparo, desmontagem, qualidade Q1–Q5 e refino +1 a +12), **4. Construção** (grade no relevo, madeira/pedra, martelo, integridade, armadilhas), **6. Progressão** (proficiências, nível, trilhas, maestria, grimórios e vocações), **7. Mundo** (mundo infinito com relevo, biomas, lugares raros, clima, mapa e minimapa) e **8. Polimento** (salvamento por mundo e personagem, menu inicial, configurações, idiomas, tela de carregamento, otimização).
+
+Feito depois: **árvore passiva, ascendência e auras** (substituem as trilhas de habilidades). Próximo em crafting: **afixos** (6 slots, 3 prefixos e 3 sufixos, de 1 a 6 abertos ao fabricar) e a estação **Upgrading Machine** (slots, refino e qualidade), GDD 8.4.
 
 Mudança de rumo: o jogo deixou o tema de zumbis e virou **fantasia com monstros**; as hordas e as armas de fogo saíram. Próxima: **9. Expansão** (mais conteúdo de fantasia). Detalhes no GDD, seção 17.

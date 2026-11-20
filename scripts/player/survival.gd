@@ -68,8 +68,11 @@ func _process(delta: float) -> void:
 		damage += dehydrated_damage_per_second * span
 	if damage > 0.0:
 		_player.health.take_damage(damage, _player)
-	elif is_well_fed() and _player.health.current < _player.health.max_health:
-		_player.health.heal(regen_per_second * span)
+	elif _player.health.current < _player.health.cap():
+		# Bem alimentado regenera devagar; a árvore passiva, a ascendência e auras somam.
+		var regen := (regen_per_second if is_well_fed() else 0.0) + maxf(_player.progression.add("life_regen_add"), 0.0)
+		if regen > 0.0:
+			_player.health.heal(regen * span)
 
 
 func is_well_fed() -> bool:
@@ -102,4 +105,4 @@ func _apply_stamina_penalty() -> void:
 	if _base_stamina_regen == 0.0:
 		_base_stamina_regen = stamina.regen_per_second
 	stamina.regen_per_second = _base_stamina_regen * (weak_stamina_factor if is_weak() else 1.0) \
-		* _player.death_penalty.stamina_factor()
+		* _player.death_penalty.stamina_factor() * _player.progression.mult("stamina_regen")

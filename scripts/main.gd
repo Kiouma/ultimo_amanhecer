@@ -273,9 +273,9 @@ func _show_characters() -> void:
 	desc.add_theme_color_override("font_color", Color(0.7, 0.72, 0.66))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	create_box.add_child(desc)
-	picker.item_selected.connect(func(i: int) -> void: desc.text = tr("Vocação: %s") % GameData.get_entry("backgrounds", ids[i]).get("desc", ""))
+	picker.item_selected.connect(func(i: int) -> void: desc.text = tr("Classe: %s") % GameData.get_entry("backgrounds", ids[i]).get("desc", ""))
 	picker.select(0)
-	desc.text = tr("Vocação: %s") % GameData.get_entry("backgrounds", ids[0]).get("desc", "")
+	desc.text = tr("Classe: %s") % GameData.get_entry("backgrounds", ids[0]).get("desc", "")
 	_content.add_child(create_box)
 
 	var play: Button = null

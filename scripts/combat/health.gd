@@ -29,6 +29,9 @@ var spell_taken_multiplier := 1.0
 ## Não recebe dano (jogador no modo criativo). O dono pede; o servidor guarda.
 var invulnerable := false
 var is_dead := false
+## Fração da vida reservada por auras de vida (0 a 0,9): a vida não passa de cap().
+## O dono pede (set_owner_vitals); o servidor guarda; o dono guarda uma cópia para o HUD.
+var reserved := 0.0
 
 
 func _ready() -> void:
@@ -51,7 +54,7 @@ func heal(amount: float) -> void:
 	if is_dead or amount <= 0.0:
 		return
 	if multiplayer.is_server():
-		_apply(minf(current + amount, max_health), 0.0, null)
+		_apply(minf(current + amount, cap()), 0.0, null)
 	elif Network.is_online():
 		_request_heal.rpc_id(1, amount)
 
@@ -82,7 +85,7 @@ func reset(new_max := -1.0) -> void:
 	if new_max > 0.0:
 		max_health = new_max
 	if multiplayer.is_server():
-		_apply(max_health, 0.0, null, true)
+		_apply(cap(), 0.0, null, true)
 	elif Network.is_online():
 		_request_reset.rpc_id(1)
 
@@ -94,6 +97,34 @@ func configure(new_max: float) -> void:
 	current = new_max
 	is_dead = false
 	changed.emit(current, max_health)
+
+
+## Vida máxima utilizável (sem a parte reservada por auras de vida).
+func cap() -> float:
+	return max_health * (1.0 - reserved)
+
+
+## Dono do personagem: vida máxima (árvore passiva, itens) e fração reservada por
+## auras de vida. Num cliente, pede ao servidor.
+func set_owner_vitals(new_max: float, new_reserved: float) -> void:
+	new_max = clampf(new_max, 10.0, 5000.0)
+	new_reserved = clampf(new_reserved, 0.0, 0.9)
+	if multiplayer.is_server():
+		_set_vitals(new_max, new_reserved)
+	else:
+		reserved = new_reserved
+		if Network.is_online():
+			_request_vitals.rpc_id(1, new_max, new_reserved)
+
+
+func _set_vitals(new_max: float, new_reserved: float) -> void:
+	new_max = clampf(new_max, 10.0, 5000.0)
+	new_reserved = clampf(new_reserved, 0.0, 0.9)
+	if is_equal_approx(new_max, max_health) and is_equal_approx(new_reserved, reserved):
+		return
+	max_health = new_max
+	reserved = new_reserved
+	_apply(minf(current, cap()), 0.0, null)
 
 
 ## Procura o componente Health em um nó (filho direto chamado "Health").
@@ -189,7 +220,13 @@ func _request_heal(amount: float) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func _request_reset() -> void:
 	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
-		_apply(max_health, 0.0, null, true)
+		_apply(cap(), 0.0, null, true)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_vitals(new_max: float, new_reserved: float) -> void:
+	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
+		_set_vitals(new_max, new_reserved)
 
 
 @rpc("any_peer", "call_remote", "reliable")
