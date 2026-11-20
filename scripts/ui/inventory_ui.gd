@@ -1,15 +1,15 @@
 class_name InventoryUI
 extends Control
-## Tela de inventário (Tab): equipamento e status (esquerda, EquipmentPanel), mochila,
-## hotbar, peso e fabricação (GDD 8 e 13.2).
+## Tela de inventário (Tab): mochila, hotbar, peso e fabricação nas mãos (GDD 8 e 13.2).
+## Equipamento e status ficam na tela própria (V, EquipmentUI).
 ## As estações (fogueira, bancada) têm a própria tela de fabricação (CraftingUI).
 ## Fabricar entra na fila (CraftQueue), que aparece embaixo com progresso e cancelar.
 ## Arrastar entre slots move/junta; botão direito divide a pilha;
 ## soltar fora da janela joga o item no chão, na frente do jogador.
 
 const COLUMNS := 8
-## Slots um pouco menores que os da hotbar do HUD: equipamento + mochila + fabricação cabem em 1280 px.
-const SLOT_SIZE := Vector2(54, 54)
+## Tela compacta: mochila + fabricação ocupam pouco mais da metade da largura em 1280 px.
+const SLOT_SIZE := Vector2(46, 46)
 
 var player: Player
 var _slots: Array[InventorySlotUI] = []
@@ -22,10 +22,10 @@ var _craft_title: Label
 var _queue_box: VBoxContainer
 ## Slot sob o mouse (-1 = nenhum): apertar 1-9 troca com aquele slot da hotbar.
 var _hovered := -1
-var _equipment: EquipmentPanel
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # o fundo recebe o tr("soltar no chão")
 	visible = false
@@ -64,11 +64,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func toggle() -> void:
 	visible = not visible and not player.health.is_dead
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 	_hovered = -1
 	if visible:
 		_refresh()
-		_equipment.refresh()
 
 
 # Soltar fora dos slots (no fundo escuro) = jogar no chão.
@@ -239,34 +238,29 @@ func _build() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.09, 0.08, 0.95)
 	style.set_corner_radius_all(6)
-	style.set_content_margin_all(18)
+	style.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 	UITabs.attach(self, "inventory", panel)
 
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 20)
+	columns.add_theme_constant_override("separation", 16)
 	panel.add_child(columns)
-
-	_equipment = EquipmentPanel.new()
-	columns.add_child(_equipment)
-	_equipment.setup(player)
-	columns.add_child(VSeparator.new())
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
 	columns.add_child(vbox)
 
 	var craft := VBoxContainer.new()
-	craft.custom_minimum_size = Vector2(330, 0)
+	craft.custom_minimum_size = Vector2(290, 0)
 	craft.add_theme_constant_override("separation", 8)
 	columns.add_child(craft)
 	_craft_title = Label.new()
 	_craft_title.text = "Fabricar (mãos)"
-	_craft_title.add_theme_font_size_override("font_size", 22)
+	_craft_title.add_theme_font_size_override("font_size", 18)
 	craft.add_child(_craft_title)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(330, 420)
+	scroll.custom_minimum_size = Vector2(290, 340)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	craft.add_child(scroll)
 	_craft_list = VBoxContainer.new()
@@ -282,7 +276,7 @@ func _build() -> void:
 
 	var title := Label.new()
 	title.text = "Inventário"
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(title)
 
 	_weight_label = Label.new()
@@ -315,7 +309,7 @@ func _build() -> void:
 		hotbar.add_child(_new_slot(i))
 
 	var help := Label.new()
-	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nsolte fora da janela para jogar no chão · Tab fecha"
+	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nclique duplo veste/equipa · solte fora da janela para jogar no chão · Tab fecha"
 	help.add_theme_font_size_override("font_size", 12)
 	help.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 	vbox.add_child(help)

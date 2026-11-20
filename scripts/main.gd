@@ -420,7 +420,7 @@ func _finish_loading(world: Node) -> void:
 		_frozen_player.set_physics_process(true)
 	_frozen_player = null
 	_loading.close()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 
 
 func _on_connection_failed(reason: String) -> void:

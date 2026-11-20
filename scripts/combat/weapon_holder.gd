@@ -136,12 +136,16 @@ func _process(delta: float) -> void:
 			changed.emit()
 	if user == null or not _accepts_input():
 		return
+	# Mouse livre: clique em cima da HUD não é ataque.
+	var can := MouseMode.can_attack(get_viewport())
+	var held := can and Input.is_action_pressed("attack")
+	var just := can and Input.is_action_just_pressed("attack")
 	# Atacando: a mana sai do "fora de ação" (regeneração acelerada só depois de 3 s parado).
-	if Input.is_action_pressed("attack") and user.mana:
+	if held and user.mana:
 		user.mana.mark_action()
 	if _current:
-		_current.handle_attack(Input.is_action_pressed("attack"), Input.is_action_just_pressed("attack"))
-	elif Input.is_action_just_pressed("attack"):
+		_current.handle_attack(held, just)
+	elif just:
 		use_selected()
 
 
@@ -303,7 +307,7 @@ func caster_for(spell_id: String) -> SpellCaster:
 
 
 func _accepts_input() -> bool:
-	if not user.is_multiplayer_authority() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not user.is_multiplayer_authority() or not MouseMode.playing():
 		return false
 	if user.build and user.build.active:
 		return false  # mouse e roda são do modo construção

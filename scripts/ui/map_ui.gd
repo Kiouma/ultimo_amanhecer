@@ -15,6 +15,7 @@ var _dragging := false
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
@@ -116,7 +117,7 @@ func toggle() -> void:
 		_view.follow = true
 	visible = not visible
 	_dragging = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 	if visible:
 		_view.queue_redraw()
 

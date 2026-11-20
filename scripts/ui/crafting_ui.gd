@@ -19,6 +19,7 @@ var _opened_frame := -1
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
@@ -90,14 +91,14 @@ func _on_station_opened(s: Node, who: Node) -> void:
 		inventory_ui.toggle()
 	visible = true
 	_opened_frame = Engine.get_process_frames()
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseMode.refresh()
 	_refresh()
 
 
 func close() -> void:
 	visible = false
 	station = null
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 
 
 func _unhandled_input(event: InputEvent) -> void:

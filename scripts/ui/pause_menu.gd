@@ -14,6 +14,7 @@ var _copy_button: Button
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
@@ -108,7 +109,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if player == null or not event.is_action_pressed("pause"):
 		return
 	# Com outra tela aberta (inventário, mapa...), o Esc é dela.
-	if not visible and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not visible and MouseMode.any_open():
 		return
 	if visible and _settings.visible:
 		_show_settings(false)  # Esc nas configurações volta para a pausa
@@ -128,7 +129,7 @@ func toggle() -> void:
 	if hosting:
 		_share_label.text = Network.share_text()
 		_copy_button.visible = Network.share_address() != ""
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 
 
 func _quit_to_menu() -> void:

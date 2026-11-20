@@ -68,7 +68,7 @@ func set_active(value: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if user == null or not user.is_local() or user.health.is_dead \
-			or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			or not MouseMode.playing():
 		return
 	if event.is_action_pressed("build_mode"):
 		set_active(not active)
@@ -85,10 +85,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		tier_index = wrapi(tier_index + 1, 0, TIERS.size())
 	elif event.is_action_pressed("reload"):
 		turn = wrapi(turn + 1, 0, 4)
-	elif event.is_action_pressed("attack"):
+	elif event.is_action_pressed("attack") and MouseMode.can_attack(get_viewport()):
 		place()
-	elif event.is_action_pressed("aim"):
-		demolish()
+	elif event.is_action_pressed("aim") and not MouseMode.free:
+		demolish()  # no mouse livre o botão direito gira a câmera
 	else:
 		handled = false
 		for i in Inventory.HOTBAR_SIZE:

@@ -15,6 +15,7 @@ var _prompt: Label
 var _inventory_ui: InventoryUI
 var _progression_ui: ProgressionUI
 var _aura_ui: AuraUI
+var _equipment_ui: EquipmentUI
 ## Telas cheias (inventário, bancada, personagem, auras, mapa, criativo, baú, pausa):
 ## com alguma aberta, o minimapa some.
 var _screens: Array[Control] = []
@@ -87,7 +88,8 @@ func _on_player_spawned(player: Node) -> void:
 		_update_weapon()
 		if _inventory_ui and _inventory_ui.visible:
 			_inventory_ui._refresh()
-			_inventory_ui._equipment.refresh()
+		if _equipment_ui and _equipment_ui.visible:
+			_equipment_ui.refresh()
 		if _progression_ui and _progression_ui.visible:
 			_progression_ui._refresh()
 		if _aura_ui and _aura_ui.visible:
@@ -132,7 +134,12 @@ func _bind_inventory(player: Player) -> void:
 	strip.add_child(gap)
 	for i in Inventory.HOTBAR_SIZE:
 		var slot := InventorySlotUI.new()
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# Clicável com o mouse livre (Alt): escolhe o slot.
+		slot.mouse_filter = Control.MOUSE_FILTER_STOP
+		slot.gui_input.connect(func(e: InputEvent) -> void:
+			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+				_weapons.select(i)
+				slot.accept_event())
 		slot.setup(player.inventory, i, false, true)
 		strip.add_child(slot)
 		_hotbar_slots.append(slot)
@@ -165,6 +172,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_progression_ui)
 	_progression_ui.bind(player)
 
+	_equipment_ui = EquipmentUI.new()
+	add_child(_equipment_ui)
+	_equipment_ui.bind(player)
+
 	_aura_ui = AuraUI.new()
 	add_child(_aura_ui)
 	_aura_ui.bind(player)
@@ -184,7 +195,7 @@ func _bind_inventory(player: Player) -> void:
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.bind(player)
-	_screens = [_inventory_ui, crafting_ui, _progression_ui, _aura_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
+	_screens = [_inventory_ui, _equipment_ui, crafting_ui, _progression_ui, _aura_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
 
 
 func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
@@ -556,7 +567,7 @@ func _build_clock() -> void:
 
 ## Troca de tela pelas abas (Inventário / Personagem / Mapa).
 func open_panel(which: String) -> void:
-	var panels := {"inventory": _inventory_ui, "character": _progression_ui, "auras": _aura_ui, "map": _map_ui, "creative": _creative_ui}
+	var panels := {"inventory": _inventory_ui, "equipment": _equipment_ui, "character": _progression_ui, "auras": _aura_ui, "map": _map_ui, "creative": _creative_ui}
 	var target: Control = panels.get(which)
 	if target == null:
 		return

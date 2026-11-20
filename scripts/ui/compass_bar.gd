@@ -22,7 +22,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# Some com telas abertas (inventário, mapa...): as abas ficam no mesmo lugar.
-	visible = Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	visible = MouseMode.playing()
 	queue_redraw()
 
 

@@ -30,7 +30,7 @@ func _process(delta: float) -> void:
 	super(delta)
 	if not visible:
 		return
-	var zoom := Input.is_action_pressed("aim") or drawing
+	var zoom := (Input.is_action_pressed("aim") and not MouseMode.free) or drawing
 	var target_fov := lerpf(_default_fov, aim_fov, draw) if drawing else (aim_fov if zoom else _default_fov)
 	camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * delta, 1.0))
 	_update_visual()

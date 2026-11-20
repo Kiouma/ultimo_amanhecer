@@ -19,6 +19,7 @@ var _types: Array[String] = []
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
@@ -44,7 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func toggle() -> void:
 	visible = not visible and player.creative and not player.health.is_dead
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 	if visible:
 		_refresh_info()
 		_refresh_catalog()

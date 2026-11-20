@@ -1,10 +1,10 @@
 class_name UITabs
 extends HBoxContainer
-## Abas das telas cheias (Inventário, Personagem, Auras, Mapa e, no modo criativo, Criativo):
+## Abas das telas cheias (Inventário, Equipamentos, Personagem, Auras, Mapa e, no modo criativo, Criativo):
 ## clicar troca de tela sem fechar e reabrir. Ficam logo acima do painel da tela
 ## (frame), não no topo da janela. Cada tela adiciona a sua (UITabs.attach) e o HUD troca.
 
-const TABS := [["inventory", "Inventário (Tab)"], ["character", "Personagem (P)"], ["auras", "Auras (C)"], ["map", "Mapa (M)"], ["creative", "Criativo"]]
+const TABS := [["inventory", "Inventário (Tab)"], ["equipment", "Equipamentos (V)"], ["character", "Personagem (P)"], ["auras", "Auras (C)"], ["map", "Mapa (M)"], ["creative", "Criativo"]]
 const GAP := 6.0
 
 var _screen: Control

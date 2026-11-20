@@ -196,7 +196,7 @@ func _ready() -> void:
 		if not SaveGame.apply_character(self):
 			_give_starter_kit()
 			_apply_background(SaveGame.character_background())
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		MouseMode.refresh()
 		_apply_camera_mode()
 	else:
 		# Personagem de outro jogador: sem câmera, sem armas de 1ª pessoa, corpo visível.
@@ -236,17 +236,24 @@ func is_local() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if event is InputEventMouseMotion and MouseMode.looking():
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		head.rotate_x(-event.relative.y * mouse_sensitivity)
 		head.rotation.x = clampf(head.rotation.x, deg_to_rad(-85.0), deg_to_rad(85.0))
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and MouseMode.free and MouseMode.playing():
+		# Mouse livre: segurar o botão direito gira a câmera.
+		MouseMode.set_rotating(event.pressed, get_viewport())
+	elif event.is_action_pressed("free_mouse") and MouseMode.playing():
+		MouseMode.toggle_free()
+		notify(tr("Mouse livre: clique na HUD; segure o botão direito para girar a câmera (Alt volta)") if MouseMode.free else tr("Mouse travado (Alt solta o mouse)"))
 	elif event.is_action_pressed("toggle_camera"):
 		first_person = not first_person
 		_apply_camera_mode()
 	elif event.is_action_pressed("interact") and _focused and not health.is_dead:
 		_focused.interact(self)
-	elif event.is_action_pressed("attack") and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event.is_action_pressed("attack") and MouseMode.playing() and not MouseMode.free \
+			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		MouseMode.refresh()  # voltou para a janela (Alt+Tab): trava de novo
 
 
 func _physics_process(delta: float) -> void:
@@ -271,7 +278,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var captured := MouseMode.playing()  # nenhuma tela aberta: teclas valem
 	if creative and captured and Input.is_action_just_pressed("jump"):
 		var now := Time.get_ticks_msec()
 		if now - _last_jump_ms < DOUBLE_TAP_MS:
@@ -593,7 +600,7 @@ func _on_revived() -> void:
 
 ## Shift: segurado ou alternado (Configurações).
 func _sprint_pressed() -> bool:
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not MouseMode.playing():
 		return false
 	return _sprint_on if Settings.sprint_toggle else Input.is_action_pressed("sprint")
 

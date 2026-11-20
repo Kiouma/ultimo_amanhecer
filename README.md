@@ -29,11 +29,12 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 
 ## Controles
 
-- **WASD** move, **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **V** troca 1ª/3ª pessoa, **Esc** abre o menu de pausa e solta o mouse.
+- **WASD** move, **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **F1** troca 1ª/3ª pessoa, **Esc** abre o menu de pausa e solta o mouse.
+- **Alt esquerdo** solta/trava o mouse. Com o **mouse livre**, dá para clicar na HUD (hotbar, botões +/− do minimapa) e a câmera só gira **segurando o botão direito**; a mira continua no centro da tela. Bom para corpo a corpo e para mexer na HUD.
 - **Hotbar:** teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
 - **E** pega o que está na mira e interage (portas, baús, estações); passar por cima de itens pega sozinho.
-- **Tab** inventário, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
+- **Tab** inventário (mochila e fabricação), **V** equipamentos e status, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
 - **F8** (host) adianta 1 hora; **F10** (host) troca o clima.
 
 O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Projeto > Mapa de Entrada*.

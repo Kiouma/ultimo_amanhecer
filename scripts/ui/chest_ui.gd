@@ -11,6 +11,7 @@ var _title: Label
 
 
 func _ready() -> void:
+	MouseMode.register(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
@@ -71,14 +72,14 @@ func _on_opened(chest: Node, who: Node) -> void:
 		return
 	_chest = chest
 	visible = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseMode.refresh()
 	_refresh()
 
 
 func close() -> void:
 	visible = false
 	_chest = null
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseMode.refresh()
 
 
 func _unhandled_input(event: InputEvent) -> void:

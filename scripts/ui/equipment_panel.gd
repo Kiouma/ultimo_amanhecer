@@ -31,16 +31,29 @@ var _menu_slot := ""
 var _menu_indexes: Array = []
 
 
-func setup(p: Player) -> void:
+## side_by_side: corpo à esquerda e status à direita (tela de equipamentos, V).
+func setup(p: Player, side_by_side := false) -> void:
 	player = p
 	add_theme_constant_override("separation", 6)
+	var left: Container = self
+	_stats_parent = self
+	if side_by_side:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 18)
+		add_child(row)
+		left = VBoxContainer.new()
+		row.add_child(left)
+		_stats_parent = VBoxContainer.new()
+		_stats_parent.add_theme_constant_override("separation", 6)
+		row.add_child(_stats_parent)
+		_stats_height = BODY_SIZE.y
 	var title := Label.new()
 	title.text = "Equipamento"
 	title.add_theme_font_size_override("font_size", 22)
-	add_child(title)
+	left.add_child(title)
 	var body := _Body.new()
 	body.custom_minimum_size = BODY_SIZE
-	add_child(body)
+	left.add_child(body)
 	for slot: String in Equipment.SLOTS:
 		var s := EquipSlot.new()
 		s.panel = self
@@ -99,10 +112,15 @@ func _on_menu(id: int) -> void:
 
 # --- Status ------------------------------------------------------------------------------
 
+## Onde ficam as abas e a lista de status, e a altura da lista.
+var _stats_parent: Container
+var _stats_height := 210.0
+
+
 func _build_stats() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 4)
-	add_child(tabs)
+	_stats_parent.add_child(tabs)
 	for t: Array in [["primary", "Primários"], ["secondary", "Secundários"]]:
 		var b := Button.new()
 		b.text = t[1]
@@ -120,9 +138,9 @@ func _build_stats() -> void:
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(8)
 	frame.add_theme_stylebox_override("panel", style)
-	add_child(frame)
+	_stats_parent.add_child(frame)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(BODY_SIZE.x, 210)
+	scroll.custom_minimum_size = Vector2(BODY_SIZE.x, _stats_height)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	frame.add_child(scroll)
 	_stats_box = VBoxContainer.new()
