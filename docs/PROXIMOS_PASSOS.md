@@ -262,7 +262,7 @@ Ver [GDD 8.4](GDD.md): 6 slots (3 prefixos, 3 sufixos) nos equipamentos fabricá
   - Em troca, o personagem **perde 15% da XP do personagem** e **15% do ouro** que carrega.
   - O XP perdido é o acumulado rumo ao próximo nível (não desce de nível), como hoje.
   - **O que muda:** `death_penalty.gd` (perda de 15% em vez de 10%, mais o ouro), `player.gd` (`_empty_backpack` e `WorldItems.drop_bag` deixam de ser chamados), `death_bag.gd` e o salvamento das bags no mundo (`save_game.gd`) saem; saves antigos com bags no chão continuam abrindo.
-  - **A decidir:** a **Fraqueza** (debuff temporário que piora com mortes seguidas) continua junto? Sugestão: sim, mais curta.
+  - **Decidido:** a **Fraqueza** (debuff temporário que piora com mortes seguidas) continua.
 - **Drops de chefe com % de chance:** grimórios exclusivos, recursos de evolução de habilidade (níveis 5, 10, 15, 20) e materiais de upgrade de ferramenta. Precisa de tabela de drops por chefe em `data/` e de chefes fixos no mundo.
 - **Buffs temporários:** ver seção 10.
 - **NPCs vendedores** (futuro): onde vendem peixes e outros itens.
