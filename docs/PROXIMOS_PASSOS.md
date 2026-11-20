@@ -304,7 +304,7 @@ Cada passo termina jogável:
 1. ✅ **Limpeza (feito):** fim de fome/sede e das bandagens, cura por frutas (4); fim do graveto (6.1, parte de dados).
 2. ✅ **Auras (feito):** interface nova (1), eficiências separadas (3), Pacto de Sangue conversor liberado por ascendência (2). Pacto liberado pela Vanguarda e pelo Rompe-Ossos (7º nó de cada), custo próprio de 10% de vida.
 3. ✅ **Telas e controles (feito):** inventário menor e equipamentos separados (V), câmera no F1, Alt e mouse livre com hotbar e botões do minimapa clicáveis (5, 7). O círculo de magia em área no mouse livre fica para a etapa das habilidades (6).
-4. **HUD:** esferas, arco de stamina, números, ícones de buff, engrenagem e layout (8.2, 8.3).
+4. ✅ **HUD (feito):** esferas de vida (com escudo de energia e reserva) e mana, arco de stamina perto da mira (some quando cheio), números, opção de vida/mana em arcos "( )", ícones de buff (por enquanto as auras recebidas), engrenagem ao lado da hotbar com editor de posição/tamanho, salvo nas Configurações (8.2, 8.3). A barra da party (8.1) fica para a etapa 9.
 5. **Ouro, morte sem bag, buffs temporários e debuffs, fogueira "Descansado"** (13, 10, 4, 15).
 6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5); debuffs e mecânicas (puxão, empurrão, stun, roubo de vida/mana, transferência de mana) nas habilidades (15).
 7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).

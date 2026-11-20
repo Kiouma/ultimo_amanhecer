@@ -39,6 +39,13 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 
 O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
 
+## HUD
+
+- **Vida** numa esfera à esquerda e **mana** à direita, enchendo de baixo para cima, com os números. A parte **reservada** por auras aparece escura em cima; o **escudo de energia** é um anel azul claro em volta da esfera de vida.
+- **Stamina** num arco "(" perto da mira (some quando está cheia).
+- **Buffs** (por enquanto as auras que você recebe) como ícones acima da hotbar.
+- **Engrenagem** ao lado da hotbar (com o mouse livre, Alt): arraste as esferas e os buffs, roda do mouse numa esfera muda o tamanho, escolha **esferas** ou **arcos "( )" perto da mira** para vida e mana. Fica salvo.
+
 ## Configurações
 
 Em **Esc → Configurações** (ou no menu inicial):

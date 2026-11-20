@@ -19,6 +19,18 @@ var _equipment_ui: EquipmentUI
 ## Telas cheias (inventário, bancada, personagem, auras, mapa, criativo, baú, pausa):
 ## com alguma aberta, o minimapa some.
 var _screens: Array[Control] = []
+# HUD de recursos (etapa 4): esferas ou arcos de vida/mana, arco de stamina, buffs e
+# o editor da engrenagem. As barras antigas da cena ficam escondidas.
+var _player: Player
+var _life_orb: ResourceOrb
+var _mana_orb: ResourceOrb
+var _life_arc: ResourceArc
+var _mana_arc: ResourceArc
+var _stamina_arc: ResourceArc
+var _buff_bar: BuffBar
+var _hud_editor: HudEditor
+## Centro da barra de buffs (pixels): ela muda de largura conforme os ícones.
+var _buff_center := Vector2.ZERO
 var _health: Health
 var _shield_bar: ProgressBar
 var _map_ui: MapUI
@@ -112,6 +124,7 @@ func _on_player_spawned(player: Node) -> void:
 		if _aura_ui and _aura_ui.visible:
 			_aura_ui._refresh())
 	_bind_notifications(player)
+	_build_resource_hud(player)
 	var channel := ChannelBar.new()
 	channel.player = player
 	add_child(channel)
@@ -160,6 +173,14 @@ func _bind_inventory(player: Player) -> void:
 		slot.setup(player.inventory, i, false, true)
 		strip.add_child(slot)
 		_hotbar_slots.append(slot)
+	# Engrenagem: editor da HUD (clicável com o mouse livre).
+	var gear_gap := Control.new()
+	gear_gap.custom_minimum_size = Vector2(6, 0)
+	strip.add_child(gear_gap)
+	var gear := GearButton.new()
+	gear.size_flags_vertical = Control.SIZE_SHRINK_END
+	gear.pressed.connect(open_hud_editor)
+	strip.add_child(gear)
 	# Âncora depois dos slots, para usar o tamanho real da faixa.
 	strip.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 16)
 	player.inventory.changed.connect(_update_hotbar)
@@ -612,6 +633,7 @@ func _bind_pool(pool: StatPool, bar: ProgressBar) -> void:
 
 
 func _process(delta: float) -> void:
+	_update_resource_hud()
 	# Recarga de feitiço muda a cada frame; o resto atualiza por sinal.
 	if _weapons and _weapons.current() is SpellCaster:
 		_update_weapon()
@@ -708,3 +730,117 @@ func _on_health_changed(current: float, maximum: float) -> void:
 			health_label.text += "  ·  " + tr("Escudo %d / %d") % [ceili(_health.shield), ceili(_health.max_shield)]
 	if current > 0.0:
 		death_label.visible = false
+
+
+# --- HUD de recursos (etapa 4) ------------------------------------------------------------
+
+func _build_resource_hud(player: Player) -> void:
+	_player = player
+	# Barras antigas: escondidas (continuam recebendo valores). A caixa fica para os
+	# avisos de Fraqueza e sobrecarga, agora acima da esfera de vida.
+	for n: Control in [health_label, health_bar, stamina_bar, mana_bar]:
+		n.visible = false
+	var box := health_bar.get_parent() as Control
+	box.offset_top = -330.0
+	box.offset_bottom = -170.0
+	weapon_label.offset_left = -520.0
+	weapon_label.offset_right = -170.0
+	_life_orb = ResourceOrb.new()
+	_life_orb.fill_color = Color(0.72, 0.12, 0.12)
+	add_child(_life_orb)
+	_mana_orb = ResourceOrb.new()
+	_mana_orb.fill_color = Color(0.2, 0.36, 0.85)
+	add_child(_mana_orb)
+	_life_arc = ResourceArc.new()
+	_life_arc.side = -1
+	_life_arc.thickness = 7.0
+	_life_arc.fill_color = Color(0.85, 0.2, 0.2)
+	add_child(_life_arc)
+	_mana_arc = ResourceArc.new()
+	_mana_arc.side = 1
+	_mana_arc.thickness = 7.0
+	_mana_arc.fill_color = Color(0.3, 0.5, 1.0)
+	add_child(_mana_arc)
+	_stamina_arc = ResourceArc.new()
+	_stamina_arc.side = -1
+	_stamina_arc.radius = 44.0
+	_stamina_arc.thickness = 4.0
+	_stamina_arc.span = 80.0
+	_stamina_arc.fade_when_full = true
+	_stamina_arc.fill_color = Color(0.92, 0.8, 0.28)
+	add_child(_stamina_arc)
+	_buff_bar = BuffBar.new()
+	_buff_bar.player = player
+	add_child(_buff_bar)
+	_hud_editor = HudEditor.new()
+	_hud_editor.hud = self
+	add_child(_hud_editor)
+	_screens.append(_hud_editor)
+	get_viewport().size_changed.connect(apply_hud_layout)
+	apply_hud_layout()
+
+
+## O que o editor da HUD pode mover: nome → controle.
+func hud_items() -> Dictionary:
+	return {"life_orb": _life_orb, "mana_orb": _mana_orb, "buffs": _buff_bar}
+
+
+## Posições, tamanhos e estilo (esferas ou arcos) salvos nas Configurações.
+func apply_hud_layout() -> void:
+	if _life_orb == null:
+		return
+	var vp := get_viewport().get_visible_rect().size
+	var layout := HudEditor.layout()
+	for key: String in ["life_orb", "mana_orb"]:
+		var entry: Array = layout[key]
+		var orb := hud_items()[key] as Control
+		var s := float(entry[2])
+		orb.size = Vector2(s, s)
+		orb.position = Vector2(float(entry[0]) * vp.x, float(entry[1]) * vp.y) - orb.size * 0.5
+	var arcs := Settings.hud_style == "arcs"
+	_life_orb.visible = not arcs
+	_mana_orb.visible = not arcs
+	_life_arc.visible = arcs
+	_mana_arc.visible = arcs
+	_life_arc.radius = Settings.hud_arc_radius
+	_mana_arc.radius = Settings.hud_arc_radius
+	# Stamina por dentro dos arcos de vida/mana (ou perto da mira).
+	_stamina_arc.radius = clampf(Settings.hud_arc_radius - 16.0, 34.0, 200.0) if arcs else 44.0
+	var buffs: Array = layout["buffs"]
+	_buff_center = Vector2(float(buffs[0]) * vp.x, float(buffs[1]) * vp.y)
+	_center_buffs()
+
+
+func _center_buffs() -> void:
+	_buff_bar.reset_size()
+	_buff_bar.position = _buff_center - _buff_bar.get_combined_minimum_size() * 0.5
+
+
+func open_hud_editor() -> void:
+	for s: Control in _screens:
+		if s != _hud_editor and is_instance_valid(s) and s.visible and s.has_method(&"toggle"):
+			s.toggle()
+	_hud_editor.open()
+
+
+func _update_resource_hud() -> void:
+	if _player == null or not is_instance_valid(_player) or _life_orb == null:
+		return
+	var h := _player.health
+	var life := [h.current, h.max_health, h.reserved, h.shield, h.max_shield]
+	var mana := [_player.mana.current, _player.mana.max_value, _player.mana.reserved]
+	if _life_orb.visible:
+		_life_orb.set_values(life[0], life[1], life[2], life[3], life[4])
+		_mana_orb.set_values(mana[0], mana[1], mana[2])
+	else:
+		_life_arc.set_values(life[0], life[1], life[2], life[3], life[4])
+		_mana_arc.set_values(mana[0], mana[1], mana[2])
+	_stamina_arc.set_values(_player.stamina.current, _player.stamina.max_value)
+	_center_buffs()
+	# Telas cheias abertas: a HUD de recursos some junto com o minimapa.
+	var playing := MouseMode.playing() or _hud_editor.visible
+	for n: Control in [_stamina_arc, _buff_bar]:
+		n.visible = playing
+	if Settings.hud_style == "arcs":
+		_life_arc.visible = playing
+		_mana_arc.visible = playing

@@ -6,7 +6,7 @@ extends Control
 ##   uma cópia do ícone, o nível como título, a descrição completa, a barra de reserva
 ##   (estreita, % no topo) e, por último, o interruptor Ativado (verde) / Desativado
 ##   (vermelho), que é o que liga e desliga.
-## Também mantém no HUD a lista das auras que o jogador está recebendo.
+## As auras recebidas aparecem como ícones na barra de buffs do HUD (BuffBar).
 
 const ICON := Vector2(56, 56)
 const BIG_ICON := Vector2(68, 68)
@@ -34,7 +34,6 @@ var _icons := {}  # id → Button
 var _focus := ""
 ## Montando o detalhe: mudar os limites da barra dispara value_changed; ignora.
 var _updating := false
-var _strip: Label  # HUD: auras recebidas
 var _strip_timer := 0.0
 
 
@@ -55,15 +54,6 @@ func bind(p: Player) -> void:
 	player.progression.changed.connect(func() -> void:
 		if visible:
 			_refresh())
-	_strip = Label.new()
-	_strip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 16)
-	_strip.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_strip.position.y -= 96
-	_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_strip.add_theme_font_size_override("font_size", 13)
-	_strip.add_theme_color_override("font_outline_color", Color.BLACK)
-	_strip.add_theme_constant_override("outline_size", 4)
-	get_parent().add_child.call_deferred(_strip)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -91,7 +81,7 @@ func toggle() -> void:
 
 func _process(delta: float) -> void:
 	_strip_timer -= delta
-	if _strip == null or player == null or _strip_timer > 0.0:
+	if player == null or not visible or _strip_timer > 0.0:
 		return
 	_strip_timer = 0.5
 	var names: PackedStringArray = []
@@ -101,9 +91,7 @@ func _process(delta: float) -> void:
 		if source != player and is_instance_valid(source):
 			aura_name += " (%s)" % _player_name(source)
 		names.append(aura_name)
-	_strip.text = (tr("Auras: ") + ", ".join(names)) if not names.is_empty() else ""
-	if visible:
-		_receiving_label.text = tr("Recebendo agora: %s") % (", ".join(names) if not names.is_empty() else tr("nenhuma"))
+	_receiving_label.text = tr("Recebendo agora: %s") % (", ".join(names) if not names.is_empty() else tr("nenhuma"))
 
 
 func _player_name(p: Node) -> String:

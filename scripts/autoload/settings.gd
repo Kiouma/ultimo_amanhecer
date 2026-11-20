@@ -31,6 +31,11 @@ var crouch_toggle := true
 var show_minimap := true
 ## Zoom do minimapa (pixels por metro; botões +/- embaixo dele).
 var minimap_zoom := 1.1
+## HUD (editor da engrenagem): vida/mana em "orbs" (esferas) ou "arcs" (arcos perto da
+## mira), posições/tamanhos (HudEditor.DEFAULTS) e raio dos arcos.
+var hud_style := "orbs"
+var hud_layout := {}
+var hud_arc_radius := 62.0
 ## Contador de FPS no canto superior esquerdo.
 var show_fps := false
 ## Sincronia vertical (limita o FPS à taxa do monitor, evita "rasgos" na imagem).
@@ -48,6 +53,10 @@ func _ready() -> void:
 	show_minimap = bool(cfg.get_value("interface", "show_minimap", show_minimap))
 	show_fps = bool(cfg.get_value("interface", "show_fps", show_fps))
 	minimap_zoom = float(cfg.get_value("interface", "minimap_zoom", minimap_zoom))
+	hud_style = str(cfg.get_value("interface", "hud_style", hud_style))
+	var saved_layout: Variant = cfg.get_value("interface", "hud_layout", {})
+	hud_layout = saved_layout if saved_layout is Dictionary else {}
+	hud_arc_radius = float(cfg.get_value("interface", "hud_arc_radius", hud_arc_radius))
 	vsync = bool(cfg.get_value("video", "vsync", vsync))
 	_apply_vsync()
 	volume = float(cfg.get_value("audio", "volume", volume))
