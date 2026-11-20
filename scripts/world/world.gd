@@ -501,9 +501,13 @@ func _process_build_queue() -> void:
 func _process_free_queue() -> void:
 	var budget := 100000 if preloading else FREES_PER_FRAME
 	while budget > 0 and not _free_queue.is_empty():
-		var node: Node = _free_queue.pop_back()
-		if is_instance_valid(node) and not node.is_queued_for_deletion():
-			node.queue_free()
+		# Sem tipo até conferir: o recurso pode já ter sido apagado (coletado, bloco que
+		# voltou) e atribuir uma instância liberada a "var x: Node" trava o GDScript.
+		var entry: Variant = _free_queue.pop_back()
+		if is_instance_valid(entry):
+			var node := entry as Node
+			if node and not node.is_queued_for_deletion():
+				node.queue_free()
 		budget -= 1
 
 
