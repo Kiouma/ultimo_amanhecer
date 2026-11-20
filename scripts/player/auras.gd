@@ -5,7 +5,8 @@ extends Node
 ##
 ## - Cada aura tem a reserva escolhida pelo jogador (1% a 35% do recurso): o efeito
 ##   cresce na mesma proporção ("effects" do JSON são por 1% reservado).
-## - Nível (1 a MAX_LEVEL): sobe com o tempo ligada; cada nível dá +LEVEL_BONUS de efeito.
+## - Nível (1 a MAX_LEVEL): sobe com o tempo ligada COM A RESERVA NO MÁXIMO (35%); com
+##   menos, os segundos não contam. Cada nível dá +LEVEL_BONUS de efeito.
 ## - Efeito e raio crescem com "aura_effect" e "aura_radius".
 ## - Reserva (reservations()), nesta ordem:
 ##   1. soma bruta das % das auras de mana ligadas;
@@ -170,6 +171,11 @@ func _fits(on: Dictionary, pcts: Dictionary = {}) -> bool:
 	return float(r.mana) <= MAX_RESERVED + 0.0001 and float(r.life) <= MAX_RESERVED + 0.0001
 
 
+## Está ganhando tempo de nível agora: ligada e com a reserva no máximo (35%).
+func levels_now(id: String) -> bool:
+	return active.has(id) and not is_converter(id) and get_percent(id) >= MAX_PERCENT
+
+
 ## Força de uma aura ligada (multiplica os efeitos por 1%).
 func strength(id: String) -> float:
 	var aura_effect := _player.progression.mult("aura_effect") if _player else 1.0
@@ -268,7 +274,7 @@ func _gain_xp(seconds: float) -> void:
 		return
 	for id: String in active:
 		var lvl := level(id)
-		if lvl >= MAX_LEVEL or is_converter(id):
+		if lvl >= MAX_LEVEL or not levels_now(id):
 			continue
 		xp[id] = float(xp.get(id, 0.0)) + seconds
 		if float(xp[id]) >= xp_to_next(lvl):

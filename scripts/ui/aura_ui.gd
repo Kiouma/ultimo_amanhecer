@@ -186,8 +186,10 @@ func _refresh_detail() -> void:
 		lines.append(tr("Efeito agora: %s") % ProgressionUI.bonus_text(auras.effects_at(_focus, auras.strength(_focus))))
 		var level_line := tr("Raio %.0f m · nível %d: +%d%% de efeito") % [auras.radius(), lvl, roundi(Auras.LEVEL_BONUS * (lvl - 1) * 100.0)]
 		if lvl < Auras.MAX_LEVEL:
-			level_line += " · " + tr("próximo nível: %d / %d s ligada") % [int(float(auras.xp.get(_focus, 0.0))), int(Auras.xp_to_next(lvl))]
+			level_line += " · " + tr("próximo nível: %d / %d s") % [int(float(auras.xp.get(_focus, 0.0))), int(Auras.xp_to_next(lvl))]
 		lines.append(level_line)
+		if lvl < Auras.MAX_LEVEL:
+			lines.append(tr("Evoluindo agora") if auras.levels_now(_focus) else tr("Nota: a aura só evolui ligada com a reserva no máximo (%d%%); com menos, o tempo não conta.") % Auras.MAX_PERCENT)
 	var real: PackedStringArray = []
 	if float(cost.mana) >= 0.005:
 		real.append(tr("%d%% de mana") % roundi(float(cost.mana) * 100.0))
