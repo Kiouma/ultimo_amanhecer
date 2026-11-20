@@ -130,7 +130,7 @@ func _build_water() -> void:
 
 
 func _scatter(rng: RandomNumberGenerator) -> void:
-	var trees := ["CommonTree_1", "CommonTree_2", "CommonTree_3", "Pine_1", "Pine_2", "Pine_4", "TwistedTree_1", "DeadTree_2"]
+	var trees := ["Tree_1_A_Color1", "Tree_1_B_Color1", "Tree_2_A_Color1", "Tree_2_C_Color1", "Tree_3_A_Color1", "Tree_4_A_Color1", "Tree_4_B_Color1", "Tree_Bare_2_A_Color1"]
 	for k in 46:
 		var a := rng.randf() * TAU
 		var d := rng.randf_range(12.0, RADIUS - 6.0)
@@ -138,7 +138,7 @@ func _scatter(rng: RandomNumberGenerator) -> void:
 		if p.distance_to(Vector2(9, -6)) < 9.0:
 			continue
 		var model: String = trees[rng.randi() % trees.size()]
-		var tree := NatureKit.instance(model, rng.randf_range(6.0, 10.0) if not model.begins_with("Twisted") else rng.randf_range(9.0, 12.0))
+		var tree := NatureKit.instance(model, rng.randf_range(6.0, 10.0) if not model.begins_with("Tree_Bare") else rng.randf_range(7.0, 9.0))
 		if tree == null:
 			continue
 		tree.position = Vector3(p.x, _height(p.x, p.y) - 0.1, p.y)
@@ -147,18 +147,18 @@ func _scatter(rng: RandomNumberGenerator) -> void:
 	for k in 10:
 		var a := rng.randf() * TAU
 		var d := rng.randf_range(5.0, RADIUS - 10.0)
-		var rock := NatureKit.instance("Rock_Medium_%d" % (1 + k % 3), rng.randf_range(0.8, 2.0))
+		var rock := NatureKit.instance("Rock_3_%s_Color1" % "ABCDEFGH"[k % 8], rng.randf_range(0.8, 2.0))
 		if rock:
 			rock.position = Vector3(cos(a) * d, _height(cos(a) * d, sin(a) * d) - 0.1, sin(a) * d)
 			rock.rotation.y = rng.randf() * TAU
 			add_child(rock)
 	# Grama e flores: uma MultiMesh por modelo.
-	for model: String in ["Grass_Common_Short", "Grass_Wispy_Short", "Flower_3_Group", "Fern_1"]:
+	for model: String in ["Grass_1_A_Color1", "Grass_2_B_Color1", "Bush_1_A_Color1", "Bush_2_A_Color1"]:
 		var mesh := NatureKit.mesh(model)
 		if mesh == null:
 			continue
 		var count := 260 if model.begins_with("Grass") else 40
-		var scale_range: Vector2 = {"Fern_1": Vector2(0.15, 0.22), "Flower_3_Group": Vector2(0.25, 0.35)}.get(model, Vector2(0.35, 0.55))
+		var scale_range: Vector2 = {"Grass_1_A_Color1": Vector2(0.74, 1.11), "Grass_2_B_Color1": Vector2(0.45, 0.68), "Bush_1_A_Color1": Vector2(1.79, 2.68), "Bush_2_A_Color1": Vector2(0.76, 1.14)}.get(model, Vector2.ONE)
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
 		mm.mesh = mesh
@@ -181,9 +181,9 @@ func _build_campfire() -> void:
 	var base := Vector3(0, _height(0, 0), 0)
 	for k in 8:
 		var a := TAU * k / 8.0
-		var stone := NatureKit.instance("Pebble_Round_%d" % (1 + k % 5), 0.0)
+		var stone := NatureKit.instance("Rock_1_%s_Color1" % "ABCDE"[k % 5], 0.0)
 		if stone:
-			stone.scale = Vector3.ONE * 1.4
+			stone.scale = Vector3.ONE * 0.5
 			stone.position = base + Vector3(cos(a) * 0.65, 0.0, sin(a) * 0.65)
 			add_child(stone)
 	for k in 3:

@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scripts/enemies/zombie.gd" id="1_zombie"]
 [ext_resource type="PackedScene" path="res://scenes/player/character_model.tscn" id="2_model"]
 [ext_resource type="Script" path="res://scripts/combat/health.gd" id="3_health"]
-[ext_resource type="PackedScene" path="res://assets/models/characters/universal_base/Hair_Buzzed.gltf" id="4_hair"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_zombie"]
 radius = 0.35
@@ -36,9 +35,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_zombie")
 
 [node name="Model" parent="." instance=ExtResource("2_model")]
-attachments = Array[PackedScene]([ExtResource("4_hair")])
-hair_color = Color(0.12, 0.12, 0.1, 1)
-skin_tint = Color(0.55, 0.68, 0.5, 1)
+body_kind = "skeleton_minion"
+
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("3_health")

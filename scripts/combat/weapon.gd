@@ -276,9 +276,23 @@ static func spawn_tracer(context: Node, from: Vector3, to: Vector3) -> void:
 	tw.tween_callback(tracer.queue_free)
 
 
-## Os modelos de verdade ainda não existem: cada arma monta formas simples.
+## Cada arma monta o próprio visual de 1ª pessoa (modelo KayKit do campo "model", ou
+## formas simples quando não há modelo).
 func _build_viewmodel() -> void:
 	pass
+
+
+## Modelo KayKit do item ("model" nos dados) com o maior lado = length metros; null se
+## o item não tem modelo. Quem chama posiciona/gira.
+func model_viewmodel(length: float) -> Node3D:
+	var path := str(data.get("model", ""))
+	if path == "":
+		return null
+	var node := WeaponModels.instance_sized(path, float(data.get("fp_length", length)))
+	if node:
+		for mesh: GeometryInstance3D in node.find_children("*", "GeometryInstance3D", true, false):
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return node
 
 
 static func box(size: Vector3, color: Color, pos := Vector3.ZERO, emissive := false) -> MeshInstance3D:

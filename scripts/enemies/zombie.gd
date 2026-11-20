@@ -417,8 +417,11 @@ func is_dead() -> bool:
 
 # --- Tipos especiais (GDD 6.1) -----------------------------------------------------
 
-## Tamanho e cor do tipo ("scale", "tint" em zombies.json). Igual em todas as máquinas.
+## Corpo, arma, tamanho e cor do tipo ("model", "weapon_model", "scale", "tint" em
+## zombies.json). Igual em todas as máquinas.
 func _apply_type_look() -> void:
+	model.set_body(str(stats.get("model", "skeleton_minion")))
+	model.set_held_model(str(stats.get("weapon_model", "")))
 	var s := _stat("scale", 1.0)
 	if not is_equal_approx(s, 1.0):
 		model.scale = Vector3.ONE * s

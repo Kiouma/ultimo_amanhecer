@@ -1,7 +1,7 @@
 class_name NatureDecor
 extends Node3D
-## Vegetação decorativa de um bloco do mundo (grama, flores, samambaias, cogumelos), com
-## os modelos do Stylized Nature MegaKit (NatureKit). Só visual: sem colisão, sem rede.
+## Vegetação decorativa de um bloco do mundo (grama, arbustos, pedrinhas), com os
+## modelos do KayKit Forest Nature Pack (NatureKit). Só visual: sem colisão, sem rede.
 ##
 ## compute() roda numa thread (só usa o ruído do mundo e a lista de lugares) e devolve,
 ## por modelo, as transformações; build() monta um MultiMeshInstance3D por modelo (um
@@ -9,42 +9,36 @@ extends Node3D
 
 const STEP := 2.0
 
-## Modelo: [escala mín, escala máx, distância de visão].
+## Modelo: [escala mín, escala máx, distância de visão] (KayKit Forest Nature Pack). As
+## escalas saem da altura-alvo de cada família (grama 0,3-0,55 m, arbustos 0,4-0,8 m,
+## pedrinhas 0,1-0,25 m) dividida pela altura real do modelo: as variantes do kit têm
+## tamanhos bem diferentes.
 const MODELS := {
-	"Grass_Common_Short": [0.35, 0.55, 45.0], "Grass_Common_Tall": [0.35, 0.5, 50.0],
-	"Grass_Wispy_Short": [0.4, 0.6, 45.0], "Grass_Wispy_Tall": [0.4, 0.6, 50.0],
-	"Flower_3_Group": [0.28, 0.38, 50.0], "Flower_4_Group": [0.25, 0.35, 50.0],
-	"Flower_3_Single": [0.28, 0.38, 40.0], "Flower_4_Single": [0.25, 0.35, 40.0],
-	"Petal_1": [0.7, 1.0, 30.0], "Petal_2": [0.7, 1.0, 30.0], "Petal_3": [0.7, 1.0, 30.0],
-	"Petal_4": [0.8, 1.1, 30.0], "Petal_5": [0.6, 0.9, 30.0],
-	"Clover_1": [0.3, 0.42, 40.0], "Clover_2": [0.3, 0.42, 40.0],
-	"Fern_1": [0.16, 0.24, 60.0], "Plant_1": [0.4, 0.6, 50.0], "Plant_1_Big": [0.3, 0.42, 70.0],
-	"Plant_7": [0.6, 0.9, 40.0], "Plant_7_Big": [0.6, 0.9, 40.0],
-	"Mushroom_Common": [0.6, 1.0, 35.0], "Mushroom_Laetiporus": [0.5, 0.8, 35.0],
-	"Pebble_Round_1": [0.8, 1.5, 30.0], "Pebble_Round_2": [0.8, 1.5, 30.0], "Pebble_Round_3": [0.8, 1.5, 30.0],
-	"Pebble_Round_4": [0.8, 1.5, 30.0], "Pebble_Round_5": [0.8, 1.5, 30.0],
-	"Pebble_Square_1": [0.9, 1.6, 30.0], "Pebble_Square_2": [0.9, 1.6, 30.0], "Pebble_Square_3": [0.9, 1.6, 30.0],
-	"Pebble_Square_4": [0.9, 1.6, 30.0], "Pebble_Square_5": [0.9, 1.6, 30.0], "Pebble_Square_6": [0.9, 1.6, 30.0],
-	"RockPath_Square_Small_1": [0.8, 1.2, 50.0], "RockPath_Square_Small_2": [0.8, 1.2, 50.0],
-	"RockPath_Round_Small_1": [0.8, 1.2, 50.0], "RockPath_Round_Small_2": [0.8, 1.2, 50.0],
+	"Grass_1_A_Color1": [0.56, 0.83, 45.0], "Grass_1_B_Color1": [0.62, 0.94, 45.0], "Grass_1_C_Color1": [0.55, 0.82, 45.0],
+	"Grass_1_D_Color1": [0.55, 0.82, 45.0], "Grass_2_A_Color1": [0.39, 0.62, 50.0], "Grass_2_B_Color1": [0.39, 0.62, 50.0],
+	"Grass_2_C_Color1": [0.39, 0.62, 50.0], "Grass_2_D_Color1": [0.39, 0.62, 50.0], "Bush_1_A_Color1": [1.79, 3.13, 60.0],
+	"Bush_1_B_Color1": [0.85, 1.48, 60.0], "Bush_1_C_Color1": [0.50, 0.88, 60.0], "Bush_1_D_Color1": [0.41, 0.72, 60.0],
+	"Bush_1_E_Color1": [0.50, 0.88, 60.0], "Bush_1_F_Color1": [0.41, 0.72, 60.0], "Bush_1_G_Color1": [0.41, 0.72, 60.0],
+	"Bush_2_A_Color1": [0.85, 1.52, 60.0], "Bush_2_B_Color1": [0.52, 0.93, 60.0], "Bush_2_C_Color1": [0.34, 0.61, 60.0],
+	"Bush_2_D_Color1": [0.52, 0.93, 60.0], "Bush_2_E_Color1": [0.34, 0.60, 60.0], "Bush_2_F_Color1": [0.25, 0.45, 60.0],
+	"Bush_3_A_Color1": [0.87, 1.52, 60.0], "Bush_3_B_Color1": [0.51, 0.90, 60.0], "Bush_3_C_Color1": [0.36, 0.62, 60.0],
+	"Bush_4_A_Color1": [0.92, 1.73, 60.0], "Bush_4_B_Color1": [0.54, 1.01, 60.0], "Bush_4_C_Color1": [0.31, 0.58, 60.0],
+	"Bush_4_D_Color1": [0.54, 1.01, 60.0], "Bush_4_E_Color1": [0.31, 0.58, 60.0], "Bush_4_F_Color1": [0.31, 0.58, 60.0],
+	"Rock_1_A_Color1": [0.19, 0.46, 30.0], "Rock_1_B_Color1": [0.19, 0.46, 30.0], "Rock_1_C_Color1": [0.19, 0.46, 30.0],
+	"Rock_1_D_Color1": [0.09, 0.22, 30.0], "Rock_1_E_Color1": [0.09, 0.22, 30.0], "Rock_1_F_Color1": [0.09, 0.22, 30.0],
+	"Rock_1_G_Color1": [0.05, 0.13, 30.0], "Rock_1_H_Color1": [0.05, 0.13, 30.0],
 }
 
 ## Por bioma: chance de cada enfeite em cada ponto. Nomes terminados em "*" sorteiam
-## entre as variantes (Clover_* = Clover_1..2).
+## entre os modelos que começam assim (Grass_1_* = Grass_1_A..D).
 const DECOR := {
-	"plains": {"Grass_Common_Short": 0.3, "Grass_Common_Tall": 0.06, "Grass_Wispy_Short": 0.08,
-		"Flower_3_Group": 0.025, "Flower_4_Group": 0.025, "Flower_3_Single": 0.02, "Flower_4_Single": 0.02,
-		"Petal_*": 0.03, "Clover_*": 0.03},
-	"forest": {"Grass_Common_Short": 0.14, "Grass_Wispy_Short": 0.08, "Fern_1": 0.08, "Plant_1": 0.04,
-		"Plant_7": 0.04, "Plant_1_Big": 0.01, "Mushroom_Common": 0.03, "Clover_*": 0.05},
-	"swamp": {"Grass_Wispy_Tall": 0.2, "Grass_Common_Tall": 0.1, "Fern_1": 0.06, "Plant_7_Big": 0.04,
-		"Mushroom_Laetiporus": 0.02, "Mushroom_Common": 0.03},
-	"lakeside": {"Grass_Wispy_Tall": 0.12, "Grass_Common_Short": 0.12,
-		"Plant_7": 0.03, "Flower_3_Single": 0.02},
-	"mountain": {"RockPath_Square_Small_*": 0.04, "Grass_Wispy_Short": 0.05},
-	"tundra": {"Grass_Wispy_Short": 0.025},
-	"contaminated": {"Mushroom_Laetiporus": 0.03, "Mushroom_Common": 0.05,
-		"Grass_Wispy_Short": 0.05},
+	"plains": {"Grass_1_*": 0.3, "Grass_2_*": 0.08, "Bush_1_*": 0.015, "Rock_1_*": 0.008},
+	"forest": {"Grass_1_*": 0.14, "Grass_2_*": 0.08, "Bush_2_*": 0.05, "Bush_3_*": 0.03, "Rock_1_*": 0.01},
+	"swamp": {"Grass_2_*": 0.25, "Bush_4_*": 0.05, "Grass_1_*": 0.05},
+	"lakeside": {"Grass_2_*": 0.15, "Grass_1_*": 0.1, "Rock_1_*": 0.02},
+	"mountain": {"Rock_1_*": 0.05, "Grass_1_*": 0.04},
+	"tundra": {"Grass_1_*": 0.02, "Rock_1_*": 0.01},
+	"contaminated": {"Grass_2_*": 0.05, "Bush_4_*": 0.03},
 }
 
 ## modelo → [MultiMeshInstance3D, PackedVector3Array posições locais]
@@ -55,13 +49,12 @@ var _batches := {}
 static func compute(world: Node, c: Vector2i, near_pois: Array) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([int(world.world_seed), c.x, c.y, 31])
-	var variants := {}  # "Clover_*" -> [Clover_1, ...]
-	for key: String in MODELS:
-		var base := key.rstrip("0123456789")
-		if base != key and base.ends_with("_"):
-			if not variants.has(base + "*"):
-				variants[base + "*"] = []
-			variants[base + "*"].append(key)
+	var variants := {}  # "Grass_1_*" -> [Grass_1_A_Color1, ...]
+	for table: Dictionary in DECOR.values():
+		for key: String in table:
+			if key.ends_with("*") and not variants.has(key):
+				var prefix := key.trim_suffix("*")
+				variants[key] = MODELS.keys().filter(func(m: String) -> bool: return m.begins_with(prefix))
 	var chunk_size: float = world.CHUNK
 	var ox := c.x * chunk_size
 	var oz := c.y * chunk_size

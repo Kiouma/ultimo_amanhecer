@@ -77,6 +77,20 @@ var _torch_light: OmniLight3D
 ## bônus (ver Auras).
 var net_auras := ""
 
+## Classe do personagem (data/backgrounds): define o corpo KayKit ("model"). Replicada.
+var net_class := "":
+	set(value):
+		net_class = value
+		if is_node_ready():
+			model.set_body(str(GameData.get_entry("backgrounds", value).get("model", "knight")))
+
+## Item na mão (id), replicado: os outros veem a arma/ferramenta no modelo.
+var net_held := "":
+	set(value):
+		net_held = value
+		if is_node_ready():
+			model.set_held_item(value)
+
 ## Peças de traje vestidas (nomes separados por vírgula), replicadas: todos veem a roupa.
 var net_outfit := "":
 	set(value):
@@ -174,8 +188,11 @@ func _ready() -> void:
 	auras.name = "Auras"
 	add_child(auras)
 	equipment.changed.connect(_update_outfit)
+	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
+	model.set_held_item(net_held)
 	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
+	weapons.changed.connect(_update_held)
 	# Regeneração de vida só corre na máquina do dono (ver Survival).
 	survival.set_process(is_local())
 	death_penalty.set_process(is_local())
@@ -197,6 +214,9 @@ func _ready() -> void:
 			_give_starter_kit()
 			_apply_background(SaveGame.character_background())
 		MouseMode.refresh()
+		net_class = progression.char_class  # corpo da classe (salva ou escolhida no menu)
+		_update_outfit()
+		_update_held()
 		_apply_camera_mode()
 	else:
 		# Personagem de outro jogador: sem câmera, sem armas de 1ª pessoa, corpo visível.
@@ -217,17 +237,24 @@ func _on_settings_changed() -> void:
 
 
 ## Dono: traje a partir do equipamento vestido (peças com "outfit"; quebradas não aparecem).
+## Peças vestidas que mudam o modelo: "head" (capacete/chapéu/capuz) e "chest" (capa).
 func _update_outfit() -> void:
 	if not is_local():
 		return
 	var parts := PackedStringArray()
-	for slot: String in Equipment.SLOTS:
+	for slot: String in ["head", "chest"]:
 		var item := equipment.get_item(slot)
-		if item.is_empty() or Inventory.is_broken(item):
-			continue
-		for part: String in GameData.get_item(item.id).get("outfit", []):
-			parts.append(part)
+		if not item.is_empty() and not Inventory.is_broken(item):
+			parts.append(slot)
 	net_outfit = ",".join(parts)
+
+
+## Arma ou ferramenta selecionada na hotbar (para o modelo em 3ª pessoa e os outros).
+func _update_held() -> void:
+	if not is_local():
+		return
+	var item := weapons.selected_item()
+	net_held = str(item.get("id", "")) if not item.is_empty() else ""
 
 
 ## Verdadeiro se este é o personagem controlado nesta máquina.

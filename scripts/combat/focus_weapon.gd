@@ -154,7 +154,11 @@ func _process(delta: float) -> void:
 
 
 func _build_viewmodel() -> void:
-	var stick := Weapon.box(Vector3(0.03, 0.75, 0.03), Color(0.42, 0.29, 0.17), Vector3(0, 0.05, 0))
+	var stick: Node3D = model_viewmodel(0.8)
+	if stick:
+		stick.position = Vector3(0, -0.32, 0.1)
+	else:
+		stick = Weapon.box(Vector3(0.03, 0.75, 0.03), Color(0.42, 0.29, 0.17), Vector3(0, 0.05, 0))
 	stick.rotation.x = -0.35
 	add_child(stick)
 	_orb = Weapon.sphere(0.05, Color(0.9, 0.6, 1.0), Vector3(0, 0.42, -0.14), true)

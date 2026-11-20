@@ -113,6 +113,25 @@ func hud_text() -> String:
 
 
 func _build_viewmodel() -> void:
+	var model := model_viewmodel(0.7)
+	if model:
+		# Modelo KayKit (arco já com corda): a flecha encaixada e a corda puxada continuam
+		# desenhadas por código para mostrar a puxada.
+		model.rotation = Vector3(0, deg_to_rad(90), 0)
+		add_child(model)
+		_limb_top = Node3D.new()
+		_limb_bottom = Node3D.new()
+		add_child(_limb_top)
+		add_child(_limb_bottom)
+		_string = Weapon.box(Vector3(0.004, 0.5, 0.004), Color(0.9, 0.88, 0.8))
+		_string.visible = false
+		add_child(_string)
+		_nocked = Weapon.box(Vector3(0.012, 0.012, 0.6), Color(0.6, 0.5, 0.35))
+		add_child(_nocked)
+		rotation = Vector3(0, deg_to_rad(8), deg_to_rad(-14))
+		scale = Vector3.ONE * 0.8
+		_update_visual()
+		return
 	var wood := Color(0.45, 0.3, 0.16)
 	# Duas hastes (de cima e de baixo) inclinadas para trás, formando o arco.
 	_limb_top = Node3D.new()

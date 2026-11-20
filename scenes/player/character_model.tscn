@@ -1,21 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/player/character_model.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/models/characters/universal_base/Superhero_Male_FullBody.gltf" id="2_body"]
-[ext_resource type="AnimationLibrary" path="res://assets/animations/ual/UAL1_Standard.glb" id="3_ual1"]
-[ext_resource type="AnimationLibrary" path="res://assets/animations/ual/UAL2_Standard.glb" id="4_ual2"]
-[ext_resource type="PackedScene" path="res://assets/models/characters/universal_base/Hair_SimpleParted.gltf" id="5_hair"]
 
 [node name="CharacterModel" type="Node3D"]
 script = ExtResource("1_script")
-attachments = Array[PackedScene]([ExtResource("5_hair")])
-
-[node name="Body" parent="." instance=ExtResource("2_body")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-root_node = NodePath("../Body")
-libraries = {
-&"ual1": ExtResource("3_ual1"),
-&"ual2": ExtResource("4_ual2")
-}

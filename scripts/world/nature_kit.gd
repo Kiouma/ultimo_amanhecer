@@ -1,9 +1,10 @@
 class_name NatureKit
-## Modelos do Stylized Nature MegaKit (Quaternius, CC0) em assets/models/environment/nature/.
+## Modelos do KayKit Forest Nature Pack (Kay Lousberg, CC0) em
+## assets/models/environment/kaykit_forest/ (versão free, de testes).
 ## Carrega cada modelo uma vez e guarda a cena, a malha e a altura (para escalar por
 ## altura desejada em vez de por fator: os modelos do kit têm tamanhos bem diferentes).
 
-const DIR := "res://assets/models/environment/nature/"
+const DIR := "res://assets/models/environment/kaykit_forest/"
 
 static var _scenes := {}
 static var _meshes := {}

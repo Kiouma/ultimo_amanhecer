@@ -158,6 +158,12 @@ func _swing(direction: float) -> void:
 func _build_viewmodel() -> void:
 	if data.get("no_viewmodel", false):
 		return  # mãos livres (soco)
+	var model := model_viewmodel(0.55)
+	if model:
+		model.position = Vector3(0, -0.08, 0)
+		add_child(model)
+		rotation = Vector3(deg_to_rad(-20), deg_to_rad(-10), deg_to_rad(-15))
+		return
 	var handle := cylinder(0.018, 0.45, Color(0.4, 0.28, 0.16), Vector3(0, 0.12, 0))
 	add_child(handle)
 	add_child(box(Vector3(0.02, 0.13, 0.16), Color(0.55, 0.57, 0.6), Vector3(0, 0.33, -0.07)))  # lâmina

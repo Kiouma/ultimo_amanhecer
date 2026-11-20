@@ -55,7 +55,7 @@ func _throw() -> void:
 	make_noise(stat("noise", 0.05))
 	Sfx.play("swing", user.global_position + Vector3.UP * 1.4, -4.0)
 	count_use()
-	play_body_anim(&"Punch_Cross")
+	play_body_anim(&"Throw")
 	hud_changed.emit()
 
 
@@ -77,5 +77,10 @@ func on_unequip() -> void:
 
 
 func _build_viewmodel() -> void:
+	var model := model_viewmodel(0.22)
+	if model:
+		model.rotation = Vector3(deg_to_rad(-90), 0, 0)  # lâmina para a frente
+		add_child(model)
+		return
 	add_child(Weapon.box(Vector3(0.02, 0.012, 0.16), Color(0.75, 0.75, 0.78), Vector3(0, 0, -0.08)))
 	add_child(Weapon.box(Vector3(0.025, 0.02, 0.08), Color(0.25, 0.2, 0.15), Vector3(0, 0, 0.04)))

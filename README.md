@@ -23,7 +23,7 @@ A **classe** (Guerreiro, Arqueiro, Mago, Pugilista) só define onde você começ
 - **Manto do aprendiz** (Mago): tecido + pó arcano, moído do cristal arcano na bancada.
 - **Trajes de pugilista** (Pugilista): tendões de carniçais.
 
-O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). O Pugilista luta de mãos vazias: proficiência **Pugilismo** e um setor próprio da árvore com dano desarmado.
+**Visual (KayKit):** cada classe tem o seu personagem: Guerreiro = Cavaleiro, Arqueiro = Patrulheiro, Mago = Mago, Pugilista = Bárbaro. A arma selecionada aparece na mão (3ª pessoa e para os outros jogadores) e na 1ª pessoa. Monstros: goblins, xamã, ogro, troll, espectro e diabrete usam os personagens KayKit tingidos; carniçal, draugr e necromante são esqueletos. O Pugilista luta de mãos vazias: proficiência **Pugilismo** e um setor próprio da árvore com dano desarmado.
 
 Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse em cima de um item mostra o que ele faz (ex.: "Regenera 30 de vida em 10 s"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
 
@@ -131,8 +131,10 @@ Quem entra no mundo de um amigo salva o próprio personagem na hora em que sai (
 
 ```
 assets/        Arte e som (veja assets/README.md e assets/LICENSES.md)
-  models/      environment/nature (Nature MegaKit), props/fantasy (Fantasy Props),
-               buildings/village (Medieval Village), characters/outfits (trajes)
+  models/      KayKit (estilo visual do jogo): characters/kaykit (Adventurers),
+               enemies/skeletons, weapons/kaykit, environment/kaykit_forest;
+               ainda Quaternius: props/fantasy e buildings/village
+  animations/  kaykit (Character Animations, esqueleto Rig_Medium)
 data/          Conteúdo do jogo em JSON: itens, receitas, monstros (data/zombies), feitiços,
                proficiências, classes (data/backgrounds), árvore passiva (data/passives),
                ascendências, auras, conjuntos, saques e traduções (data/i18n).
