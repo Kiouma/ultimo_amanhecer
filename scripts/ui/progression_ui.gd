@@ -204,7 +204,7 @@ const BONUS_NAMES := {
 	"thrown.damage": "Dano de arremesso", "ranged.draw_time": "Tempo de puxada do arco", "move_speed": "Velocidade de movimento",
 	"noise": "Barulho", "damage_taken": "Dano recebido", "max_stamina_add": "Stamina máxima", "max_mana_add": "Mana máxima",
 	"magic.mana": "Custo de mana", "magic.cooldown": "Recarga de feitiços", "melee.stamina_cost": "Stamina por golpe",
-	"sneak_damage": "Dano de ataque surpresa", "food": "Comida e bebida rendem", "heal": "Cura de bandagens e kits",
+	"sneak_damage": "Dano de ataque surpresa", "heal": "Cura de poções e comida",
 	"ranged.recover_chance": "Recuperar flechas", "attack_speed": "Velocidade de ataque", "cooldown_reduction": "Redução de recarga",
 	"spell_resist": "Resistência a magia", "carry_weight_add": "Capacidade de carga", "loot_bonus": "Aumento de loot",
 	"headshot_damage": "Dano na cabeça", "magic.channel": "Força da canalização", "melee.channel": "Carga do golpe",

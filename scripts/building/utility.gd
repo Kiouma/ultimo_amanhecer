@@ -3,34 +3,15 @@ extends CraftingStation
 ## Utilidades da base (GDD 9.3), colocadas como as estações:
 ## - Baú ("chest"): guarda até MAX_STACKS pilhas, compartilhado (o servidor manda).
 ## - Cama ("bed"): E define o seu ponto de renascimento (vale nesta partida e no save).
-## - Coletor de água ("collector"): junta água limpa com o tempo (bem mais na chuva);
-##   E enche as garrafas vazias com ela.
 
 const MAX_STACKS := 30
-const COLLECTOR_MAX := 10
-## Segundos por garrafa: tempo normal e com chuva/tempestade.
-const COLLECT_DRY := 90.0
-const COLLECT_RAIN := 20.0
 
 ## Baú: lista de pilhas {id, count, ...extras}.
 var contents: Array = []
-## Coletor: garrafas de água prontas.
-var water := 0
-
-var _collect_timer := 0.0
-
-
-func _ready() -> void:
-	super()
-	if station == "collector":
-		set_process(true)
-
-
 func get_prompt() -> String:
 	match station:
 		"chest": return tr("[E] Abrir baú (%d/%d)") % [contents.size(), MAX_STACKS]
 		"bed": return tr("[E] Dormir aqui (renascer nesta cama)")
-		"collector": return tr("[E] Encher garrafas (%d de água limpa)") % water
 	return super()
 
 
@@ -42,66 +23,8 @@ func interact(player: Node3D) -> void:
 				_request_contents.rpc_id(1)
 		"bed":
 			player.set_respawn_point(global_position + Vector3.UP * 0.3)
-		"collector":
-			_collect(player)
 		_:
 			super(player)
-
-
-func _process(delta: float) -> void:
-	super(delta)
-	if station != "collector" or not multiplayer.is_server() or water >= COLLECTOR_MAX:
-		return
-	var w := Weather.find(get_tree())
-	var rainy := w != null and w.state in ["rain", "storm"]
-	_collect_timer += delta
-	if _collect_timer >= (COLLECT_RAIN if rainy else COLLECT_DRY):
-		_collect_timer = 0.0
-		_set_water(water + 1)
-
-
-# --- Coletor -----------------------------------------------------------------------------
-
-func _collect(player: Node3D) -> void:
-	var inv := player.get_node(^"Inventory") as Inventory
-	var want := mini(inv.count_of("empty_bottle"), water)
-	if want <= 0:
-		player.notify(tr("Precisa de garrafas vazias") if water > 0 else tr("O coletor ainda está vazio"))
-		return
-	inv.remove_item("empty_bottle", want)
-	if multiplayer.is_server():
-		_give_water(player, want)
-	else:
-		_request_water.rpc_id(1, want)
-
-
-@rpc("any_peer", "call_remote", "reliable")
-func _request_water(want: int) -> void:
-	var p := _sender()
-	if p:
-		_give_water(p, clampi(want, 0, COLLECTOR_MAX))
-
-
-## Servidor: entrega o que tem; o resto das garrafas volta vazio.
-func _give_water(player: Node3D, want: int) -> void:
-	var inv := player.get_node(^"Inventory") as Inventory
-	var got := mini(want, water)
-	if got > 0:
-		inv.grant("water_bottle", got)
-	if want - got > 0:
-		inv.grant("empty_bottle", want - got)
-	_set_water(water - got)
-
-
-func _set_water(value: int) -> void:
-	water = clampi(value, 0, COLLECTOR_MAX)
-	if Network.is_online() and multiplayer.is_server():
-		_sync_water.rpc(water)
-
-
-@rpc("authority", "call_remote", "reliable")
-func _sync_water(value: int) -> void:
-	water = value
 
 
 # --- Baú ---------------------------------------------------------------------------------

@@ -6,7 +6,7 @@ extends Node
 ## - chuva: abafa sons (zumbis ouvem 30% menos); tempestade: 45% menos, relâmpagos e
 ##   Raio em cadeia 30% mais forte;
 ## - neblina: zumbis enxergam 45% menos (e a névoa fecha a sua visão);
-## - frio extremo: neve, fome 60% mais rápida longe de uma fogueira (6 m).
+## - frio extremo: neve e visibilidade menor.
 
 const STATES := {
 	"clear": {"name": "Céu limpo", "weight": 50, "hearing": 1.0, "sight": 1.0, "fog": 1.0},
@@ -18,8 +18,6 @@ const STATES := {
 ## Duração de cada clima, em segundos reais.
 const MIN_DURATION := 150.0
 const MAX_DURATION := 360.0
-const COLD_HUNGER_FACTOR := 1.6
-const CAMPFIRE_WARMTH := 6.0
 
 var state := "clear"
 
@@ -53,18 +51,6 @@ static func sight_factor(tree: SceneTree) -> float:
 static func lightning_factor(tree: SceneTree) -> float:
 	var w := find(tree)
 	return 1.3 if w and w.state == "storm" else 1.0
-
-
-## Fome mais rápida no frio, a não ser perto de uma fogueira.
-static func hunger_factor(tree: SceneTree, position: Vector3) -> float:
-	var w := find(tree)
-	var world := tree.get_first_node_in_group("world")
-	var tundra: bool = world != null and world.biome_at(position.x, position.z) == "tundra"
-	if not tundra and (w == null or w.state != "cold"):
-		return 1.0
-	if not Structures.stations_near("campfire", position, CAMPFIRE_WARMTH).is_empty():
-		return 1.0
-	return COLD_HUNGER_FACTOR
 
 
 func display_name() -> String:

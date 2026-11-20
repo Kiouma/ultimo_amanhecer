@@ -3,7 +3,7 @@ extends Node3D
 ## Fica na câmera do jogador e segue a hotbar do inventário (teclas 1-9, rodinha).
 ## O item do slot selecionado define o que o botão esquerdo faz:
 ## - arco / melee / feitiço: cria (uma vez) e mostra a arma;
-## - consumível (bandagem, kit médico): usa e gasta um;
+## - consumível (poção, comida): usa e gasta um;
 ## - outro item ou vazio: mãos livres.
 ## Q conjura a última habilidade sem trocar de slot.
 
@@ -165,8 +165,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_q_down = Time.get_ticks_msec()
 
 
-## Usa o item selecionado (consumíveis): cura ("heals"), comida ("food"), água ("water").
-## Não gasta se não ajudar em nada. Cura passa pelo servidor (Health.heal).
+## Usa o item selecionado (consumíveis): cura na hora ("heals", poções) ou regeneração
+## temporária ("regen" vida/s por "regen_time" s, comida). Não gasta se não ajudar em
+## nada. Cura passa pelo servidor (Health.heal).
 func use_selected() -> void:
 	var s := selected_item()
 	if s.is_empty() or _use_cooldown > 0.0:
@@ -202,20 +203,15 @@ func use_selected() -> void:
 	var prog := user.progression
 	var heals := float(data.get("heals", 0.0)) * prog.mult("heal")
 	var can_heal := heals > 0.0 and user.health.current < user.health.cap()
-	var fed := user.survival.consume(float(data.get("food", 0.0)) * prog.mult("food"), float(data.get("water", 0.0)) * prog.mult("food"))
-	if not can_heal and not fed:
+	var regen := float(data.get("regen", 0.0)) * prog.mult("heal")
+	var regenerates := regen > 0.0 and user.survival.add_food_regen(regen, float(data.get("regen_time", 10.0)))
+	if not can_heal and not regenerates:
+		user.notify(tr("Vida cheia"))
 		return  # nada a ganhar: não desperdiça
 	if can_heal:
 		user.health.heal(heals)
 	inventory.consume_from_slot(selected, 1)
 	prog.gain("survival", 1.0)
-	# Garrafa: beber devolve a garrafa vazia.
-	if data.has("returns"):
-		Crafting.give_result(inventory, {"result": data.returns, "amount": 1}, 1)
-	# Água suja e afins: chance de passar mal.
-	if randf() < float(data.get("sick_chance", 0.0)):
-		user.health.take_damage(float(data.get("sick_damage", 10.0)), user)
-		user.notify(tr("Você passou mal (%s)") % str(data.get("name", s.id)).to_lower())
 	_use_cooldown = 1.0
 	user.play_action_synced(&"Consume")
 

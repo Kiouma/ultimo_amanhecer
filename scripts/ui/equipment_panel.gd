@@ -151,9 +151,8 @@ static func primary_stats(p: Player) -> Array:
 	var mana := p.mana
 	var out: Array = []
 	out.append([tr_static(TranslationServer.translate("Vida")), "%d" % ceili(p.health.max_health)])
-	var life_regen := maxf(prog.add("life_regen_add"), 0.0)
-	out.append([tr_static(TranslationServer.translate("Regeneração de vida")), "%.2f/s" % (p.survival.regen_per_second + life_regen),
-		tr_static(TranslationServer.translate("%.2f/s com fome e sede acima de %d%%; %.2f/s sempre (árvore, ascendência e auras)")) % [p.survival.regen_per_second, int(p.survival.well_fed_threshold), life_regen]])
+	out.append([tr_static(TranslationServer.translate("Regeneração de vida")), "%.2f/s" % p.survival.life_regen_rate(),
+		tr_static(TranslationServer.translate("Base 0. Sobe com a árvore passiva, a ascendência, itens, auras e comida."))])
 	out.append([tr_static(TranslationServer.translate("Stamina")), "%d" % roundi(stamina.max_value)])
 	out.append([tr_static(TranslationServer.translate("Regeneração de stamina")), "%.1f/s" % stamina.regen_per_second])
 	out.append([tr_static(TranslationServer.translate("Mana")), "%d" % roundi(mana.max_value)])
@@ -184,8 +183,7 @@ static func secondary_stats(p: Player) -> Array:
 		[tr_static(TranslationServer.translate("Aumento de loot")), "%+d%%" % roundi(clampf(prog.add("loot_bonus"), 0.0, 2.0) * 100.0), tr_static(TranslationServer.translate("Chance e quantidade dos itens que inimigos derrubam."))],
 		[tr_static(TranslationServer.translate("Capacidade de carga")), TranslationServer.translate("%.0f kg") % p.inventory.max_weight, tr_static(TranslationServer.translate("Acima disso fica lento."))],
 		[tr_static(TranslationServer.translate("Coleta de recursos")), pct.call("gather_yield")],
-		[tr_static(TranslationServer.translate("Comida e bebida rendem")), pct.call("food")],
-		[tr_static(TranslationServer.translate("Cura de bandagens e kits")), pct.call("heal")],
+		[tr_static(TranslationServer.translate("Cura de poções e comida")), pct.call("heal")],
 		[tr_static(TranslationServer.translate("Tempo de fabricação")), pct.call("craft_time")],
 		[tr_static(TranslationServer.translate("Barulho")), pct.call("noise")],
 		[tr_static(TranslationServer.translate("Stamina gasta correndo")), pct.call("sprint_stamina")],

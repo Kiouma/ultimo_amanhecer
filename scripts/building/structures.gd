@@ -17,7 +17,7 @@ const PIECE_SCRIPT := preload("res://scripts/building/build_piece.gd")
 const TRAP_SCRIPT := preload("res://scripts/building/trap.gd")
 const UTILITY_SCRIPT := preload("res://scripts/building/utility.gd")
 ## Estações que são utilidades da base (baú, cama, coletor).
-const UTILITY_STATIONS := ["chest", "bed", "collector"]
+const UTILITY_STATIONS := ["chest", "bed"]
 ## Tipos de item colocados no chão pelo item (estação, armadilha).
 const PLACEABLE_TYPES := ["station", "trap"]
 ## Distância máxima entre o jogador e o ponto onde a estação vai.

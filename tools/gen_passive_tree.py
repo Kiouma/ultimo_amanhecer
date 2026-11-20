@@ -39,15 +39,15 @@ def e(**kw):
 
 # Nós pequenos dos caminhos, por setor (ciclados).
 PATH_SMALLS = {
-    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04))],
+    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04)), ("Sangue forte", e(life_regen_add=0.15))],
     "archer": [("Precisão", e(ranged__damage=0.04)), ("Mão ágil", e(ranged__draw_time=-0.03)), ("Passo leve", e(move_speed=0.015)), ("Reflexos", e(attack_speed=0.02)), ("Arremesso", e(thrown__damage=0.05))],
     "mage": [("Intelecto", e(magic__damage=0.04)), ("Reserva arcana", e(max_mana_add=8)), ("Fluxo de mana", e(mana_regen=0.06)), ("Foco", e(magic__mana=-0.03)), ("Ressonância", e(aura_effect=0.02))],
-    "brawler": [("Punho", e(unarmed__damage=0.05)), ("Resiliência", e(max_health_add=6)), ("Ritmo", e(attack_speed=0.02)), ("Ímpeto", e(unarmed__stamina_cost=-0.04)), ("Recuperação", e(stamina_regen=0.06))],
+    "brawler": [("Punho", e(unarmed__damage=0.05)), ("Resiliência", e(max_health_add=6)), ("Ritmo", e(attack_speed=0.02)), ("Ímpeto", e(unarmed__stamina_cost=-0.04)), ("Recuperação", e(stamina_regen=0.06)), ("Fôlego vital", e(life_regen_add=0.15))],
     "monk": [("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02)), ("Meditação", e(mana_regen=0.04, stamina_regen=0.04)), ("Espírito", e(aura_effect=0.02))],
     "spellbow": [("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025)), ("Recarga", e(magic__cooldown=-0.03)), ("Vento", e(move_speed=0.012))],
     "hunter": [("Caça", e(ranged__damage=0.025, melee__damage=0.025)), ("Rastreio", e(noise=-0.03)), ("Emboscada", e(sneak_damage=0.06))],
     "barbarian": [("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03)), ("Couro grosso", e(max_health_add=7)), ("Teimosia", e(damage_taken=-0.012))],
-    "center": [("Sobrevivência", e(gather_yield=0.04)), ("Fartura", e(food=0.05)), ("Remendo", e(heal=0.05)), ("Carga", e(carry_weight_add=3)), ("Artesão", e(craft_time=-0.04)), ("Regeneração", e(life_regen_add=0.1))],
+    "center": [("Sobrevivência", e(gather_yield=0.04)), ("Vitalidade", e(max_health_add=5)), ("Remendo", e(heal=0.05)), ("Carga", e(carry_weight_add=3)), ("Artesão", e(craft_time=-0.04)), ("Regeneração", e(life_regen_add=0.1))],
 }
 
 # Notáveis dos setores de classe: 6 de cluster (2 por ramo, na ordem ramo esquerdo,

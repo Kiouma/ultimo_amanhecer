@@ -118,7 +118,7 @@ O jogador escolhe aparência básica, um **passado** (que dá pequenos bônus in
 
 - Segurar o ataque puxa a corda; quanto mais puxada, mais dano e alcance. Soltar dispara.
 - A flecha é um projétil com queda (gravidade). Quase não faz barulho: ideal para furtividade.
-- **Flecha = pena + graveto**, fabricada nas mãos. Flechas que erram ficam cravadas e podem ser recuperadas (chance).
+- **Flecha = pena + madeira**, fabricada nas mãos. Flechas que erram ficam cravadas e podem ser recuperadas (chance).
 - Tipos futuros: flechas de pedra/metal, incendiárias, encantadas.
 
 **Armas de fogo (alto custo, emergência):**
@@ -197,7 +197,7 @@ Animais infectados (cães, corvos), saqueadores humanos em fases posteriores e p
 Os sistemas abaixo criam pressão sem tornar o jogo cansativo. Todos são ajustáveis nas opções de dificuldade.
 
 - **Vida:** reduzida por dano; regenera devagar se o jogador está bem alimentado.
-- **Fome e sede:** caem com o tempo e mais rápido com esforço. Comida cozida dá mais e traz bônus.
+- ~~**Fome e sede**~~ *(removidas na virada para RPG: a vida regenera pela árvore, itens, auras e comida; ver PROXIMOS_PASSOS.md, seção 4)*.
 - **Stamina:** usada em correr, pular e atacar com melee.
 - **Mana:** usada em magias (seção 5.4).
 - **Temperatura:** frio e calor afetam o jogador; roupas e fogueiras ajudam.
@@ -218,13 +218,13 @@ Implementado na Fase 2 (valores provisórios): a **hotbar (9 slots) conta como o
 
 ### 8.1 Recursos básicos
 
-Madeira, graveto, pena, pedra, sucata de metal, tecido, couro, ervas, comida, combustível, componentes eletrônicos e **cristais arcanos** (raros, usados em magia).
+Madeira (também coletada no chão; o graveto saiu), pena, pedra, sucata de metal, tecido, couro, ervas, comida, combustível, componentes eletrônicos e **cristais arcanos** (raros, usados em magia).
 
 ### 8.2 Estações de crafting
 
 | Estação | O que produz |
 | --- | --- |
-| **Mãos (sem estação)** | Itens primitivos: tocha, bandagem simples, lança de madeira, **flecha (pena + graveto)** |
+| **Mãos (sem estação)** | Itens primitivos: tocha, lança de madeira, **flecha (pena + madeira)** |
 | **Fogueira / fogão** | Comida, água fervida |
 | **Bancada** | Ferramentas, armas melee, flechas, reparos |
 | **Forja** | Metais, lâminas, peças de armas |
@@ -279,7 +279,7 @@ Ainda não implementado; custos e valores serão definidos depois.
 ### 9.2 Defesa
 
 - **Armadilhas:** espetos, fosso, cerca elétrica, mina, armadilha de fogo.
-  - Implementadas (fabricadas na bancada, colocadas pela hotbar como as estações, só ferem inimigos, zumbis passam por cima): **espetos** (3 madeira + 8 gravetos; 12 de dano a cada 0,8 s e lentidão de 55%; 60 usos) e **mandíbula** (3 sucata + 2 gravetos; 45 de dano e prende por 3,5 s; 10 usos). Cada acerto gasta durabilidade; com 0 param de funcionar mas não somem: **E** recolhe com a durabilidade atual e a bancada conserta.
+  - Implementadas (fabricadas na bancada, colocadas pela hotbar como as estações, só ferem inimigos, zumbis passam por cima): **espetos** (6 madeira; 12 de dano a cada 0,8 s e lentidão de 55%; 60 usos) e **mandíbula** (3 sucata + 2 gravetos; 45 de dano e prende por 3,5 s; 10 usos). Cada acerto gasta durabilidade; com 0 param de funcionar mas não somem: **E** recolhe com a durabilidade atual e a bancada conserta.
 - **Torretas:** automáticas, precisam de munição e energia.
 - **Magia defensiva:** muros de terra, runas de gelo no chão, totens de cura.
 - **Pontos fortes do projeto:** o jogador pode criar um "funil" para guiar zumbis a um caminho de morte.
@@ -288,7 +288,7 @@ Ainda não implementado; custos e valores serão definidos depois.
 
 Baús, cama (ponto de renascimento), horta, coletor de água, gerador, iluminação.
 
-**Implementado:** **Baú** (30 pilhas, compartilhado, servidor manda; clique para guardar/pegar), **Cama** (E: passa a renascer nela; vai no save) e **Coletor de água** (junta 1 garrafa de água limpa a cada 90 s, ou 20 s na chuva, até 10; E enche as garrafas vazias). Baú e coletor nas mãos; cama na bancada. A base também pode ser **ocupada em pontos pré-existentes** do mapa (um posto de gasolina, uma casa), poupando tempo no início.
+**Implementado:** **Baú** (30 pilhas, compartilhado, servidor manda; clique para guardar/pegar), **Cama** (E: passa a renascer nela; vai no save) *(o Coletor de água saiu junto com a sede)*. Baú nas mãos; cama na bancada. A base também pode ser **ocupada em pontos pré-existentes** do mapa (um posto de gasolina, uma casa), poupando tempo no início.
 
 ## 10. Mundo e exploração
 
@@ -337,7 +337,7 @@ Chuva, neblina, tempestade e frio extremo. O clima afeta visão, barulho (chuva 
 
 ### 13.1 Interface (HUD)
 
-Barras de vida, stamina, fome, sede e mana; mira central; hotbar de itens e feitiços; bússola; contador de dia/hora; indicador de barulho (o quanto o jogador está sendo ouvido).
+Barras de vida, stamina e mana; mira central; hotbar de itens e feitiços; bússola; contador de dia/hora; indicador de barulho (o quanto o jogador está sendo ouvido).
 
 ### 13.2 Menus
 

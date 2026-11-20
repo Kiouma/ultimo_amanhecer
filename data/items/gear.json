@@ -26,7 +26,7 @@
   {"id":"shadow_feet","name":"Botas silenciosas","type":"armor","slot":"feet","set":"shadow","weight":1,"stack":1,"bonus":{"noise":-0.08},"armor":2,"durability":140},
   {"id":"shadow_hands","name":"Luvas finas","type":"armor","slot":"hands","set":"shadow","weight":1,"stack":1,"bonus":{"thrown.damage":0.08},"armor":1,"durability":140},
   {"id":"shadow_ring","name":"Anel sombrio","type":"armor","slot":"ring","set":"shadow","weight":0.1,"stack":1,"bonus":{"sneak_damage":0.15,"attack_speed":0.05}},
-  {"id":"shadow_neck","name":"Colar do sobrevivente","type":"armor","slot":"neck","set":"shadow","weight":0.1,"stack":1,"bonus":{"food":0.1,"heal":0.1,"loot_bonus":0.1}},
+  {"id":"shadow_neck","name":"Colar do sobrevivente","type":"armor","slot":"neck","set":"shadow","weight":0.1,"stack":1,"bonus":{"life_regen_add":0.3,"heal":0.1,"loot_bonus":0.1}},
   {"id":"heavy_head","name":"Elmo de pedra","type":"armor","slot":"head","set":"starter_heavy","weight":3,"stack":1,"bonus":{"damage_taken":-0.02},"armor":6,"durability":160},
   {"id":"heavy_chest","name":"Couraça de pedra","type":"armor","slot":"chest","set":"starter_heavy","weight":5,"stack":1,"bonus":{"max_stamina_add":10},"armor":12,"durability":160},
   {"id":"heavy_legs","name":"Grevas de pedra","type":"armor","slot":"legs","set":"starter_heavy","weight":4,"stack":1,"bonus":{"damage_taken":-0.02},"armor":8,"durability":160},

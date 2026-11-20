@@ -125,7 +125,7 @@ static func station_name(station: String) -> String:
 		_: return station
 
 
-## "Pena 1 · Graveto 1"
+## "Pena 1 · Madeira 1"
 static func describe_ingredients(recipe: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	var ingredients: Dictionary = recipe.get("ingredients", {})

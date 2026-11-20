@@ -75,7 +75,6 @@ func _on_player_spawned(player: Node) -> void:
 		_weapons.changed.connect(_update_weapon)
 	_update_weapon()
 	_bind_inventory(player)
-	_bind_survival(player)
 	_bind_death_penalty(player)
 	_bind_overload(player)
 	_bind_network()
@@ -186,23 +185,6 @@ func _bind_inventory(player: Player) -> void:
 	add_child(pause_menu)
 	pause_menu.bind(player)
 	_screens = [_inventory_ui, crafting_ui, _progression_ui, _aura_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
-
-
-## Fome e sede: duas meias-barras com rótulo, embaixo de vida/stamina/mana.
-func _bind_survival(player: Player) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	health_bar.get_parent().add_child(row)
-	var hunger := _labeled_bar(row, tr("Fome"), Color(0.85, 0.55, 0.2))
-	var thirst := _labeled_bar(row, tr("Sede"), Color(0.3, 0.75, 0.9))
-	var update := func(h: float, t: float) -> void:
-		hunger.value = h
-		thirst.value = t
-		# Pisca o rótulo em vermelho quando está acabando.
-		hunger.get_parent().get_child(0).modulate = Color(1, 0.35, 0.3) if h < 20.0 else Color.WHITE
-		thirst.get_parent().get_child(0).modulate = Color(1, 0.35, 0.3) if t < 20.0 else Color.WHITE
-	player.survival.changed.connect(update)
-	update.call(player.survival.hunger, player.survival.thirst)
 
 
 func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
@@ -322,8 +304,8 @@ func _apply_minimap_setting() -> void:
 		_clock.offset_bottom = _clock.offset_top + 50.0
 
 
-## Itens recebidos (coleta, chão, recompensas): "+1 Graveto" à direita da tela. O mesmo
-## item pego de novo logo em seguida soma na mesma linha ("+3 Graveto").
+## Itens recebidos (coleta, chão, recompensas): "+1 Madeira" à direita da tela. O mesmo
+## item pego de novo logo em seguida soma na mesma linha ("+3 Madeira").
 const FEED_SECONDS := 3.0
 const FEED_MAX := 6
 var _feed: VBoxContainer

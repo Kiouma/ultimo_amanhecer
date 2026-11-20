@@ -136,7 +136,7 @@ static func find_in(node: Node) -> Health:
 
 # --- Interno ---------------------------------------------------------------------
 
-## Fome/sede (fonte = o próprio dono) não são reduzidas pela Resistência.
+## Dano causado pelo próprio dono não é reduzido pela Resistência.
 func _taken_factor(source: Node, magic := false) -> float:
 	if source == get_parent():
 		return 1.0

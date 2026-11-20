@@ -91,7 +91,7 @@ func _build() -> void:
 	_button(left, "+10 níveis de personagem", func() -> void: _add_levels(10))
 	_button(left, "+10 em todas as proficiências", _boost_proficiencies)
 	_button(left, "Todas as habilidades no nível máximo", _learn_all_spells)
-	_button(left, "Encher vida, fome, sede, stamina e mana", _refill)
+	_button(left, "Encher vida, stamina e mana", _refill)
 	_fly = CheckButton.new()
 	_fly.text = "Voar (ou Espaço duas vezes)"
 	_fly.toggled.connect(func(on: bool) -> void: player.flying = on)
@@ -286,7 +286,6 @@ func _learn_all_spells() -> void:
 
 func _refill() -> void:
 	player.health.heal(player.health.max_health)
-	player.survival.refill()
 	player.stamina.refill()
 	player.mana.refill()
 	player.notify(tr("Tudo cheio"))

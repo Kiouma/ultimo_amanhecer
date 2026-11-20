@@ -2,6 +2,5 @@
   { "id": "campfire", "name": "Fogueira", "type": "station", "station": "campfire", "weight": 4.0, "stack": 1 },
   { "id": "chest", "name": "Baú", "type": "station", "station": "chest", "weight": 6.0, "stack": 1 },
   { "id": "bed", "name": "Cama", "type": "station", "station": "bed", "weight": 8.0, "stack": 1 },
-  { "id": "water_collector", "name": "Coletor de água", "type": "station", "station": "collector", "weight": 4.0, "stack": 1 },
   { "id": "workbench", "name": "Bancada", "type": "station", "station": "workbench", "weight": 12.0, "stack": 1 }
 ]

@@ -27,7 +27,7 @@ const CREATIVE_COUNT := 999
 ## (pegar item do chão) passa pelo servidor, que concede com grant() via RPC.
 
 signal changed
-## Recebeu itens de fora (coletou, pegou do chão, recompensa): o HUD mostra "+1 Graveto".
+## Recebeu itens de fora (coletou, pegou do chão, recompensa): o HUD mostra "+1 Madeira".
 signal received(id: String, count: int)
 
 const HOTBAR_SIZE := 9

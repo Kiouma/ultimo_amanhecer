@@ -4,7 +4,7 @@ extends Node
 ##   construções, estações, armadilhas e itens/bags no chão. Recursos e zumbis voltam
 ##   pela semente e pela população.
 ## - Personagens (user://characters/<id>.json), salvos por cada jogador na própria
-##   máquina: nome, passado, inventário, equipamento, níveis, habilidades, fome/sede...
+##   máquina: nome, passado, inventário, equipamento, níveis, habilidades, auras...
 ##   O mesmo personagem entra em qualquer mundo (inclusive no de um amigo); a posição
 ##   é guardada por mundo (semente).
 ## O menu escolhe o mundo (current_world_id, só solo/host) e o personagem
@@ -200,7 +200,7 @@ func _capture_world(level: Node) -> Dictionary:
 	for s in level.get_node("Structures").get_children():
 		if s is BaseUtility:
 			placed.append({"id": s.item_id, "pos": _v(s.global_position), "rot": s.rotation.y, "dur": -1.0,
-				"contents": s.contents, "water": s.water})
+				"contents": s.contents})
 		elif s is CraftingStation:
 			placed.append({"id": s.item_id, "pos": _v(s.global_position), "rot": s.rotation.y, "dur": -1.0})
 		elif s is Trap:
@@ -245,7 +245,6 @@ func apply_world(level: Node) -> void:
 		var node := Structures._spawn(str(s.id), _vec(s.pos), float(s.rot), float(s.get("dur", -1.0)))
 		if node is BaseUtility:
 			node.contents.append_array(_valid_stacks(s.get("contents", [])))
-			node.water = int(s.get("water", 0))
 	for it: Dictionary in data.get("items", []):
 		if it.get("bag", false):
 			WorldItems.drop_bag(_valid_stacks(it.get("contents", [])), _vec(it.pos), str(it.owner))
@@ -278,7 +277,7 @@ func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 		"inventory": p.inventory.slots,
 		"equipment": p.equipment.to_save(),
 		"exploration": (p.get_node(^"Exploration") as Exploration).to_save() if p.has_node(^"Exploration") else {},
-		"health": p.health.current, "hunger": p.survival.hunger, "thirst": p.survival.thirst,
+		"health": p.health.current,
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
 		"progression": {"levels": prog.levels, "xp": prog.xp, "char_level": prog.char_level, "char_xp": prog.char_xp,
 			"class": prog.char_class, "passives": prog.passives.keys(), "ascendancy": prog.ascendancy,
@@ -342,8 +341,6 @@ func apply_character(p: Player) -> bool:
 	if p.has_node(^"Exploration") and data.has("exploration"):
 		(p.get_node(^"Exploration") as Exploration).from_save(data.exploration)
 	p.equipment.from_save(data.get("equipment", {}))
-	p.survival.hunger = float(data.get("hunger", 100.0))
-	p.survival.thirst = float(data.get("thirst", 100.0))
 	p.creative = bool(data.get("creative", false))
 	var weak: Dictionary = data.get("weakness", {})
 	p.death_penalty.level = int(weak.get("level", 0))

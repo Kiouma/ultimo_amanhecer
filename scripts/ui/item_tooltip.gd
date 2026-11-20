@@ -1,6 +1,6 @@
 class_name ItemTooltip
 ## Painel de informações de um item (mouse em cima de um slot): nome, tipo, efeitos
-## ("Recupera 40 de sede"), números de arma/armadura, durabilidade, peso e, no rodapé,
+## ("Regenera 30 de vida em 10 s"), números de arma/armadura, durabilidade, peso e, no rodapé,
 ## as etiquetas "Material" (usado em alguma receita) e "Consumível".
 
 const TYPE_NAMES := {
@@ -31,16 +31,11 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 	var data := GameData.get_item(str(s.get("id", "")))
 	var type := str(data.get("type", ""))
 	var power := Inventory.quality_multiplier(s) * Inventory.refine_multiplier(s) if data.has("durability") else 1.0
-	if float(data.get("food", 0.0)) > 0.0:
-		lines.append(t("Recupera %d de fome") % roundi(float(data.food)))
-	if float(data.get("water", 0.0)) > 0.0:
-		lines.append(t("Recupera %d de sede") % roundi(float(data.water)))
 	if float(data.get("heals", 0.0)) > 0.0:
 		lines.append(t("Recupera %d de vida") % roundi(float(data.heals)))
-	if float(data.get("sick_chance", 0.0)) > 0.0:
-		lines.append(t("Chance de passar mal: %d%%") % roundi(float(data.sick_chance) * 100.0))
-	if data.has("returns"):
-		lines.append(t("Devolve: %s") % GameData.get_item(str(data.returns)).get("name", data.returns))
+	if float(data.get("regen", 0.0)) > 0.0:
+		var secs := float(data.get("regen_time", 10.0))
+		lines.append(t("Regenera %d de vida em %d s") % [roundi(float(data.regen) * secs), roundi(secs)])
 	match type:
 		"melee", "thrown":
 			lines.append(t("Dano: %d") % roundi(float(data.get("damage", 0.0)) * power))

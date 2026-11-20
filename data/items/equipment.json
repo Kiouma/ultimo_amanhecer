@@ -14,7 +14,6 @@
   {"id":"staff_wood","name":"Cajado de madeira","type":"focus","weight":1.5,"durability":250,"noise":0.1},
   {"id":"hammer","name":"Martelo","type":"tool","use":"hammer","weight":1.2,"durability":200},
   {"id":"torch","name":"Tocha","type":"tool","weight":0.5,"durability":300},
-  {"id":"bandage","name":"Bandagem simples","type":"consumable","weight":0.05,"stack":20,"heals":10,"cures":["bleeding"]},
   {"id":"medkit_basic","name":"Poção de cura","type":"consumable","weight":0.5,"stack":5,"heals":50},
   {"id":"grimoire_basic","name":"Grimório simples","type":"grimoire","weight":1,"teaches":["firebolt"],"requires":{"magic":1}},
   {"id":"grimoire_life","name":"Grimório da vida","type":"grimoire","weight":1,"teaches":["mend"],"requires":{"magic":2}},

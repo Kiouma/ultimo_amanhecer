@@ -14,7 +14,7 @@ Ao entrar num mundo aparece uma **tela de carregamento** (barra de progresso, et
 
 ## Começo e vocações
 
-Personagem novo começa só com **1 tocha, 2 garrafas de água e 3 frutas silvestres**: o resto se coleta, acha ou fabrica (machado e picareta de pedra, lança e cajado saem nas mãos). Perto de onde se nasce há **pedras soltas** (E: +1 pedra) e galhos para começar. Itens recebidos aparecem à direita da tela ("+1 Graveto").
+Personagem novo começa só com **1 tocha e 5 frutas silvestres**: o resto se coleta, acha ou fabrica (machado e picareta de pedra, lança e cajado saem nas mãos). Perto de onde se nasce há **pedras soltas** (E: +1 pedra) e galhos para começar. Itens recebidos aparecem à direita da tela ("+1 Graveto").
 
 A **classe** (Guerreiro, Arqueiro, Mago, Pugilista) só define onde você começa na **árvore passiva**; a especialização vem dos pontos e, no nível 30, da **ascendência**. Cada classe tem um **conjunto inicial** de 5 peças feito na bancada com recursos naturais e drops de monstros:
 
@@ -25,12 +25,12 @@ A **classe** (Guerreiro, Arqueiro, Mago, Pugilista) só define onde você começ
 
 O traje de patrulheiro e o de pugilista aparecem no personagem (Modular Character Outfits). O Pugilista luta de mãos vazias: proficiência **Pugilismo** e um setor próprio da árvore com dano desarmado.
 
-Recursos e saques são raros (galhos e pedras são a exceção). Mouse em cima de um item mostra o que ele faz (ex.: "Recupera 40 de sede"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
+Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse em cima de um item mostra o que ele faz (ex.: "Regenera 30 de vida em 10 s"), com as etiquetas **Material** (usado em receitas) e **Consumível**.
 
 ## Controles
 
 - **WASD** move, **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **V** troca 1ª/3ª pessoa, **Esc** abre o menu de pausa e solta o mouse.
-- **Hotbar:** teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/água/bandagem: usa). Botão direito mira.
+- **Hotbar:** teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
 - **E** pega o que está na mira e interage (portas, baús, estações); passar por cima de itens pega sozinho.
 - **Tab** inventário, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
@@ -50,13 +50,13 @@ Em **Esc → Configurações** (ou no menu inicial):
 
 ## Sobrevivência, fabricação e equipamento
 
-Fique de olho na **fome** e na **sede** (barras abaixo da vida). Água: beber a garrafa deixa uma garrafa vazia; encha no **lago** (água suja, pode fazer passar mal) e ferva na fogueira.
+Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da árvore passiva, da ascendência, de itens, de auras e da **comida** (frutas silvestres regeneram vida por alguns segundos). **Poções de cura** curam na hora. A madeira se junta no chão (não existe mais graveto).
 
-**Inventário (Tab):** fabricação nas mãos (ex.: flecha = pena + graveto). **Clique duplo** num item: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
+**Inventário (Tab):** fabricação nas mãos (ex.: flecha = pena + madeira). **Clique duplo** num item: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
 
 **Estações:** fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar. **E** numa estação abre a tela dela, só com as receitas daquela estação (na bancada, também reparar/refinar/desmontar). Cada receita mostra os recursos como "Madeira 12/5" (o que você tem / o que pede; verde se tem, vermelho se falta) e o botão Fabricar fica verde ou vermelho. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela).
 
-**Base:** **Baú** (guarda 30 pilhas para o grupo), **Cama** (E: renasce nela) e **Coletor de água** (água limpa, mais rápido na chuva).
+**Base:** **Baú** (guarda 30 pilhas para o grupo) e **Cama** (E: renasce nela).
 
 **Equipamento** (Tab, à esquerda do inventário, arrumado como um corpo): capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. Embaixo, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
 
@@ -86,7 +86,7 @@ Fique de olho na **fome** e na **sede** (barras abaixo da vida). Água: beber a 
 
 **Dia e noite:** um dia de jogo dura 24 min (dia 06h–20h, noite 20h–06h). À noite os monstros ficam mais ferozes e ouvem melhor; segure a **tocha** para iluminar.
 
-**Clima:** chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (fome mais rápida longe de fogueira).
+**Clima:** chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (neve).
 
 **Monstros:** carniçais, goblins, ogros, xamãs goblins, espectros noturnos, diabretes flamejantes e draugrs gélidos, conforme a região. Chefes: o **Necromante** surge nas ruínas à noite e o **Troll ancião** desce das montanhas à noite.
 

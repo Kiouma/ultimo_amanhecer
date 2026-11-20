@@ -1,12 +1,11 @@
 [
-  {"id":"craft_arrow","result":"arrow","amount":1,"station":"hands","time":1.5,"ingredients":{"feather":1,"stick":1}},
-  {"id":"craft_bow_wood","result":"bow_wood","amount":1,"station":"hands","time":6,"ingredients":{"wood":3,"stick":2,"sinew":1}},
+  {"id":"craft_arrow","result":"arrow","amount":1,"station":"hands","time":1.5,"ingredients":{"feather":1,"wood":1}},
+  {"id":"craft_bow_wood","result":"bow_wood","amount":1,"station":"hands","time":6,"ingredients":{"wood":5,"sinew":1}},
   {"id":"craft_pickaxe_stone","result":"pickaxe_stone","amount":1,"station":"hands","time":5,"ingredients":{"wood":2,"stone":3}},
-  {"id":"craft_axe_stone","result":"axe_stone","amount":1,"station":"hands","time":5,"ingredients":{"wood":2,"stone":2,"stick":1}},
+  {"id":"craft_axe_stone","result":"axe_stone","amount":1,"station":"hands","time":5,"ingredients":{"wood":3,"stone":2}},
   {"id":"craft_staff_wood","result":"staff_wood","amount":1,"station":"hands","time":4,"ingredients":{"wood":3,"feather":1}},
   {"id":"craft_hammer","result":"hammer","amount":1,"station":"hands","time":3,"ingredients":{"wood":2,"stone":2}},
-  {"id":"craft_torch","result":"torch","amount":1,"station":"hands","time":2,"ingredients":{"wood":1,"stick":2}},
-  {"id":"craft_bandage","result":"bandage","amount":2,"station":"hands","time":2,"ingredients":{"cloth":2}},
+  {"id":"craft_torch","result":"torch","amount":1,"station":"hands","time":2,"ingredients":{"wood":2}},
   {"id":"craft_spear_wood","result":"spear_wood","amount":1,"station":"hands","time":4,"ingredients":{"wood":4}},
   {"id":"craft_axe_iron","result":"axe_iron","amount":1,"station":"workbench","time":10,"ingredients":{"wood":3,"scrap_metal":5},"min_proficiency":{"crafting":5}}
 ]

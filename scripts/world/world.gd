@@ -46,7 +46,7 @@ const BIOME_NAMES := {
 }
 ## Chance por célula de 8 m de cada recurso, por bioma.
 const DENSITY := {
-	# Coletáveis raros (frutas, ninhos, ervas, cristais); gravetos e pedras (pedrinhas) fartos.
+	# Coletáveis raros (frutas, ninhos, ervas, cristais); madeira caída e pedras (pedrinhas) fartas.
 	"forest": {"tree": 0.42, "rock": 0.04, "pebbles": 0.06, "branches": 0.12, "berry_bush": 0.025, "nest": 0.02},
 	"plains": {"tree": 0.04, "rock": 0.04, "pebbles": 0.07, "branches": 0.06, "berry_bush": 0.035, "nest": 0.005},
 	"swamp": {"twisted_tree": 0.03, "dead_tree": 0.03, "tree": 0.02, "pebbles": 0.03, "branches": 0.1, "herb_patch": 0.07},
@@ -698,7 +698,7 @@ func _compute_terrain(c: Vector2i, near: Array, with_spawns := false) -> Diction
 			indices.append_array([a, a + 1, a + VERTS + 1, a, a + VERTS + 1, a + VERTS])
 			if with_spawns:  # servidor: triângulos para a navegação dos monstros
 				nav_faces.append_array([verts[a], verts[a + 1], verts[a + VERTS + 1], verts[a], verts[a + VERTS + 1], verts[a + VERTS]])
-	# Pontos de água (para encher garrafa) a cada 8 m onde o chão está abaixo da água.
+	# Pontos de água a cada 8 m onde o chão está abaixo da água (para a pesca, depois).
 	var water_spots := PackedVector2Array()
 	for j in range(2, VERTS, 4):
 		for i in range(2, VERTS, 4):
@@ -753,12 +753,6 @@ func _build_terrain_chunk(data: Dictionary) -> void:
 		water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		water.position = Vector3(CHUNK * 0.5, WATER_LEVEL - 0.05, CHUNK * 0.5)
 		node.add_child(water)
-		for spot: Vector2 in data.water:
-			var source := WaterSource.new()
-			source.show_visual = false
-			source.radius = 4.5
-			source.position = Vector3(spot.x - node.position.x, WATER_LEVEL - 0.1, spot.y - node.position.z)
-			node.add_child(source)
 	add_child(node)
 	body.set_meta(&"terrain", true)
 	_chunks[c] = {"node": node, "body": body, "heights": data.heights, "spawns": data.spawns, "nav_faces": data.nav_faces}

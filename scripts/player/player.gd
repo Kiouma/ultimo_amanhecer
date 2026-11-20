@@ -15,7 +15,7 @@ signal notified(text: String)
 ## Kit inicial de todo personagem novo: o resto se coleta, acha ou fabrica.
 ## Cada entrada: [id, quantidade, slot da hotbar ou -1].
 const STARTER_KIT := [
-	["torch", 1, 0], ["water_bottle", 2, 1], ["berries", 3, 2],
+	["torch", 1, 0], ["berries", 5, 1],
 ]
 
 @export_group("Movimento")
@@ -176,7 +176,7 @@ func _ready() -> void:
 	equipment.changed.connect(_update_outfit)
 	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
-	# Fome e sede só correm na máquina do dono (ver Survival).
+	# Regeneração de vida só corre na máquina do dono (ver Survival).
 	survival.set_process(is_local())
 	death_penalty.set_process(is_local())
 	craft_queue.set_process(is_local())
@@ -321,7 +321,6 @@ func _physics_process(delta: float) -> void:
 	if sprinting:
 		stamina.drain(sprint_stamina_per_second * progression.mult("sprint_stamina") * delta)
 		progression.gain("athletics", Vector2(velocity.x, velocity.z).length() * delta * 0.1)
-	survival.exerting = sprinting
 	net_crouching = crouching
 	net_sprinting = sprinting
 	net_on_floor = is_on_floor()
@@ -480,7 +479,7 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 
 func _on_damaged(amount: float, source: Node) -> void:
 	if source == self:
-		return  # fome/sede: sem animação de golpe
+		return  # dano do próprio dono: sem animação de golpe
 	if is_local() and source is Zombie:
 		progression.gain("toughness", amount * 0.25)
 		equipment.wear_on_hit()
@@ -501,7 +500,7 @@ func _on_died(_source: Node) -> void:
 	velocity = Vector3.ZERO
 	stamina.refill()
 	mana.refill()
-	survival.refill()
+	survival.reset()
 	health.reset()  # pede ao servidor; quando voltar, dispara revived
 
 

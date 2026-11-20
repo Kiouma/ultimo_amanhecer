@@ -33,7 +33,7 @@
     {"id":"wanderer_3","name":"Mochileiro","effects":{"carry_weight_add":25}},
     {"id":"wanderer_4","name":"Coletor","effects":{"gather_yield":0.2,"loot_bonus":0.1}},
     {"id":"wanderer_5","name":"Esquiva Rápida","effects":{"damage_taken":-0.06,"attack_speed":0.05}},
-    {"id":"wanderer_6","name":"Sobrevivente Nato","effects":{"food":0.2,"heal":0.2}}
+    {"id":"wanderer_6","name":"Sobrevivente Nato","effects":{"life_regen_add":1.0,"heal":0.2}}
   ]},
   {"id":"arcanist","name":"Arcanista","class":"mage","desc":"Poder mágico bruto: feitiços mais fortes, rápidos e baratos.","effects":{"magic.damage":0.2,"max_mana_add":30},
    "nodes":[

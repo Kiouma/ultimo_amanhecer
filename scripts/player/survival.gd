@@ -1,42 +1,18 @@
 class_name Survival
 extends Node
-## Fome e sede (GDD 7). Valores de 0 (vazio) a 100 (satisfeito).
-## Caem com o tempo e mais rápido com esforço (correr). Efeitos:
-## - as duas acima de well_fed_threshold: a vida regenera devagar;
-## - qualquer uma abaixo de weak_threshold: stamina recupera mais devagar;
-## - fome em 0 ou sede em 0: perde vida aos poucos.
-## Todos os números são provisórios e vão para as opções de dificuldade depois.
+## Regeneração de vida e de stamina do personagem (nó "Survival" do Player).
+## Não há mais fome nem sede (o jogo virou RPG de exploração, docs/PROXIMOS_PASSOS.md).
+## - Vida: base 0. Regenera com "life_regen_add" (árvore passiva, ascendência, itens,
+##   auras) e com a regeneração temporária de comida (frutas; peixes depois).
+## - Stamina: regeneração base do StatPool × Fraqueza (morte) × "stamina_regen".
 ##
-## Rede: roda só na máquina do dono do personagem; dano e cura passam pelo
-## servidor (Health), como o resto da vida.
+## Rede: roda só na máquina do dono do personagem; a cura passa pelo servidor (Health).
 
-signal changed(hunger: float, thirst: float)
+## De quanto em quanto tempo aplica a cura (evita um pedido por frame na rede).
+@export var tick_seconds := 1.0
 
-@export_group("Queda por minuto (parado/andando)")
-## 100 / 40 min
-@export var hunger_per_minute := 2.5
-## 100 / 25 min
-@export var thirst_per_minute := 4.0
-## Multiplicador da queda enquanto corre.
-@export var sprint_multiplier := 2.5
-
-@export_group("Efeitos")
-@export var well_fed_threshold := 60.0
-@export var weak_threshold := 20.0
-## Vida recuperada por segundo bem alimentado.
-@export var regen_per_second := 0.25
-@export var starving_damage_per_second := 0.5
-@export var dehydrated_damage_per_second := 1.0
-## Fator da regeneração de stamina quando fraco.
-@export var weak_stamina_factor := 0.5
-## De quanto em quanto tempo aplica dano/cura (evita um pedido por frame na rede).
-@export var tick_seconds := 2.0
-
-var hunger := 100.0
-var thirst := 100.0
-## Ligado pelo Player enquanto corre.
-var exerting := false
-
+## Regenerações temporárias de comida: [vida por segundo, segundos restantes].
+var _food_regen: Array = []
 var _tick := 0.0
 var _player: Player
 var _base_stamina_regen := 0.0
@@ -47,62 +23,55 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _player == null or _player.health.is_dead:
+	if _player == null:
 		return
-	var effort := sprint_multiplier if exerting else 1.0
-	var cold := Weather.hunger_factor(get_tree(), get_parent().global_position)
-	hunger = maxf(hunger - hunger_per_minute / 60.0 * effort * cold * delta, 0.0)
-	thirst = maxf(thirst - thirst_per_minute / 60.0 * effort * delta, 0.0)
-	changed.emit(hunger, thirst)
-	_apply_stamina_penalty()
-
+	_apply_stamina_regen()
+	if _player.health.is_dead:
+		_food_regen.clear()
+		return
 	_tick += delta
 	if _tick < tick_seconds:
 		return
 	var span := _tick
 	_tick = 0.0
-	var damage := 0.0
-	if hunger <= 0.0:
-		damage += starving_damage_per_second * span
-	if thirst <= 0.0:
-		damage += dehydrated_damage_per_second * span
-	if damage > 0.0:
-		_player.health.take_damage(damage, _player)
-	elif _player.health.current < _player.health.cap():
-		# Bem alimentado regenera devagar; a árvore passiva, a ascendência e auras somam.
-		var regen := (regen_per_second if is_well_fed() else 0.0) + maxf(_player.progression.add("life_regen_add"), 0.0)
-		if regen > 0.0:
-			_player.health.heal(regen * span)
+	var regen := maxf(_player.progression.add("life_regen_add"), 0.0) + food_regen_rate()
+	for entry: Array in _food_regen:
+		entry[1] = float(entry[1]) - span
+	_food_regen = _food_regen.filter(func(entry: Array) -> bool: return float(entry[1]) > 0.0)
+	if regen > 0.0 and _player.health.current < _player.health.cap():
+		_player.health.heal(regen * span)
 
 
-func is_well_fed() -> bool:
-	return hunger >= well_fed_threshold and thirst >= well_fed_threshold
-
-
-func is_weak() -> bool:
-	return hunger < weak_threshold or thirst < weak_threshold
-
-
-## Comer/beber. Retorna true se ajudou em algo (para não gastar à toa).
-func consume(food: float, water: float) -> bool:
-	var useful := (food > 0.0 and hunger < 100.0) or (water > 0.0 and thirst < 100.0)
-	if not useful:
+## Comida: regenera `per_second` de vida por `seconds`. Retorna false se não adiantaria
+## (vida cheia), para não desperdiçar o item.
+func add_food_regen(per_second: float, seconds: float) -> bool:
+	if per_second <= 0.0 or seconds <= 0.0 or _player.health.current >= _player.health.cap():
 		return false
-	hunger = clampf(hunger + food, 0.0, 100.0)
-	thirst = clampf(thirst + water, 0.0, 100.0)
-	changed.emit(hunger, thirst)
+	_food_regen.append([per_second, seconds])
 	return true
 
 
-func refill() -> void:
-	hunger = 100.0
-	thirst = 100.0
-	changed.emit(hunger, thirst)
+## Vida por segundo vinda de comida agora (somando o que estiver ativo).
+func food_regen_rate() -> float:
+	var total := 0.0
+	for entry: Array in _food_regen:
+		total += float(entry[0])
+	return total
 
 
-func _apply_stamina_penalty() -> void:
+## Regeneração total de vida por segundo agora (painel de status).
+func life_regen_rate() -> float:
+	return maxf(_player.progression.add("life_regen_add"), 0.0) + food_regen_rate()
+
+
+## Renascer: tira as regenerações de comida em andamento.
+func reset() -> void:
+	_food_regen.clear()
+
+
+func _apply_stamina_regen() -> void:
 	var stamina := _player.stamina
 	if _base_stamina_regen == 0.0:
 		_base_stamina_regen = stamina.regen_per_second
-	stamina.regen_per_second = _base_stamina_regen * (weak_stamina_factor if is_weak() else 1.0) \
-		* _player.death_penalty.stamina_factor() * _player.progression.mult("stamina_regen")
+	stamina.regen_per_second = _base_stamina_regen * _player.death_penalty.stamina_factor() \
+		* _player.progression.mult("stamina_regen")

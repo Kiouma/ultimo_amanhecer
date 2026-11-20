@@ -17,8 +17,8 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 @export var player_spacing := 1.5
 ## Itens espalhados para testar a coleta: [id, quantidade]. Saque de verdade: Fase 7.
 @export var loot := [
-	["canned_food", 2], ["water_bottle", 2], ["berries", 8], ["empty_bottle", 2],
-	["arrow", 8], ["bandage", 2], ["medkit_basic", 1],
+	["berries", 8],
+	["arrow", 8], ["medkit_basic", 1],
 	["crossbow", 1], ["bolt", 10],
 	["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
 	["spear_wood", 1], ["torch", 1],
@@ -74,12 +74,9 @@ func _ready() -> void:
 	_scatter_loot.call_deferred()  # depois da física do chão estar pronta
 
 
-## Monta o cenário (todas as máquinas). Arena: o lago fixo. O mundo sobrescreve.
+## Monta o cenário (todas as máquinas). Arena: nada extra. O mundo sobrescreve.
 func _setup_level() -> void:
-	var pond := WaterSource.new()
-	pond.name = "Pond"
-	pond.position = POND_POSITION
-	add_child(pond)
+	pass
 
 
 func _bake_navigation() -> void:
