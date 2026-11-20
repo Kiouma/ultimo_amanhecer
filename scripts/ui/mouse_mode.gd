@@ -1,16 +1,14 @@
 class_name MouseMode
 extends RefCounted
-## Quem decide o modo do mouse (docs/PROXIMOS_PASSOS.md, seção 7).
-## - Mouse travado (padrão): girar o mouse gira a câmera.
-## - Mouse livre (Alt esquerdo alterna): o cursor aparece; a câmera só gira segurando o
-##   botão direito; dá para clicar na HUD (hotbar, botões do minimapa...). A mira continua
-##   no centro da tela.
+## Quem decide o modo do mouse. O mouse fica sempre livre (o cursor aparece, dá para
+## clicar na HUD e no mundo); a câmera só gira segurando o botão direito, quando o mouse
+## trava por um momento e volta ao mesmo lugar ao soltar.
 ## - Com uma tela cheia aberta (inventário, mapa, pausa...), o cursor aparece sempre.
 ## As telas se registram (register) e, ao abrir/fechar, chamam refresh() em vez de mexer
 ## em Input.mouse_mode direto.
 
-## Modo livre ligado pelo jogador (Alt esquerdo).
-static var free := false
+## Mouse livre: sempre (o jogo é em 3ª pessoa com cursor, estilo RPG de ação).
+static var free := true
 ## Segurando o botão direito no modo livre: o mouse trava enquanto gira a câmera.
 static var rotating := false
 
@@ -46,12 +44,6 @@ static func refresh() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
-
-static func toggle_free() -> void:
-	free = not free
-	rotating = false
-	refresh()
 
 
 ## Modo livre: começa/termina de girar a câmera com o botão direito. O cursor volta para

@@ -218,19 +218,16 @@ func make_noise(factor: float) -> void:
 	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS * stealth, user)
 
 
-## Raio a partir do centro da tela (mira). Ignora o próprio jogador.
+## Mira: o alvo selecionado (peito) ou o ponto do mundo sob o cursor. Ignora o próprio
+## jogador. Retorna o dicionário do intersect_ray (sempre com "position").
 func aim_ray(max_range: float, spread_deg := 0.0) -> Dictionary:
-	var origin := camera.global_position
-	var dir := -camera.global_basis.z
-	if spread_deg > 0.0:
+	if user.has_target():
+		var p: Vector3 = user.target.global_position + Vector3.UP * 1.1
+		return {"position": p, "collider": user.target, "normal": Vector3.UP}
+	var hit: Dictionary = user.cursor_ray(max_range, HIT_MASK)
+	if spread_deg > 0.0 and not hit.has("collider"):
 		var s := deg_to_rad(spread_deg)
-		dir = dir.rotated(camera.global_basis.x, randf_range(-s, s))
-		dir = dir.rotated(camera.global_basis.y, randf_range(-s, s))
-	var query := PhysicsRayQueryParameters3D.create(origin, origin + dir * max_range, HIT_MASK)
-	query.exclude = [user.get_rid()]
-	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
-	if hit.is_empty():
-		hit = {"position": origin + dir * max_range, "miss": true}
+		hit.position = hit.position + Vector3(randf_range(-s, s), 0, randf_range(-s, s)) * max_range * 0.1
 	return hit
 
 
@@ -247,10 +244,12 @@ func deal_damage(target: Object, amount: float) -> bool:
 	return true
 
 
-## Animação de ação do personagem (vista na 3ª pessoa e pelos outros jogadores).
-func play_body_anim(anim_name: StringName) -> void:
+## Animação de ataque do personagem (vista por todos). duration: quanto o ataque dura
+## (a animação acelera junto com a velocidade de ataque); o personagem vira para o alvo
+## e anda mais devagar enquanto isso.
+func play_body_anim(anim_name: StringName, duration := 0.0) -> void:
 	if user.has_method(&"play_action_synced"):
-		user.play_action_synced(anim_name)
+		user.play_action_synced(anim_name, duration, true)
 
 
 ## Pequeno "coice" visual do viewmodel.

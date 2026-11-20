@@ -30,9 +30,8 @@ func _process(delta: float) -> void:
 	super(delta)
 	if not visible:
 		return
-	var zoom := (Input.is_action_pressed("aim") and not MouseMode.free) or drawing
-	var target_fov := lerpf(_default_fov, aim_fov, draw) if drawing else (aim_fov if zoom else _default_fov)
-	camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * delta, 1.0))
+	# Só 3ª pessoa: sem zoom de mira (a câmera fica no FOV padrão).
+	camera.fov = lerpf(camera.fov, _default_fov, minf(10.0 * delta, 1.0))
 	_update_visual()
 
 
@@ -61,8 +60,9 @@ func _release() -> void:
 		return
 	cooldown = 0.35
 	var power := draw
-	var from := head.global_position + (-head.global_basis.z) * 0.6 + head.global_basis.x * 0.1
 	var aim_point: Vector3 = aim_ray(120.0).position
+	var from: Vector3 = user.shot_origin(aim_point)
+	play_body_anim(&"Ranged_Bow_Release", 0.5)
 	var direction := (aim_point - from).normalized()
 	var speed := lerpf(15.0, stat("arrow_speed", 45.0), power)
 

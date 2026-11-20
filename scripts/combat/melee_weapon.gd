@@ -89,7 +89,7 @@ func _attack() -> void:
 	var direction := 1.0 if _combo_index % 2 == 0 else -1.0
 	_combo_index = (_combo_index + 1) % combo.size()
 
-	play_body_anim(anim)
+	play_body_anim(anim, cooldown)
 	_swing(direction)
 	make_noise(stat("noise", 0.2))
 	Sfx.play("swing", user.global_position + Vector3.UP * 1.4, -6.0)
@@ -101,12 +101,13 @@ func _hit() -> void:
 	if not is_instance_valid(user):
 		return
 	var reach := stat("range", 2.2)
-	var forward := -head.global_basis.z
+	# Na frente do corpo (o personagem vira para o alvo/cursor ao atacar).
+	var forward := -user.global_basis.z
 	var shape := SphereShape3D.new()
 	shape.radius = reach * 0.5
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = shape
-	query.transform = Transform3D(Basis(), head.global_position + forward * reach * 0.5 + Vector3.DOWN * 0.3)
+	query.transform = Transform3D(Basis(), user.global_position + Vector3.UP * 1.1 + forward * reach * 0.5)
 	query.collision_mask = 4  # zumbis
 	query.exclude = [user.get_rid()]
 	var results := user.get_world_3d().direct_space_state.intersect_shape(query, 16)
@@ -125,9 +126,10 @@ func _hit() -> void:
 
 ## Recurso na mira (árvore, rocha): pede a coleta. Retorna true se acertou um.
 func _hit_resource(reach: float) -> bool:
-	var from := camera.global_position
-	var length := reach + from.distance_to(head.global_position)  # 3ª pessoa: câmera atrás
-	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * length, 1)
+	# Do peito para a frente do corpo (e um pouco para baixo: pedras baixas).
+	var from := user.global_position + Vector3.UP * 1.2
+	var forward := -user.global_basis.z
+	var query := PhysicsRayQueryParameters3D.create(from, from + (forward + Vector3.DOWN * 0.35).normalized() * (reach + 0.6), 1)
 	query.exclude = [user.get_rid()]
 	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
 	var target: Object = hit.get("collider")

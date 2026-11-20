@@ -1,6 +1,12 @@
 class_name Player
 extends CharacterBody3D
-## Jogador: movimento, pulo, corrida, agachar e câmera em 1ª/3ª pessoa (tecla V).
+## Jogador: movimento, pulo, corrida, agachar e câmera em 3ª pessoa (estilo RPG de ação).
+## - Câmera própria (não segue o giro do corpo): gira segurando o botão direito do mouse,
+##   roda do mouse aproxima/afasta (até 2x a distância padrão). O mouse fica sempre livre.
+## - WASD anda em relação à câmera e o corpo vira para onde anda.
+## - Clicar num inimigo seleciona o alvo (anel vermelho). Armas à distância e feitiços vão
+##   no alvo; sem alvo, no ponto do mundo sob o cursor. Ao atacar, o personagem vira para
+##   o alvo/cursor e anda mais devagar enquanto dura o ataque.
 ## Valores provisórios: ajustar com testes (GDD 5.5 e 16).
 ##
 ## Rede: o nó se chama com o id do jogador (peer id) e esse jogador é a autoridade
@@ -49,9 +55,24 @@ const STARTER_KIT := [
 @export var stand_head_height := 1.6
 @export var crouch_head_height := 1.0
 @export var third_person_distance := 3.5
-@export var third_person_offset := Vector3(0.5, 0.2, 0.0)
+@export var third_person_offset := Vector3(0.0, 0.35, 0.0)
+## Zoom da câmera (roda do mouse): de ZOOM_MIN até 2x a distância padrão.
+const ZOOM_MIN := 1.5
+const ZOOM_STEP := 0.35
+## Velocidade enquanto ataca (fração da normal).
+const ATTACK_MOVE_FACTOR := 0.4
+## Alcance máximo do alvo selecionado (passa disso, o alvo é solto).
+const TARGET_RANGE := 60.0
 
-var first_person := true
+## Câmera: giro (yaw) e inclinação (pitch) próprios, e distância (zoom).
+var camera_yaw := 0.0
+var camera_pitch := -0.3
+var _zoom := 3.5
+## Inimigo selecionado (clique). Armas à distância e feitiços miram nele.
+var target: Node3D = null
+var _target_ring: MeshInstance3D
+## Até quando (ms) o personagem está atacando: anda mais devagar.
+var _attack_until := 0
 
 # Estado de animação replicado para os outros jogadores.
 var net_crouching := false
@@ -216,6 +237,8 @@ func _ready() -> void:
 			_apply_background(SaveGame.character_background())
 		MouseMode.refresh()
 		net_class = progression.char_class  # corpo da classe (salva ou escolhida no menu)
+		camera_yaw = rotation.y
+		_zoom = third_person_distance
 		_update_outfit()
 		_update_held()
 		_apply_camera_mode()
@@ -265,23 +288,20 @@ func is_local() -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and MouseMode.looking():
-		rotate_y(-event.relative.x * mouse_sensitivity)
-		head.rotate_x(-event.relative.y * mouse_sensitivity)
-		head.rotation.x = clampf(head.rotation.x, deg_to_rad(-85.0), deg_to_rad(85.0))
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and MouseMode.free and MouseMode.playing():
-		# Mouse livre: segurar o botão direito gira a câmera.
+		camera_yaw -= event.relative.x * mouse_sensitivity
+		camera_pitch = clampf(camera_pitch - event.relative.y * mouse_sensitivity, deg_to_rad(-80.0), deg_to_rad(35.0))
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and MouseMode.playing():
+		# Segurar o botão direito gira a câmera.
 		MouseMode.set_rotating(event.pressed, get_viewport())
-	elif event.is_action_pressed("free_mouse") and MouseMode.playing():
-		MouseMode.toggle_free()
-		notify(tr("Mouse livre: clique na HUD; segure o botão direito para girar a câmera (Alt volta)") if MouseMode.free else tr("Mouse travado (Alt solta o mouse)"))
-	elif event.is_action_pressed("toggle_camera"):
-		first_person = not first_person
-		_apply_camera_mode()
+	elif event is InputEventMouseButton and event.pressed and MouseMode.playing() \
+			and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and not (build and build.active):
+		var step := -ZOOM_STEP if event.button_index == MOUSE_BUTTON_WHEEL_UP else ZOOM_STEP
+		_zoom = clampf(_zoom + step, ZOOM_MIN, third_person_distance * 2.0)
+		spring_arm.spring_length = _zoom
 	elif event.is_action_pressed("interact") and _focused and not health.is_dead:
 		_focused.interact(self)
-	elif event.is_action_pressed("attack") and MouseMode.playing() and not MouseMode.free \
-			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		MouseMode.refresh()  # voltou para a janela (Alt+Tab): trava de novo
+	elif event.is_action_pressed("attack") and MouseMode.playing():
+		_pick_target()
 
 
 func _physics_process(delta: float) -> void:
@@ -341,10 +361,14 @@ func _physics_process(delta: float) -> void:
 	var target_head := crouch_head_height if crouching else stand_head_height
 	head.position.y = lerpf(head.position.y, target_head, minf(10.0 * delta, 1.0))
 
+	_update_target_ring()
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if _sprint_on and (input.length() < 0.1 or stamina.current <= 0.0):
 		_sprint_on = false  # corrida alternada para quando o jogador para ou cansa
-	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
+	var direction := (Basis(Vector3.UP, camera_yaw) * Vector3(input.x, 0.0, input.y)).normalized()
+	if direction.length() > 0.1 and Time.get_ticks_msec() >= _attack_until:
+		# O corpo vira para onde anda (atacando, fica virado para o alvo).
+		rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), minf(12.0 * delta, 1.0))
 	var target := direction * _current_speed(crouching) * (FLY_SPEED_FACTOR if flying else 1.0)
 	var weight := minf(acceleration * delta, 1.0)
 	velocity.x = lerpf(velocity.x, target.x, weight)
@@ -360,6 +384,7 @@ func _physics_process(delta: float) -> void:
 	net_sprinting = sprinting
 	net_on_floor = is_on_floor()
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
+	_update_camera_rig()
 	_emit_footstep_noise(delta, crouching, sprinting)
 	_update_focus()
 	_auto_pickup(delta)
@@ -395,22 +420,41 @@ func _update_focus() -> void:
 		_focused = null
 		_has_focus = false
 		interaction_prompt_changed.emit("")
-	var reach := interact_range + spring_arm.get_hit_length()
-	var from := camera.global_position
-	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * reach, 1 | 8 | 32 | BuildPiece.DOOR_LAYER)
-	query.exclude = [get_rid()]
-	var hit := get_world_3d().direct_space_state.intersect_ray(query)
-	var target: Node = hit.get("collider")
-	if target and not target.has_method(&"interact"):
-		target = null
-	if target and target.has_method(&"has_prompt") and not target.has_prompt():
-		target = null  # ex.: árvore (coleta é por golpe, não por E)
-	if target and target.global_position.distance_to(global_position) > interact_range + 1.0:
-		target = null
-	if target != _focused:
-		_focused = target
-		_has_focus = target != null
+	# Sob o cursor e perto; senão, o interagível mais próximo ao alcance.
+	var hit := cursor_ray(30.0, 1 | 8 | 32 | BuildPiece.DOOR_LAYER)
+	var found: Node = _usable(hit.get("collider"))
+	if found == null:
+		var shape := SphereShape3D.new()
+		shape.radius = interact_range
+		var query := PhysicsShapeQueryParameters3D.new()
+		query.shape = shape
+		query.transform = Transform3D(Basis(), global_position + Vector3.UP * 0.8)
+		query.collision_mask = 1 | 8 | 32 | BuildPiece.DOOR_LAYER
+		query.exclude = [get_rid()]
+		var best := INF
+		for r: Dictionary in get_world_3d().direct_space_state.intersect_shape(query, 24):
+			var node := _usable(r.collider)
+			if node:
+				var d := (node as Node3D).global_position.distance_to(global_position)
+				if d < best:
+					best = d
+					found = node
+	if found != _focused:
+		_focused = found
+		_has_focus = found != null
 		interaction_prompt_changed.emit(_focused.get_prompt() if _focused else "")
+
+
+## O nó pode ser usado com E agora (tem interact, tem aviso e está ao alcance)?
+func _usable(collider: Object) -> Node:
+	var node := collider as Node3D
+	if node == null or not node.has_method(&"interact"):
+		return null
+	if node.has_method(&"has_prompt") and not node.has_prompt():
+		return null  # ex.: árvore (coleta é por golpe, não por E)
+	if node.global_position.distance_to(global_position) > interact_range + 1.0:
+		return null
+	return node
 
 
 func _give_starter_kit() -> void:
@@ -459,22 +503,103 @@ func _zombie_nearby(radius: float) -> bool:
 
 # --- Ações visíveis para todos -----------------------------------------------------
 
-## Animação de ação (tiro, golpe, feitiço) aqui e nas telas dos outros jogadores.
-## Só toca parado, para não travar as pernas (mistura tronco/pernas fica para depois).
-func play_action_synced(anim_name: StringName) -> void:
-	_play_action_if_still(anim_name)
+## Animação de ação (golpe, tiro, feitiço) aqui e nas telas dos outros jogadores.
+## duration > 0: a animação dura isso (acelera com a velocidade de ataque). Ataques
+## (attack = true) viram o corpo para o alvo/cursor e deixam o personagem mais lento.
+func play_action_synced(anim_name: StringName, duration := 0.0, attack := false) -> void:
+	if attack and is_local():
+		_attack_until = Time.get_ticks_msec() + int(maxf(duration, 0.3) * 1000.0)
+		face_point(aim_point(60.0))
+	model.play_action(anim_name, duration)
 	if Network.is_online():
-		_remote_action.rpc(anim_name)
+		_remote_action.rpc(anim_name, duration)
 
 
 @rpc("authority", "call_remote", "unreliable")
-func _remote_action(anim_name: StringName) -> void:
-	_play_action_if_still(anim_name)
+func _remote_action(anim_name: StringName, duration: float) -> void:
+	model.play_action(anim_name, duration)
 
 
-func _play_action_if_still(anim_name: StringName) -> void:
-	if Vector2(velocity.x, velocity.z).length() < 0.5:
-		model.play_action(anim_name)
+# --- Mira: cursor, alvo e origem dos tiros ------------------------------------------
+
+## Raio da câmera pelo cursor (ou pelo centro, girando a câmera). Retorna o dicionário
+## do intersect_ray, sempre com "position" (sem acerto: o ponto a max_range) e "dir".
+func cursor_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
+	var viewport := get_viewport()
+	var screen := viewport.get_mouse_position() if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
+			else viewport.get_visible_rect().size * 0.5
+	var from := camera.project_ray_origin(screen)
+	var dir := camera.project_ray_normal(screen)
+	var reach := max_range + spring_arm.get_hit_length()
+	var query := PhysicsRayQueryParameters3D.create(from, from + dir * reach, mask)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		hit = {"position": from + dir * reach, "miss": true}
+	hit["dir"] = dir
+	hit["from"] = from
+	return hit
+
+
+## Ponto para onde ataques à distância vão: o alvo (peito), ou o ponto sob o cursor.
+func aim_point(max_range: float) -> Vector3:
+	if has_target():
+		return target.global_position + Vector3.UP * 1.1
+	return cursor_ray(max_range).position
+
+
+## De onde saem flechas, feitiços e facas: na frente do peito, na direção do ponto.
+func shot_origin(toward: Vector3) -> Vector3:
+	var chest := global_position + Vector3.UP * 1.35
+	var flat := Vector3(toward.x - chest.x, 0.0, toward.z - chest.z)
+	return chest + (flat.normalized() * 0.5 if flat.length() > 0.01 else -global_basis.z * 0.5)
+
+
+## Vira o corpo (na hora) para um ponto.
+func face_point(point: Vector3) -> void:
+	var flat := Vector3(point.x - global_position.x, 0.0, point.z - global_position.z)
+	if flat.length() > 0.1:
+		rotation.y = atan2(-flat.x, -flat.z)
+
+
+func has_target() -> bool:
+	return is_instance_valid(target) and not (target.get(&"health") != null and target.health.is_dead) \
+		and target.global_position.distance_to(global_position) <= TARGET_RANGE
+
+
+## Clique: se o cursor está em cima de um inimigo, ele vira o alvo.
+func _pick_target() -> void:
+	var hit := cursor_ray(TARGET_RANGE, 4)
+	var collider: Object = hit.get("collider")
+	if collider is Node3D and (collider as Node).is_in_group("zombies"):
+		target = collider
+
+
+func _update_target_ring() -> void:
+	if not has_target():
+		target = null
+		if _target_ring:
+			_target_ring.visible = false
+		return
+	if _target_ring == null:
+		_target_ring = MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.55
+		torus.outer_radius = 0.68
+		torus.rings = 32
+		torus.ring_segments = 4
+		_target_ring.mesh = torus
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = Color(1.0, 0.25, 0.2, 0.85)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_target_ring.material_override = mat
+		_target_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_target_ring.top_level = true
+		add_child(_target_ring)
+	_target_ring.visible = true
+	var s := maxf(target.scale.x, 1.0)
+	_target_ring.global_transform = Transform3D(Basis().scaled(Vector3.ONE * s), target.global_position + Vector3.UP * 0.06)
 
 
 ## Efeitos de arma (rastro de tiro, dardo) mostrados nas telas dos outros jogadores.
@@ -643,7 +768,7 @@ func _wants_sprint(crouching: bool) -> bool:
 
 
 func _current_speed(crouching: bool) -> float:
-	var bonus := progression.mult("move_speed")
+	var bonus := progression.mult("move_speed") * (ATTACK_MOVE_FACTOR if Time.get_ticks_msec() < _attack_until else 1.0)
 	var factor := (overloaded_speed_factor if inventory.is_overloaded() else 1.0) * death_penalty.speed_factor() * bonus
 	if crouching:
 		return crouch_speed * factor
@@ -652,12 +777,16 @@ func _current_speed(crouching: bool) -> float:
 	return walk_speed * factor
 
 
+## Só 3ª pessoa: braço da câmera no zoom atual; as armas de 1ª pessoa (viewmodel)
+## ficam escondidas (a arma aparece na mão do modelo).
 func _apply_camera_mode() -> void:
-	spring_arm.spring_length = 0.0 if first_person else third_person_distance
-	spring_arm.position = Vector3.ZERO if first_person else third_person_offset
-	# Na 1ª pessoa o corpo some da câmera, mas continua projetando sombra.
-	# As armas de 1ª pessoa (viewmodel) só aparecem nesse modo.
-	weapons.visible = first_person and not (build and build.active)
-	var shadow_mode := GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if first_person \
-			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	model.set_shadow_mode(shadow_mode)
+	_zoom = clampf(_zoom, ZOOM_MIN, third_person_distance * 2.0)
+	spring_arm.spring_length = _zoom
+	spring_arm.position = third_person_offset
+	weapons.visible = false
+	model.set_shadow_mode(GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+
+
+## A câmera tem giro próprio: o Head (filho do corpo) desfaz o giro do corpo.
+func _update_camera_rig() -> void:
+	head.rotation = Vector3(camera_pitch, camera_yaw - rotation.y, 0.0)

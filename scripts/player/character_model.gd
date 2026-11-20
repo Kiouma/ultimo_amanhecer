@@ -288,7 +288,9 @@ func update_locomotion(local_velocity: Vector3, on_floor: bool, crouching: bool,
 
 
 ## Animações de uma vez só (ataque, dano, morte). Interrompem a locomoção até acabar.
-func play_action(anim_name: StringName) -> void:
+## duration > 0: a animação é acelerada/desacelerada para durar isso (ataques seguem o
+## tempo do golpe, que já inclui a velocidade de ataque).
+func play_action(anim_name: StringName, duration := 0.0) -> void:
 	if not rigged:
 		_rigid_start(String(anim_name))
 		return
@@ -296,7 +298,10 @@ func play_action(anim_name: StringName) -> void:
 	if full.is_empty():
 		push_warning("Animação não encontrada: %s" % anim_name)
 		return
-	anim.speed_scale = 1.0
+	var speed := 1.0
+	if duration > 0.0:
+		speed = clampf(anim.get_animation(full).length / duration, 0.5, 3.5)
+	anim.speed_scale = speed
 	anim.play(full, blend_time * 0.5)
 	_current = full
 	_in_action = true

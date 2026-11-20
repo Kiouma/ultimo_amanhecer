@@ -138,6 +138,7 @@ func _on_player_spawned(player: Node) -> void:
 	# Marca de acerto: a mira pisca (amarela em ataque surpresa).
 	var crosshair := get_node_or_null(^"Crosshair") as Label
 	if crosshair:
+		crosshair.visible = false  # 3ª pessoa com cursor: sem mira no centro
 		player.progression.hit_confirmed.connect(func(surprise: bool) -> void:
 			crosshair.text = "×"
 			crosshair.modulate = Color(1.0, 0.85, 0.2) if surprise else Color(1.0, 0.35, 0.3)
@@ -191,7 +192,7 @@ func _bind_inventory(player: Player) -> void:
 	_prompt = Label.new()
 	_prompt.set_anchors_preset(Control.PRESET_CENTER)
 	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_prompt.position.y += 28
+	_prompt.position.y += 150  # abaixo do personagem (3ª pessoa)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 5)

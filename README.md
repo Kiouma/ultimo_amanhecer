@@ -29,11 +29,12 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 
 ## Controles
 
-- **WASD** move, **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **F1** troca 1ª/3ª pessoa, **Esc** abre o menu de pausa e solta o mouse.
-- **Alt esquerdo** solta/trava o mouse. Com o **mouse livre**, dá para clicar na HUD (hotbar, botões +/− do minimapa) e a câmera só gira **segurando o botão direito**; a mira continua no centro da tela. Bom para corpo a corpo e para mexer na HUD.
-- **Hotbar:** teclas **1–9** (ou rodinha) escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
+- **Câmera em 3ª pessoa** (estilo RPG de ação): o mouse fica sempre livre; **segure o botão direito** para girar a câmera; **roda do mouse** aproxima/afasta (até 2x a distância padrão).
+- **WASD** anda em relação à câmera e o personagem vira para onde anda. **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **Esc** abre o menu de pausa.
+- **Clique esquerdo** ataca; clicar num inimigo o seleciona como **alvo** (anel vermelho): arco, feitiços e arremesso vão nele; sem alvo, vão para onde o cursor aponta. Ao atacar, o personagem vira para o alvo e anda mais devagar; a animação acelera com a velocidade de ataque.
+- **Hotbar:** teclas **1–9** escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
-- **E** pega o que está na mira e interage (portas, baús, estações); passar por cima de itens pega sozinho.
+- **E** interage com o que está sob o cursor (ou o mais perto) (portas, baús, estações); passar por cima de itens pega sozinho.
 - **Tab** inventário (mochila e fabricação), **V** equipamentos e status, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
 - **F8** (host) adianta 1 hora; **F10** (host) troca o clima.
 

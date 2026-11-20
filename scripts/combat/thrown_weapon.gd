@@ -37,8 +37,8 @@ func _throw() -> void:
 	if not user.inventory.remove_item(str(data.id), 1):
 		return
 	cooldown = stat("attack_time", 0.45)
-	var from := head.global_position + (-head.global_basis.z) * 0.6 + head.global_basis.x * 0.15
 	var aim_point: Vector3 = aim_ray(60.0).position
+	var from: Vector3 = user.shot_origin(aim_point)
 	var direction := (aim_point - from).normalized()
 	var speed := lerpf(14.0, stat("throw_speed", 30.0), power)
 	var knife: Node3D = ARROW.new()
@@ -55,7 +55,7 @@ func _throw() -> void:
 	make_noise(stat("noise", 0.05))
 	Sfx.play("swing", user.global_position + Vector3.UP * 1.4, -4.0)
 	count_use()
-	play_body_anim(&"Throw")
+	play_body_anim(&"Throw", stat("attack_time", 0.6))
 	hud_changed.emit()
 
 

@@ -69,7 +69,7 @@ func cast(power := 1.0, prepaid := false) -> bool:
 		mana.mark_action()
 	casting = true
 	cooldown = stat("cooldown", 1.0) + stat("cast_time", 0.4)
-	play_body_anim(&"Spell_Simple_Shoot")
+	play_body_anim(&"Spell_Simple_Shoot", maxf(stat("cast_time", 0.0), 0.5))
 	hud_changed.emit()
 	await get_tree().create_timer(stat("cast_time", 0.4)).timeout
 	casting = false
@@ -119,7 +119,7 @@ func _cast_nova() -> void:
 func _cast_chain() -> void:
 	var hit := aim_ray(stat("range", 30.0), 0.0)
 	var first: Node3D = hit.get("collider") as Node3D
-	var from := head.global_position + (-head.global_basis.z) * 0.6
+	var from: Vector3 = user.shot_origin(hit.position)
 	if not first is Zombie or first.is_dead():
 		# Errou: o raio some no ponto mirado.
 		spawn_tracer(user, from, hit.position)
@@ -189,8 +189,8 @@ static func _ring_fx(where: Node3D, center: Vector3, radius: float, color: Color
 
 
 func _cast_projectile() -> void:
-	var from := head.global_position + (-head.global_basis.z) * 0.7 + head.global_basis.x * 0.15
 	var aim_point: Vector3 = aim_ray(stat("range", 80.0)).position
+	var from: Vector3 = user.shot_origin(aim_point)
 	var bolt: Area3D = PROJECTILE.new()
 	bolt.damage = stat("damage", 30.0) * user.death_penalty.damage_factor()
 	bolt.speed = stat("speed", 22.0)

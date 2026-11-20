@@ -4,7 +4,7 @@ extends Node3D
 ## Mostra uma prévia da peça encaixada na grade: verde = dá para construir,
 ## vermelha = não dá (o HUD diz o motivo). Construir gasta o material do inventário.
 ## Controles: roda = peça, T = material, R = girar/virar, clique = construir,
-## botão direito = desmontar a peça na mira (devolve parte do material).
+## X = desmontar a peça sob o cursor (devolve parte do material).
 
 signal changed
 
@@ -61,7 +61,7 @@ func set_active(value: bool) -> void:
 	if not active:
 		_clear_ghost()
 		_aimed = null
-	user.weapons.visible = not active and user.first_person
+	user.weapons.visible = false  # só 3ª pessoa
 	_status = ""
 	changed.emit()
 
@@ -87,8 +87,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		turn = wrapi(turn + 1, 0, 4)
 	elif event.is_action_pressed("attack") and MouseMode.can_attack(get_viewport()):
 		place()
-	elif event.is_action_pressed("aim") and not MouseMode.free:
-		demolish()  # no mouse livre o botão direito gira a câmera
+	elif event.is_action_pressed("demolish"):
+		demolish()  # o botão direito gira a câmera
 	else:
 		handled = false
 		for i in Inventory.HOTBAR_SIZE:
@@ -159,12 +159,9 @@ func _pay(price: Dictionary) -> void:
 
 ## Peça de construção na mira (até ~5 m), ou null.
 func aimed_piece(max_distance := 5.0) -> BuildPiece:
-	var cam := user.camera
-	var from := cam.global_position
-	var reach := max_distance + user.spring_arm.get_hit_length()
-	var query := PhysicsRayQueryParameters3D.create(from, from - cam.global_basis.z * reach, 1 | 8 | BuildPiece.DOOR_LAYER)
-	query.exclude = [user.get_rid()]
-	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = user.cursor_ray(max_distance + 6.0, 1 | 8 | BuildPiece.DOOR_LAYER)
+	if hit.has("collider") and (hit.position as Vector3).distance_to(user.global_position) > max_distance + 1.0:
+		return null
 	var collider: Object = hit.get("collider")
 	if collider is BuildPiece:
 		return collider
@@ -254,7 +251,7 @@ func status_text() -> String:
 	if _reason != "":
 		lines.append(tr("Não dá: ") + _reason)
 	if _aimed:
-		lines.append(tr("Na mira: %s %d/%d · [Botão direito] desmontar (devolve %s)") % [_aimed.display_name(),
+		lines.append(tr("Na mira: %s %d/%d · [X] desmontar (devolve %s)") % [_aimed.display_name(),
 			ceili(_aimed.health.current), int(_aimed.health.max_health), Repair.describe(Structures.demolish_refund(_aimed))])
 	lines.append(tr("[Roda] peça  [T] material  [R] girar  [Clique] construir  [B] sair"))
 	return "\n".join(lines)
@@ -263,14 +260,13 @@ func status_text() -> String:
 # --- Mira e encaixe -------------------------------------------------------------------
 
 func _update_target() -> void:
-	var cam := user.camera
-	var from := cam.global_position
-	var dir := -cam.global_basis.z
-	var reach := REACH + user.spring_arm.get_hit_length()
-	var query := PhysicsRayQueryParameters3D.create(from, from + dir * reach, 1 | 8 | BuildPiece.DOOR_LAYER)
-	query.exclude = [user.get_rid()]
-	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
-	var point := from + dir * minf(reach, 5.0)
+	# Pelo cursor (até REACH do personagem).
+	var hit: Dictionary = user.cursor_ray(REACH + 8.0, 1 | 8 | BuildPiece.DOOR_LAYER)
+	var from: Vector3 = hit.from
+	var dir: Vector3 = hit.dir
+	if hit.has("collider") and (hit.position as Vector3).distance_to(user.global_position) > REACH:
+		hit = {}
+	var point := user.global_position + Vector3(dir.x, 0.0, dir.z).normalized() * minf(REACH, 4.0)
 	var normal := Vector3.ZERO
 	_aimed = null
 	if not hit.is_empty():

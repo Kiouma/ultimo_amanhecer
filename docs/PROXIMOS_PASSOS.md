@@ -169,7 +169,9 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 
 ---
 
-## 7. Câmera e mouse livre (Alt esquerdo)
+## 7. Câmera e mouse livre
+
+> **Mudou (decidido depois):** o jogo agora é **só em 3ª pessoa**, com o **mouse sempre livre**: a câmera gira segurando o botão direito e a roda dá zoom (até 2x a distância padrão). WASD anda em relação à câmera e o corpo vira para onde anda. Clicar num inimigo seleciona o **alvo**; armas à distância e feitiços vão nele (sem alvo, no ponto sob o cursor). Ao atacar, o personagem vira para o alvo, anda mais devagar e a animação acelera com a velocidade de ataque. O Alt e a tecla de 1ª/3ª pessoa saíram; desmontar no modo construção passou para o X. O texto abaixo é o plano original.
 
 **O que fazer:** além de 1ª/3ª pessoa (agora no **F1**), dois modos de controle da câmera, alternados com **Alt esquerdo**:
 

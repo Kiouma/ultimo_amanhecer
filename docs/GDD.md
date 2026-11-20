@@ -364,12 +364,12 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Usar / interagir | E |
 | Inventário | Tab |
 | Equipamentos e status | V |
-| Mouse livre / travado | Alt esquerdo (livre: clica na HUD; botão direito segurado gira a câmera) |
+| Alvo | Clique esquerdo num inimigo (ataques à distância vão nele) |
 | Trocar arma | 1 a 9, roda do mouse |
 | Recarregar | R |
 | Feitiço rápido | Q / F (configurável) |
-| Câmera 1ª / 3ª pessoa | F1 |
-| Modo construção | B (roda = peça, T = material, R = girar, clique = construir, botão direito = desmontar) |
+| Câmera | Só 3ª pessoa; botão direito segurado gira; roda dá zoom (até 2x) |
+| Modo construção | B (roda = peça, T = material, R = girar, clique = construir, X = desmontar) |
 | Personagem (árvore passiva, ascendência, proficiências) | P |
 | Auras | C |
 | Mapa | M |

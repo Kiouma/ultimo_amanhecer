@@ -32,7 +32,7 @@ static func bearing(from: Vector3, to: Vector3) -> float:
 
 
 func _heading() -> float:
-	var forward := -player.global_basis.z
+	var forward := -player.camera.global_basis.z  # para onde a câmera olha
 	return fposmod(rad_to_deg(atan2(forward.x, -forward.z)), 360.0)
 
 
