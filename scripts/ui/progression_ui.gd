@@ -211,7 +211,7 @@ const BONUS_NAMES := {
 	"ranged.arrow_speed": "Velocidade da flecha", "unarmed.damage": "Dano desarmado", "unarmed.stamina_cost": "Stamina por soco", "gather_yield": "Coleta de recursos", "craft_time": "Tempo de fabricação",
 	"max_health_add": "Vida máxima", "life_regen_add": "Regeneração de vida", "mana_regen": "Regeneração de mana",
 	"stamina_regen": "Regeneração de stamina", "aura_effect": "Efeito das auras", "aura_radius": "Raio das auras",
-	"reservation_efficiency": "Eficiência de reserva das auras", "melee.attack_time": "Tempo do golpe", "unarmed.attack_time": "Tempo do soco",
+	"mana_reservation_efficiency": "Eficiência de reserva de mana", "life_reservation_efficiency": "Eficiência de reserva de vida", "melee.attack_time": "Tempo do golpe", "unarmed.attack_time": "Tempo do soco",
 	"thrown.attack_time": "Tempo do arremesso", "magic.cast_time": "Tempo de conjuração", "sprint_stamina": "Stamina ao correr",
 }
 

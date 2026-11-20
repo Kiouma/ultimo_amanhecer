@@ -327,6 +327,16 @@ func ascendancy_node(node_id: String) -> Dictionary:
 	return {}
 
 
+## Auras liberadas pelos nós de ascendência desbloqueados ("unlocks_aura").
+func unlocked_auras() -> Array:
+	var out: Array = []
+	for node_id: String in asc_nodes:
+		var aura := str(ascendancy_node(node_id).get("unlocks_aura", ""))
+		if aura != "":
+			out.append(aura)
+	return out
+
+
 func unlock_asc_node(node_id: String) -> bool:
 	if ascendancy_node(node_id).is_empty() or asc_nodes.has(node_id) or ascendancy_points() <= 0:
 		return false

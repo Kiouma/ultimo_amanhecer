@@ -6,9 +6,17 @@ extends Node
 ## - Cada aura tem a reserva escolhida pelo jogador (1% a 35% do recurso): o efeito
 ##   cresce na mesma proporção ("effects" do JSON são por 1% reservado).
 ## - Nível (1 a MAX_LEVEL): sobe com o tempo ligada; cada nível dá +LEVEL_BONUS de efeito.
-## - Efeito e raio crescem com "aura_effect" e "aura_radius"; "reservation_efficiency"
-##   reserva menos pelo mesmo efeito. A soma reservada de cada recurso vai até MAX_RESERVED.
-## - A mesma aura de dois jogadores não soma: vale a mais forte.
+## - Efeito e raio crescem com "aura_effect" e "aura_radius".
+## - Reserva (reservations()), nesta ordem:
+##   1. soma bruta das % das auras de mana ligadas;
+##   2. conversor (Pacto de Sangue, "kind": "converter"): de 0% a 50% dessa soma vai
+##      para a vida; ele também tem custo próprio ("cost", % de vida);
+##   3. "mana_reservation_efficiency" reduz só a parte que ficou em mana;
+##   4. "life_reservation_efficiency" reduz só a parte em vida (convertida + custo).
+##   Cada recurso vai até MAX_RESERVED.
+## - Auras com "unlock": "ascendancy" só abrem por um nó de ascendência ("unlocks_aura").
+## - A mesma aura de dois jogadores não soma: vale a mais forte. Conversores não são
+##   bônus em área: não vão para net_auras.
 ##
 ## Rede: o dono escreve as auras ligadas em Player.net_auras ("id,força,raio;...") e o
 ## MultiplayerSynchronizer espalha. Cada máquina calcula só o que o SEU jogador recebe.
@@ -18,6 +26,10 @@ signal changed
 const MIN_PERCENT := 1
 const MAX_PERCENT := 35
 const DEFAULT_PERCENT := 20
+## Conversor: fração da reserva de mana que vai para a vida (0% a 50%).
+const MAX_CONVERSION := 50
+const DEFAULT_CONVERSION := 25
+const MAX_EFFICIENCY := 0.6
 const MAX_RESERVED := 0.9
 const MAX_LEVEL := 20
 const LEVEL_BONUS := 0.04
@@ -61,8 +73,19 @@ func level(id: String) -> int:
 	return clampi(int(levels.get(id, 1)), 1, MAX_LEVEL)
 
 
+func is_converter(id: String) -> bool:
+	return str(data(id).get("kind", "")) == "converter"
+
+
+## Limites da barra: auras 1% a 35%; conversor 0% a 50%.
+func percent_range(id: String) -> Vector2i:
+	return Vector2i(0, MAX_CONVERSION) if is_converter(id) else Vector2i(MIN_PERCENT, MAX_PERCENT)
+
+
 func get_percent(id: String) -> int:
-	return clampi(int(percent.get(id, DEFAULT_PERCENT)), MIN_PERCENT, MAX_PERCENT)
+	var r := percent_range(id)
+	var fallback := DEFAULT_CONVERSION if is_converter(id) else DEFAULT_PERCENT
+	return clampi(int(percent.get(id, fallback)), r.x, r.y)
 
 
 func is_active(id: String) -> bool:
@@ -70,26 +93,81 @@ func is_active(id: String) -> bool:
 
 
 func is_unlocked(id: String) -> bool:
-	return _player != null and _player.progression.char_level >= int(data(id).get("unlock_level", 1))
+	if _player == null:
+		return false
+	if str(data(id).get("unlock", "")) == "ascendancy":
+		return id in _player.progression.unlocked_auras()
+	return _player.progression.char_level >= int(data(id).get("unlock_level", 1))
+
+
+## Texto de por que está bloqueada ("" = liberada).
+func lock_reason(id: String) -> String:
+	if is_unlocked(id):
+		return ""
+	if str(data(id).get("unlock", "")) == "ascendancy":
+		return tr("Liberada por um nó de ascendência (%s)") % ", ".join(_unlocking_ascendancies(id))
+	return tr("Disponível no nível %d") % int(data(id).get("unlock_level", 1))
+
+
+func _unlocking_ascendancies(id: String) -> PackedStringArray:
+	var names: PackedStringArray = []
+	for asc_id: String in GameData.get_all("ascendancies"):
+		for n: Dictionary in GameData.get_entry("ascendancies", asc_id).get("nodes", []):
+			if str(n.get("unlocks_aura", "")) == id:
+				names.append(str(GameData.get_entry("ascendancies", asc_id).get("name", asc_id)))
+	return names
 
 
 static func xp_to_next(lvl: int) -> float:
 	return 90.0 * pow(float(lvl), 1.3)
 
 
-## Fração do recurso que esta aura reserva com `pct`% escolhido (com a eficiência).
-func reserve_cost(pct: float) -> float:
-	var efficiency := clampf(_player.progression.add("reservation_efficiency"), 0.0, 0.6) if _player else 0.0
-	return pct / 100.0 * (1.0 - efficiency)
+func _efficiency(key: String) -> float:
+	return clampf(_player.progression.add(key), 0.0, MAX_EFFICIENCY) if _player else 0.0
+
+
+## Reserva (frações, sem o limite) com um conjunto de auras ligadas e as % dadas:
+## {"mana": x, "life": y}. Ordem: conversão, depois eficiência de cada recurso.
+func reservations(on: Variant = null, pcts: Dictionary = {}) -> Dictionary:
+	if on == null:
+		on = active
+	var gross_mana := 0.0
+	var gross_life := 0.0
+	var conversion := 0.0
+	for id: String in on:
+		var pct := float(pcts.get(id, get_percent(id))) / 100.0
+		if is_converter(id):
+			conversion = clampf(pct, 0.0, MAX_CONVERSION / 100.0)
+			gross_life += float(data(id).get("cost", 0.0)) / 100.0
+		elif str(data(id).get("resource", "mana")) == "life":
+			gross_life += pct
+		else:
+			gross_mana += pct
+	var mana := gross_mana * (1.0 - conversion) * (1.0 - _efficiency("mana_reservation_efficiency"))
+	var life := (gross_mana * conversion + gross_life) * (1.0 - _efficiency("life_reservation_efficiency"))
+	return {"mana": mana, "life": life}
 
 
 ## Soma reservada de um recurso ("mana" ou "life"), 0 a MAX_RESERVED.
 func reserved_fraction(resource: String) -> float:
-	var total := 0.0
-	for id: String in active:
-		if str(data(id).get("resource", "mana")) == resource:
-			total += reserve_cost(get_percent(id))
-	return minf(total, MAX_RESERVED)
+	return minf(float(reservations().get(resource, 0.0)), MAX_RESERVED)
+
+
+## Quanto esta aura reserva de verdade agora (ou se for ligada): {"mana": x, "life": y}.
+## Para o conversor: o custo próprio mais a mana que ele passa para a vida.
+func cost_of(id: String) -> Dictionary:
+	var without := active.duplicate()
+	without.erase(id)
+	var with_it := active.duplicate()
+	with_it[id] = true
+	var a := reservations(without)
+	var b := reservations(with_it)
+	return {"mana": float(b.mana) - float(a.mana), "life": float(b.life) - float(a.life)}
+
+
+func _fits(on: Dictionary, pcts: Dictionary = {}) -> bool:
+	var r := reservations(on, pcts)
+	return float(r.mana) <= MAX_RESERVED + 0.0001 and float(r.life) <= MAX_RESERVED + 0.0001
 
 
 ## Força de uma aura ligada (multiplica os efeitos por 1%).
@@ -122,10 +200,10 @@ func toggle(id: String) -> String:
 		_apply()
 		return ""
 	if not is_unlocked(id):
-		return tr("Disponível no nível %d") % int(data(id).get("unlock_level", 1))
-	var resource := str(data(id).get("resource", "mana"))
-	var free := MAX_RESERVED - reserved_fraction(resource)
-	if reserve_cost(get_percent(id)) > free + 0.0001:
+		return lock_reason(id)
+	var with_it := active.duplicate()
+	with_it[id] = true
+	if not _fits(with_it):
 		return tr("Reserva insuficiente: diminua a % desta ou de outra aura")
 	active[id] = true
 	_apply()
@@ -135,11 +213,10 @@ func toggle(id: String) -> String:
 ## Muda a reserva escolhida. Ligada, não deixa passar do que sobra do recurso.
 ## Retorna o valor que ficou.
 func set_percent(id: String, value: int) -> int:
-	value = clampi(value, MIN_PERCENT, MAX_PERCENT)
+	var r := percent_range(id)
+	value = clampi(value, r.x, r.y)
 	if active.has(id):
-		var resource := str(data(id).get("resource", "mana"))
-		var others := reserved_fraction(resource) - reserve_cost(get_percent(id))
-		while value > MIN_PERCENT and others + reserve_cost(value) > MAX_RESERVED + 0.0001:
+		while value > r.x and not _fits(active, {id: value}):
 			value -= 1
 	percent[id] = value
 	if active.has(id):
@@ -164,6 +241,8 @@ func _publish() -> void:
 		return
 	var parts: PackedStringArray = []
 	for id: String in active:
+		if is_converter(id):
+			continue  # não é bônus em área
 		parts.append("%s,%.2f,%.1f" % [id, strength(id), radius()])
 	_player.net_auras = ";".join(parts)
 
@@ -189,7 +268,7 @@ func _gain_xp(seconds: float) -> void:
 		return
 	for id: String in active:
 		var lvl := level(id)
-		if lvl >= MAX_LEVEL:
+		if lvl >= MAX_LEVEL or is_converter(id):
 			continue
 		xp[id] = float(xp.get(id, 0.0)) + seconds
 		if float(xp[id]) >= xp_to_next(lvl):
@@ -306,7 +385,8 @@ func to_save() -> Dictionary:
 func from_save(d: Dictionary) -> void:
 	percent = {}
 	for id: String in d.get("percent", {}):
-		percent[id] = clampi(int(d.percent[id]), MIN_PERCENT, MAX_PERCENT)
+		var r := percent_range(id)
+		percent[id] = clampi(int(d.percent[id]), r.x, r.y)
 	levels = {}
 	for id: String in d.get("levels", {}):
 		levels[id] = clampi(int(d.levels[id]), 1, MAX_LEVEL)
@@ -317,4 +397,6 @@ func from_save(d: Dictionary) -> void:
 	for id: Variant in d.get("active", []):
 		if not data(str(id)).is_empty() and is_unlocked(str(id)):
 			active[str(id)] = true
+	if not _fits(active):
+		active.clear()  # dados mudaram e não cabe mais: desliga tudo
 	_apply()

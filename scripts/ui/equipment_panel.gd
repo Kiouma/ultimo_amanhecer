@@ -194,7 +194,8 @@ static func secondary_stats(p: Player) -> Array:
 		[tr_static(TranslationServer.translate("Carga do golpe")), pct.call("melee.channel")],
 		[tr_static(TranslationServer.translate("Efeito das auras")), pct.call("aura_effect")],
 		[tr_static(TranslationServer.translate("Raio das auras")), pct.call("aura_radius")],
-		[tr_static(TranslationServer.translate("Eficiência de reserva das auras")), "%+d%%" % roundi(clampf(prog.add("reservation_efficiency"), 0.0, 0.6) * 100.0), tr_static(TranslationServer.translate("Reserva menos mana/vida pelo mesmo efeito. Máximo 60%."))],
+		[tr_static(TranslationServer.translate("Eficiência de reserva de mana")), "%+d%%" % roundi(clampf(prog.add("mana_reservation_efficiency"), 0.0, Auras.MAX_EFFICIENCY) * 100.0), tr_static(TranslationServer.translate("Auras reservam menos mana pelo mesmo efeito. Não vale para a parte convertida em vida. Máximo 60%."))],
+		[tr_static(TranslationServer.translate("Eficiência de reserva de vida")), "%+d%%" % roundi(clampf(prog.add("life_reservation_efficiency"), 0.0, Auras.MAX_EFFICIENCY) * 100.0), tr_static(TranslationServer.translate("Reduz a vida reservada (Pacto de Sangue). Máximo 60%."))],
 	]
 
 

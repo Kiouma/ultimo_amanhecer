@@ -39,14 +39,14 @@ def e(**kw):
 
 # Nós pequenos dos caminhos, por setor (ciclados).
 PATH_SMALLS = {
-    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04)), ("Sangue forte", e(life_regen_add=0.15))],
+    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04)), ("Sangue forte", e(life_regen_add=0.15)), ("Sangue firme", e(life_reservation_efficiency=0.02))],
     "archer": [("Precisão", e(ranged__damage=0.04)), ("Mão ágil", e(ranged__draw_time=-0.03)), ("Passo leve", e(move_speed=0.015)), ("Reflexos", e(attack_speed=0.02)), ("Arremesso", e(thrown__damage=0.05))],
-    "mage": [("Intelecto", e(magic__damage=0.04)), ("Reserva arcana", e(max_mana_add=8)), ("Fluxo de mana", e(mana_regen=0.06)), ("Foco", e(magic__mana=-0.03)), ("Ressonância", e(aura_effect=0.02))],
+    "mage": [("Intelecto", e(magic__damage=0.04)), ("Reserva arcana", e(max_mana_add=8)), ("Fluxo de mana", e(mana_regen=0.06)), ("Foco", e(magic__mana=-0.03)), ("Ressonância", e(aura_effect=0.02)), ("Disciplina arcana", e(mana_reservation_efficiency=0.02))],
     "brawler": [("Punho", e(unarmed__damage=0.05)), ("Resiliência", e(max_health_add=6)), ("Ritmo", e(attack_speed=0.02)), ("Ímpeto", e(unarmed__stamina_cost=-0.04)), ("Recuperação", e(stamina_regen=0.06)), ("Fôlego vital", e(life_regen_add=0.15))],
-    "monk": [("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02)), ("Meditação", e(mana_regen=0.04, stamina_regen=0.04)), ("Espírito", e(aura_effect=0.02))],
+    "monk": [("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02)), ("Meditação", e(mana_regen=0.04, stamina_regen=0.04)), ("Espírito", e(aura_effect=0.02)), ("Desapego", e(mana_reservation_efficiency=0.02))],
     "spellbow": [("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025)), ("Recarga", e(magic__cooldown=-0.03)), ("Vento", e(move_speed=0.012))],
     "hunter": [("Caça", e(ranged__damage=0.025, melee__damage=0.025)), ("Rastreio", e(noise=-0.03)), ("Emboscada", e(sneak_damage=0.06))],
-    "barbarian": [("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03)), ("Couro grosso", e(max_health_add=7)), ("Teimosia", e(damage_taken=-0.012))],
+    "barbarian": [("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03)), ("Couro grosso", e(max_health_add=7)), ("Teimosia", e(damage_taken=-0.012)), ("Veias grossas", e(life_reservation_efficiency=0.02))],
     "center": [("Sobrevivência", e(gather_yield=0.04)), ("Vitalidade", e(max_health_add=5)), ("Remendo", e(heal=0.05)), ("Carga", e(carry_weight_add=3)), ("Artesão", e(craft_time=-0.04)), ("Regeneração", e(life_regen_add=0.1))],
 }
 
@@ -59,7 +59,7 @@ NOTABLES = {
         ("Golpe Carregado", e(melee__channel=0.3, melee__damage=0.08), ("Concentração", e(melee__channel=0.05))),
         ("Lâmina Veloz", e(melee__attack_time=-0.1, attack_speed=0.04), ("Agilidade", e(attack_speed=0.015))),
         ("Fôlego de Batalha", e(max_stamina_add=25, stamina_regen=0.15), ("Fôlego", e(max_stamina_add=5))),
-        ("Sangue Quente", e(life_regen_add=1.0, max_health_add=15), ("Sangue", e(life_regen_add=0.15))),
+        ("Sangue Quente", e(life_regen_add=1.0, max_health_add=15, life_reservation_efficiency=0.08), ("Sangue", e(life_regen_add=0.15))),
         ("Senhor da Guerra", e(melee__damage=0.12, max_health_add=20, damage_taken=-0.03), None),
         ("Inabalável", e(damage_taken=-0.08, max_stamina_add=15), None),
     ],
@@ -76,7 +76,7 @@ NOTABLES = {
     "mage": [
         ("Chama Interior", e(magic__damage=0.15, magic__channel=0.15), ("Intelecto", e(magic__damage=0.03))),
         ("Poço de Mana", e(max_mana_add=30, mana_regen=0.15), ("Reserva arcana", e(max_mana_add=6))),
-        ("Coração das Auras", e(aura_effect=0.12, reservation_efficiency=0.06), ("Ressonância", e(aura_effect=0.02))),
+        ("Coração das Auras", e(aura_effect=0.12, mana_reservation_efficiency=0.08), ("Ressonância", e(aura_effect=0.02))),
         ("Mente Clara", e(magic__cooldown=-0.1, magic__cast_time=-0.1), ("Clareza", e(magic__cooldown=-0.025))),
         ("Economia Arcana", e(magic__mana=-0.12), ("Foco", e(magic__mana=-0.025))),
         ("Escudo Místico", e(spell_resist=0.08, max_mana_add=15), ("Proteção", e(spell_resist=0.015))),
@@ -95,7 +95,7 @@ NOTABLES = {
     ],
     "monk": [
         ("Harmonia Interior", e(unarmed__damage=0.1, magic__damage=0.1), ("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02))),
-        ("Mantra", e(aura_effect=0.1, mana_regen=0.1), ("Espírito", e(aura_effect=0.02))),
+        ("Mantra", e(aura_effect=0.1, mana_regen=0.1, mana_reservation_efficiency=0.06), ("Espírito", e(aura_effect=0.02))),
     ],
     "spellbow": [
         ("Flecha Encantada", e(ranged__damage=0.1, magic__damage=0.1), ("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025))),
@@ -107,7 +107,7 @@ NOTABLES = {
     ],
     "barbarian": [
         ("Fúria Bárbara", e(melee__damage=0.1, unarmed__damage=0.12), ("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03))),
-        ("Couro de Fera", e(max_health_add=25, damage_taken=-0.03), ("Couro grosso", e(max_health_add=7))),
+        ("Couro de Fera", e(max_health_add=25, damage_taken=-0.03, life_reservation_efficiency=0.08), ("Couro grosso", e(max_health_add=7))),
     ],
 }
 

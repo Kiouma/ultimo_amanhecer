@@ -5,8 +5,9 @@
     {"id":"vanguard_2","name":"Estandarte de Guerra","effects":{"aura_effect":0.2,"aura_radius":0.3}},
     {"id":"vanguard_3","name":"Pulmões de Aço","effects":{"max_stamina_add":40,"stamina_regen":0.25}},
     {"id":"vanguard_4","name":"Carne Teimosa","effects":{"life_regen_add":2.0}},
-    {"id":"vanguard_5","name":"Escudo do Grupo","effects":{"reservation_efficiency":0.15,"aura_effect":0.1}},
-    {"id":"vanguard_6","name":"Inquebrável","effects":{"spell_resist":0.12,"damage_taken":-0.04}}
+    {"id":"vanguard_5","name":"Escudo do Grupo","effects":{"mana_reservation_efficiency":0.15,"aura_effect":0.1}},
+    {"id":"vanguard_6","name":"Inquebrável","effects":{"spell_resist":0.12,"damage_taken":-0.04}},
+    {"id":"vanguard_7","name":"Pacto de Sangue","unlocks_aura":"blood_pact","effects":{"life_reservation_efficiency":0.1,"max_health_add":15}}
   ]},
   {"id":"butcher","name":"Carniceiro","class":"warrior","desc":"Ofensiva pura com armas: golpes rápidos, carregados e sem cansaço.","effects":{"melee.damage":0.2,"melee.attack_time":-0.08},
    "nodes":[
@@ -44,11 +45,11 @@
     {"id":"arcanist_5","name":"Barreira Arcana","effects":{"spell_resist":0.15,"max_health_add":20}},
     {"id":"arcanist_6","name":"Sobrecarga","effects":{"magic.damage":0.15,"magic.mana":0.1}}
   ]},
-  {"id":"oracle","name":"Oráculo","class":"mage","desc":"Suporte do grupo: auras mais fortes, maiores e mais baratas.","effects":{"aura_effect":0.2,"reservation_efficiency":0.1},
+  {"id":"oracle","name":"Oráculo","class":"mage","desc":"Suporte do grupo: auras mais fortes, maiores e mais baratas.","effects":{"aura_effect":0.2,"mana_reservation_efficiency":0.1},
    "nodes":[
     {"id":"oracle_1","name":"Voz que Ecoa","effects":{"aura_radius":0.5}},
     {"id":"oracle_2","name":"Bênção Ampliada","effects":{"aura_effect":0.2}},
-    {"id":"oracle_3","name":"Disciplina Mental","effects":{"reservation_efficiency":0.15}},
+    {"id":"oracle_3","name":"Disciplina Mental","effects":{"mana_reservation_efficiency":0.15}},
     {"id":"oracle_4","name":"Fonte Partilhada","effects":{"mana_regen":0.3,"max_mana_add":30}},
     {"id":"oracle_5","name":"Mãos que Curam","effects":{"heal":0.3,"life_regen_add":1.0}},
     {"id":"oracle_6","name":"Proteção Divina","effects":{"damage_taken":-0.05,"spell_resist":0.1}}
@@ -69,6 +70,7 @@
     {"id":"bonebreaker_3","name":"Fúria Contida","effects":{"attack_speed":0.08}},
     {"id":"bonebreaker_4","name":"Brutamontes","effects":{"max_health_add":40,"carry_weight_add":15}},
     {"id":"bonebreaker_5","name":"Emboscador","effects":{"sneak_damage":0.4,"noise":-0.1}},
-    {"id":"bonebreaker_6","name":"Recuperação Feroz","effects":{"stamina_regen":0.25,"max_stamina_add":25}}
+    {"id":"bonebreaker_6","name":"Recuperação Feroz","effects":{"stamina_regen":0.25,"max_stamina_add":25}},
+    {"id":"bonebreaker_7","name":"Pacto de Sangue","unlocks_aura":"blood_pact","effects":{"life_reservation_efficiency":0.1,"max_health_add":15}}
   ]}
 ]

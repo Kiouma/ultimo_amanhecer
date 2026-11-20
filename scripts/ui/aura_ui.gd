@@ -1,26 +1,39 @@
 class_name AuraUI
 extends Control
-## Tela de auras (tecla C). Um quadrado por aura: clique liga/desliga. Passar o mouse
-## mostra embaixo o nível da aura como título, a descrição (efeito) e a barra da reserva
-## (1% a 35% de mana ou de vida; o efeito cresce na mesma proporção).
+## Tela de auras (tecla C), em duas partes:
+## - Em cima, só os ícones das auras, espaçados, com o nome completo em cima de cada um.
+## - Clicar num ícone SELECIONA a aura (não liga/desliga): embaixo, no centro, aparece
+##   uma cópia do ícone, o nível como título, a descrição completa, a barra de reserva
+##   (estreita, % no topo) e, por último, o interruptor Ativado (verde) / Desativado
+##   (vermelho), que é o que liga e desliga.
 ## Também mantém no HUD a lista das auras que o jogador está recebendo.
 
-const SQUARE := Vector2(74, 74)
+const ICON := Vector2(56, 56)
+const BIG_ICON := Vector2(68, 68)
+const CELL_WIDTH := 104.0
+const SLIDER_WIDTH := 260.0
 
 var player: Player
 
-var _grid: GridContainer
 var _reserve_label: Label
 var _receiving_label: Label
+var _hint: Label
+var _detail: VBoxContainer
+var _big_icon: Panel
+var _big_label: Label
 var _title: Label
 var _desc: Label
 var _effect: Label
 var _percent_label: Label
 var _slider: HSlider
+var _lo_label: Label
+var _hi_label: Label
+var _switch: ToggleSwitch
 var _footer: Label
-var _detail: VBoxContainer
-var _squares := {}  # id → Button
+var _icons := {}  # id → Button
 var _focus := ""
+## Montando o detalhe: mudar os limites da barra dispara value_changed; ignora.
+var _updating := false
 var _strip: Label  # HUD: auras recebidas
 var _strip_timer := 0.0
 
@@ -72,8 +85,6 @@ func toggle() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if visible else Input.MOUSE_MODE_CAPTURED
 	if visible:
 		_footer.text = ""
-		if _focus == "" and not GameData.get_all("auras").is_empty():
-			_focus = GameData.get_all("auras").keys()[0]
 		_refresh()
 
 
@@ -95,8 +106,7 @@ func _process(delta: float) -> void:
 
 
 func _player_name(p: Node) -> String:
-	var n: Variant = p.get(&"display_name")
-	return str(n) if n != null and str(n) != "" else tr("aliado")
+	return str(p.call(&"display_name")) if p.has_method(&"display_name") else tr("aliado")
 
 
 # --- Atualização ----------------------------------------------------------------------------
@@ -105,29 +115,38 @@ func _refresh() -> void:
 	var auras := player.auras
 	_reserve_label.text = tr("Mana reservada: %d%%  ·  Vida reservada: %d%%  (máximo %d%% de cada)") % [
 		roundi(auras.reserved_fraction("mana") * 100.0), roundi(auras.reserved_fraction("life") * 100.0), roundi(Auras.MAX_RESERVED * 100.0)]
-	for id: String in _squares:
-		_style_square(id)
+	for id: String in _icons:
+		_style_icon(_icons[id], id, id == _focus)
 	_refresh_detail()
 
 
-func _style_square(id: String) -> void:
+func _aura_color(id: String) -> Color:
+	return Color.from_string(str(GameData.get_entry("auras", id).get("color", "#ffffff")), Color.WHITE)
+
+
+## Fundo e borda do ícone: aura ligada fica preenchida com a cor dela; selecionada
+## ganha borda branca; bloqueada fica cinza.
+func _icon_style(id: String, selected: bool, hover := false) -> StyleBoxFlat:
 	var auras := player.auras
-	var b: Button = _squares[id]
-	var data := GameData.get_entry("auras", id)
-	var color := Color.from_string(str(data.get("color", "#ffffff")), Color.WHITE)
+	var color := _aura_color(id)
 	var active := auras.is_active(id)
-	var unlocked := auras.is_unlocked(id)
-	for state in ["normal", "hover", "pressed", "focus"]:
-		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(6)
-		style.bg_color = color.darkened(0.35) if active else Color(0.1, 0.1, 0.12)
-		style.border_color = color.lightened(0.3) if active else (color.darkened(0.2) if unlocked else Color(0.3, 0.3, 0.32))
-		style.set_border_width_all(4 if active else 2)
-		if state == "hover" or (state == "focus" and id == _focus):
-			style.border_color = Color.WHITE
-		b.add_theme_stylebox_override(state, style)
-	b.modulate = Color.WHITE if unlocked else Color(0.55, 0.55, 0.55)
-	b.text = _initials(str(data.get("name", id))) + ("" if unlocked else "\n" + tr("Nv %d") % int(data.get("unlock_level", 1)))
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(8)
+	style.bg_color = color.darkened(0.35) if active else Color(0.1, 0.1, 0.12)
+	style.border_color = color.lightened(0.3) if active else (color.darkened(0.2) if auras.is_unlocked(id) else Color(0.3, 0.3, 0.32))
+	style.set_border_width_all(3 if active else 2)
+	if selected or hover:
+		style.border_color = Color.WHITE
+		style.set_border_width_all(3)
+	return style
+
+
+func _style_icon(b: Button, id: String, selected: bool) -> void:
+	b.add_theme_stylebox_override("normal", _icon_style(id, selected))
+	b.add_theme_stylebox_override("pressed", _icon_style(id, selected))
+	b.add_theme_stylebox_override("focus", _icon_style(id, selected))
+	b.add_theme_stylebox_override("hover", _icon_style(id, selected, true))
+	b.modulate = Color.WHITE if player.auras.is_unlocked(id) else Color(0.55, 0.55, 0.55)
 
 
 func _initials(text: String) -> String:
@@ -140,30 +159,71 @@ func _initials(text: String) -> String:
 
 func _refresh_detail() -> void:
 	_detail.visible = _focus != ""
+	_hint.visible = _focus == ""
 	if _focus == "":
 		return
 	var auras := player.auras
 	var data := GameData.get_entry("auras", _focus)
-	var pct := auras.get_percent(_focus)
-	var resource := tr("mana") if str(data.get("resource", "mana")) == "mana" else tr("vida")
+	var color := _aura_color(_focus)
+	var converter := auras.is_converter(_focus)
+	# Cópia do ícone.
+	_big_icon.add_theme_stylebox_override("panel", _icon_style(_focus, false))
+	_big_icon.modulate = Color.WHITE if auras.is_unlocked(_focus) else Color(0.55, 0.55, 0.55)
+	_big_label.text = _initials(str(data.get("name", _focus)))
+	# Título: nome e nível.
 	var lvl := auras.level(_focus)
-	_title.text = tr("%s  ·  Nível %d") % [data.get("name", _focus), lvl]
-	_title.add_theme_color_override("font_color", Color.from_string(str(data.get("color", "#ffffff")), Color.WHITE).lightened(0.2))
+	_title.text = str(data.get("name", _focus)) if converter else tr("%s  ·  Nível %d") % [data.get("name", _focus), lvl]
+	_title.add_theme_color_override("font_color", color.lightened(0.2))
 	_desc.text = str(data.get("desc", ""))
-	var effect := tr("Efeito agora: %s") % ProgressionUI.bonus_text(auras.effects_at(_focus, auras.strength(_focus)))
-	effect += "\n" + tr("Raio %.0f m · nível %d: +%d%% de efeito") % [auras.radius(), lvl, roundi(Auras.LEVEL_BONUS * (lvl - 1) * 100.0)]
-	if lvl < Auras.MAX_LEVEL:
-		effect += " · " + tr("próximo nível: %d / %d s ligada") % [int(float(auras.xp.get(_focus, 0.0))), int(Auras.xp_to_next(lvl))]
-	_effect.text = effect
-	var cost := auras.reserve_cost(pct) * 100.0
-	_percent_label.text = tr("%d%% de %s") % [pct, resource]
-	if absf(cost - pct) > 0.5:
-		_percent_label.text += "  " + tr("(reserva real %.0f%%)") % cost
+	# Efeito e números.
+	var pct := auras.get_percent(_focus)
+	var cost := auras.cost_of(_focus)
+	var lines: PackedStringArray = []
+	if converter:
+		lines.append(tr("Converte %d%% da reserva de mana das outras auras em reserva de vida.") % pct)
+		lines.append(tr("Custo próprio: %d%% de vida.") % int(data.get("cost", 0)))
+	else:
+		lines.append(tr("Efeito agora: %s") % ProgressionUI.bonus_text(auras.effects_at(_focus, auras.strength(_focus))))
+		var level_line := tr("Raio %.0f m · nível %d: +%d%% de efeito") % [auras.radius(), lvl, roundi(Auras.LEVEL_BONUS * (lvl - 1) * 100.0)]
+		if lvl < Auras.MAX_LEVEL:
+			level_line += " · " + tr("próximo nível: %d / %d s ligada") % [int(float(auras.xp.get(_focus, 0.0))), int(Auras.xp_to_next(lvl))]
+		lines.append(level_line)
+	var real: PackedStringArray = []
+	if float(cost.mana) >= 0.005:
+		real.append(tr("%d%% de mana") % roundi(float(cost.mana) * 100.0))
+	elif float(cost.mana) <= -0.005:
+		real.append(tr("libera %d%% de mana") % roundi(-float(cost.mana) * 100.0))
+	if absf(float(cost.life)) >= 0.005:
+		real.append(tr("%d%% de vida") % roundi(float(cost.life) * 100.0))
+	if not real.is_empty():
+		lines.append(tr("Reserva real (com conversão e eficiência): %s") % ", ".join(real))
+	_effect.text = "\n".join(lines)
+	# Barra.
+	var r := auras.percent_range(_focus)
+	_updating = true
+	_slider.min_value = r.x
+	_slider.max_value = r.y
 	_slider.set_value_no_signal(pct)
-	var state := tr("LIGADA") if auras.is_active(_focus) else tr("desligada")
-	if not auras.is_unlocked(_focus):
-		state = tr("disponível no nível %d") % int(data.get("unlock_level", 1))
-	_footer.text = tr("Aura %s · clique no quadrado para ligar/desligar") % state
+	_updating = false
+	_lo_label.text = "%d%%" % r.x
+	_hi_label.text = "%d%%" % r.y
+	if converter:
+		_percent_label.text = tr("%d%% convertido em vida") % pct
+	else:
+		var resource := tr("mana") if str(data.get("resource", "mana")) == "mana" else tr("vida")
+		_percent_label.text = tr("%d%% de %s") % [pct, resource]
+	# Interruptor.
+	var lock := auras.lock_reason(_focus)
+	_switch.on = auras.is_active(_focus)
+	_switch.disabled = lock != ""
+	if lock != "":
+		_footer.text = lock
+
+
+func _select(id: String) -> void:
+	_focus = id
+	_footer.text = ""
+	_refresh()
 
 
 # --- Montagem -------------------------------------------------------------------------------
@@ -175,7 +235,7 @@ func _build() -> void:
 	add_child(dim)
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(620, 540)
+	panel.custom_minimum_size = Vector2(700, 640)
 	panel.position = -panel.custom_minimum_size * 0.5
 	add_child(panel)
 	var margin := MarginContainer.new()
@@ -183,107 +243,152 @@ func _build() -> void:
 		margin.add_theme_constant_override("margin_" + side, 16)
 	panel.add_child(margin)
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 5)
 	margin.add_child(root)
 
 	var title := Label.new()
 	title.text = "Auras"
 	title.add_theme_font_size_override("font_size", 22)
 	root.add_child(title)
-	var intro := Label.new()
-	intro.text = "Bônus em área para você e os aliados por perto, pagos com uma reserva de mana (ou de vida) enquanto ficam ligadas. Sobem de nível com o tempo ligadas."
-	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro.add_theme_font_size_override("font_size", 12)
-	intro.modulate = Color(0.78, 0.78, 0.74)
-	root.add_child(intro)
 	_reserve_label = Label.new()
 	_reserve_label.add_theme_font_size_override("font_size", 13)
 	_reserve_label.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
 	root.add_child(_reserve_label)
 
-	_grid = GridContainer.new()
-	_grid.columns = 7
-	_grid.add_theme_constant_override("h_separation", 8)
-	_grid.add_theme_constant_override("v_separation", 8)
-	root.add_child(_grid)
+	# Ícones com o nome em cima.
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 26)
+	grid.add_theme_constant_override("v_separation", 10)
+	var grid_center := CenterContainer.new()
+	grid_center.add_child(grid)
+	root.add_child(grid_center)
 	for id: String in GameData.get_all("auras"):
+		var cell := VBoxContainer.new()
+		cell.custom_minimum_size = Vector2(CELL_WIDTH, 0)
+		cell.add_theme_constant_override("separation", 3)
+		var name_label := Label.new()
+		name_label.text = str(GameData.get_entry("auras", id).get("name", id))
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 12)
+		cell.add_child(name_label)
 		var b := Button.new()
-		b.custom_minimum_size = SQUARE
+		b.custom_minimum_size = ICON
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 15)
-		b.mouse_entered.connect(func() -> void:
-			_focus = id
-			_refresh())
-		b.pressed.connect(func() -> void:
-			_focus = id
-			var reason := player.auras.toggle(id)
-			_refresh()
-			if reason != "":
-				_footer.text = reason)
-		_grid.add_child(b)
-		_squares[id] = b
+		b.text = _initials(name_label.text)
+		b.add_theme_font_size_override("font_size", 18)
+		b.pressed.connect(_select.bind(id))
+		cell.add_child(b)
+		grid.add_child(cell)
+		_icons[id] = b
 
+	root.add_child(HSeparator.new())
+	_hint = Label.new()
+	_hint.text = "Clique numa aura para ver os detalhes e ativar."
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.modulate = Color(0.7, 0.7, 0.68)
+	_hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(_hint)
+
+	# Detalhe da aura selecionada, centralizado.
 	_detail = VBoxContainer.new()
-	_detail.add_theme_constant_override("separation", 6)
+	_detail.add_theme_constant_override("separation", 3)
 	_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(_detail)
-	var sep := HSeparator.new()
-	_detail.add_child(sep)
+	var icon_center := CenterContainer.new()
+	_detail.add_child(icon_center)
+	_big_icon = Panel.new()
+	_big_icon.custom_minimum_size = BIG_ICON
+	icon_center.add_child(_big_icon)
+	_big_label = Label.new()
+	_big_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_big_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_big_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_big_label.add_theme_font_size_override("font_size", 24)
+	_big_icon.add_child(_big_label)
 	_title = Label.new()
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_font_size_override("font_size", 20)
 	_detail.add_child(_title)
 	_desc = Label.new()
+	_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_desc.add_theme_font_size_override("font_size", 14)
 	_detail.add_child(_desc)
 	_effect = Label.new()
+	_effect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_effect.add_theme_font_size_override("font_size", 13)
 	_effect.add_theme_color_override("font_color", Color(0.56, 0.78, 1.0))
 	_detail.add_child(_effect)
+
+	# Barra de reserva estreita, com a % no topo e no centro.
+	var bar_center := CenterContainer.new()
+	_detail.add_child(bar_center)
+	var bar_box := VBoxContainer.new()
+	bar_box.custom_minimum_size = Vector2(SLIDER_WIDTH, 0)
+	bar_box.add_theme_constant_override("separation", 2)
+	bar_center.add_child(bar_box)
 	_percent_label = Label.new()
 	_percent_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_percent_label.add_theme_font_size_override("font_size", 16)
-	_detail.add_child(_percent_label)
+	_percent_label.add_theme_font_size_override("font_size", 15)
+	bar_box.add_child(_percent_label)
 	_slider = HSlider.new()
-	_slider.min_value = Auras.MIN_PERCENT
-	_slider.max_value = Auras.MAX_PERCENT
 	_slider.step = 1
 	_slider.tick_count = 8
 	_slider.ticks_on_borders = true
 	_slider.focus_mode = Control.FOCUS_NONE
-	_slider.custom_minimum_size = Vector2(0, 24)
+	_slider.custom_minimum_size = Vector2(SLIDER_WIDTH, 18)
 	_slider.value_changed.connect(func(value: float) -> void:
-		if _focus == "" or player == null:
+		if _focus == "" or player == null or _updating:
 			return
 		var kept := player.auras.set_percent(_focus, int(value))
 		if kept != int(value):
 			_slider.set_value_no_signal(kept)
+			_footer.text = tr("Limite de reserva: %d%% de cada recurso") % roundi(Auras.MAX_RESERVED * 100.0)
 		_refresh())
-	_detail.add_child(_slider)
+	bar_box.add_child(_slider)
 	var scale_row := HBoxContainer.new()
-	var lo := Label.new()
-	lo.text = "%d%%" % Auras.MIN_PERCENT
-	lo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lo.modulate = Color(0.6, 0.6, 0.6)
-	scale_row.add_child(lo)
-	var hi := Label.new()
-	hi.text = "%d%%" % Auras.MAX_PERCENT
-	hi.modulate = Color(0.6, 0.6, 0.6)
-	scale_row.add_child(hi)
-	_detail.add_child(scale_row)
+	_lo_label = Label.new()
+	_lo_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_lo_label.modulate = Color(0.6, 0.6, 0.6)
+	_lo_label.add_theme_font_size_override("font_size", 11)
+	scale_row.add_child(_lo_label)
+	_hi_label = Label.new()
+	_hi_label.modulate = Color(0.6, 0.6, 0.6)
+	_hi_label.add_theme_font_size_override("font_size", 11)
+	scale_row.add_child(_hi_label)
+	bar_box.add_child(scale_row)
+
+	# Interruptor na parte de baixo.
+	var switch_center := CenterContainer.new()
+	_detail.add_child(switch_center)
+	_switch = ToggleSwitch.new()
+	_switch.toggled_by_user.connect(func() -> void:
+		if _focus == "" or player == null:
+			return
+		var reason := player.auras.toggle(_focus)
+		_footer.text = reason
+		_refresh())
+	switch_center.add_child(_switch)
 	_footer = Label.new()
+	_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_footer.add_theme_font_size_override("font_size", 13)
-	_footer.add_theme_color_override("font_color", Color(0.85, 0.82, 0.65))
+	_footer.add_theme_color_override("font_color", Color(0.95, 0.75, 0.55))
 	_footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail.add_child(_footer)
 
+	var bottom := HBoxContainer.new()
+	root.add_child(bottom)
 	_receiving_label = Label.new()
 	_receiving_label.add_theme_font_size_override("font_size", 12)
-	_receiving_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_receiving_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_receiving_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_receiving_label.modulate = Color(0.75, 0.9, 0.75)
-	root.add_child(_receiving_label)
+	bottom.add_child(_receiving_label)
 	var hint := Label.new()
 	hint.text = "[C] fechar"
+	hint.add_theme_font_size_override("font_size", 12)
 	hint.modulate = Color(0.7, 0.7, 0.7)
-	root.add_child(hint)
+	bottom.add_child(hint)

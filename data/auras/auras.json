@@ -7,5 +7,5 @@
   {"id":"swift_wind","name":"Vento Ligeiro","desc":"Aliados próximos andam e atacam mais rápido.","resource":"mana","unlock_level":10,"color":"#8fe3e0","effects":{"move_speed":0.003,"attack_speed":0.003}},
   {"id":"vital_spring","name":"Fonte Vital","desc":"Aliados próximos regeneram vida e curam mais com poções, comida e feitiços.","resource":"mana","unlock_level":12,"color":"#6fe08a","effects":{"life_regen_add":0.06,"heal":0.01}},
   {"id":"null_veil","name":"Véu Antimágico","desc":"Aliados próximos resistem a dano mágico (ácido, feitiços).","resource":"mana","unlock_level":15,"color":"#c48cf0","effects":{"spell_resist":0.006}},
-  {"id":"blood_pact","name":"Pacto de Sangue","desc":"Reserva vida em vez de mana: todo tipo de dano dos aliados próximos aumenta.","resource":"life","unlock_level":20,"color":"#d6404a","effects":{"melee.damage":0.006,"ranged.damage":0.006,"magic.damage":0.006,"unarmed.damage":0.006,"thrown.damage":0.006}}
+  {"id":"blood_pact","name":"Pacto de Sangue","desc":"Converte parte da reserva de mana das suas outras auras em reserva de vida (de 0% a 50%). Não dá bônus em área; tem custo próprio de vida.","kind":"converter","resource":"life","cost":10,"unlock":"ascendancy","color":"#d6404a","effects":{}}
 ]
