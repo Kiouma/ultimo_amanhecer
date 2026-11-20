@@ -509,7 +509,7 @@ func _zombie_nearby(radius: float) -> bool:
 func play_action_synced(anim_name: StringName, duration := 0.0, attack := false) -> void:
 	if attack and is_local():
 		_attack_until = Time.get_ticks_msec() + int(maxf(duration, 0.3) * 1000.0)
-		face_point(aim_point(60.0))
+		_face_attack()
 	model.play_action(anim_name, duration)
 	if Network.is_online():
 		_remote_action.rpc(anim_name, duration)
@@ -526,8 +526,8 @@ func _remote_action(anim_name: StringName, duration: float) -> void:
 ## do intersect_ray, sempre com "position" (sem acerto: o ponto a max_range) e "dir".
 func cursor_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
 	var viewport := get_viewport()
-	var screen := viewport.get_mouse_position() if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
-			else viewport.get_visible_rect().size * 0.5
+	var center := MouseMode.rotating or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var screen := viewport.get_visible_rect().size * 0.5 if center else viewport.get_mouse_position()
 	var from := camera.project_ray_origin(screen)
 	var dir := camera.project_ray_normal(screen)
 	var reach := max_range + spring_arm.get_hit_length()
@@ -541,11 +541,38 @@ func cursor_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
 	return hit
 
 
-## Ponto para onde ataques à distância vão: o alvo (peito), ou o ponto sob o cursor.
-func aim_point(max_range: float) -> Vector3:
+## Para onde os ataques vão (dicionário como o do intersect_ray, sempre com "position"):
+## - segurando o botão direito (girando a câmera): para onde a câmera aponta;
+## - com um alvo selecionado: o peito do alvo;
+## - senão: reto para a frente do personagem (para onde ele está olhando).
+func aim_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
+	if MouseMode.rotating:
+		return cursor_ray(max_range, mask)
 	if has_target():
-		return target.global_position + Vector3.UP * 1.1
-	return cursor_ray(max_range).position
+		return {"position": target.global_position + Vector3.UP * 1.1, "collider": target, "normal": Vector3.UP}
+	var chest := global_position + Vector3.UP * 1.1
+	var forward := -global_basis.z
+	var query := PhysicsRayQueryParameters3D.create(chest, chest + forward * max_range, mask)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		hit = {"position": chest + forward * max_range, "miss": true}
+	return hit
+
+
+## Ponto para onde ataques à distância vão (ver aim_ray).
+func aim_point(max_range: float) -> Vector3:
+	return aim_ray(max_range).position
+
+
+## No começo de um ataque: girando a câmera, o corpo vira para onde ela aponta; com
+## alvo, vira para o alvo; senão, ataca para onde já está olhando. A câmera não se mexe.
+func _face_attack() -> void:
+	if MouseMode.rotating:
+		rotation.y = camera_yaw
+		_update_camera_rig()
+	elif has_target():
+		face_point(target.global_position)
 
 
 ## De onde saem flechas, feitiços e facas: na frente do peito, na direção do ponto.
@@ -560,6 +587,7 @@ func face_point(point: Vector3) -> void:
 	var flat := Vector3(point.x - global_position.x, 0.0, point.z - global_position.z)
 	if flat.length() > 0.1:
 		rotation.y = atan2(-flat.x, -flat.z)
+		_update_camera_rig()  # a câmera tem giro próprio: não pode ir junto com o corpo
 
 
 func has_target() -> bool:

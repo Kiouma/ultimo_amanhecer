@@ -218,13 +218,11 @@ func make_noise(factor: float) -> void:
 	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS * stealth, user)
 
 
-## Mira: o alvo selecionado (peito) ou o ponto do mundo sob o cursor. Ignora o próprio
-## jogador. Retorna o dicionário do intersect_ray (sempre com "position").
+## Mira (Player.aim_ray): para onde a câmera aponta (segurando o botão direito), o alvo
+## selecionado, ou reto à frente do personagem. Ignora o próprio jogador. Retorna o
+## dicionário do intersect_ray (sempre com "position").
 func aim_ray(max_range: float, spread_deg := 0.0) -> Dictionary:
-	if user.has_target():
-		var p: Vector3 = user.target.global_position + Vector3.UP * 1.1
-		return {"position": p, "collider": user.target, "normal": Vector3.UP}
-	var hit: Dictionary = user.cursor_ray(max_range, HIT_MASK)
+	var hit: Dictionary = user.aim_ray(max_range, HIT_MASK)
 	if spread_deg > 0.0 and not hit.has("collider"):
 		var s := deg_to_rad(spread_deg)
 		hit.position = hit.position + Vector3(randf_range(-s, s), 0, randf_range(-s, s)) * max_range * 0.1

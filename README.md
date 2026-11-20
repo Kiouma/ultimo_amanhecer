@@ -31,7 +31,7 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 
 - **Câmera em 3ª pessoa** (estilo RPG de ação): o mouse fica sempre livre; **segure o botão direito** para girar a câmera; **roda do mouse** aproxima/afasta (até 2x a distância padrão).
 - **WASD** anda em relação à câmera e o personagem vira para onde anda. **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **Esc** abre o menu de pausa.
-- **Clique esquerdo** ataca; clicar num inimigo o seleciona como **alvo** (anel vermelho): arco, feitiços e arremesso vão nele; sem alvo, vão para onde o cursor aponta. Ao atacar, o personagem vira para o alvo e anda mais devagar; a animação acelera com a velocidade de ataque.
+- **Clique esquerdo** ataca; clicar num inimigo o seleciona como **alvo** (anel vermelho): arco, feitiços e arremesso vão nele. Sem alvo, o ataque vai **para onde o personagem está olhando**; segurando o **botão direito**, vai para onde a **câmera** aponta (o corpo vira para ela). A câmera nunca gira sozinha ao atacar. Atacando, o personagem anda mais devagar; a animação acelera com a velocidade de ataque.
 - **Hotbar:** teclas **1–9** escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
 - **E** interage com o que está sob o cursor (ou o mais perto) (portas, baús, estações); passar por cima de itens pega sozinho.
