@@ -501,7 +501,9 @@ Respostas do dono do projeto às perguntas da versão 0.1. Elas guiam o resto do
 
 ## 22. Próximos passos
 
-**Atual:**
+**Virada para RPG de exploração:** o plano detalhado (interface de auras nova, Pacto de Sangue como conversor, fim de fome/sede, hotbar de 5 habilidades por classe, coleta com ferramentas, câmera com Alt, HUD nova e personalizável, inimigos com nível, alvo em aliados, trade/follow e ideias no estilo Path of Exile) está em [PROXIMOS_PASSOS.md](PROXIMOS_PASSOS.md).
+
+**Já planejado antes:**
 
 1. **Afixos e Upgrading Machine** (seção 8.4): 6 slots (3 prefixos, 3 sufixos) nos equipamentos fabricáveis, de 1 a 6 desbloqueados ao fabricar; estação Upgrading Machine com as categorias slots, refino e qualidade. Definir custos e valores.
 2. **Balancear a árvore passiva e as auras** jogando: valores dos nós, custo de devolver pontos, curva de XP até o nível 30 (ascendência).

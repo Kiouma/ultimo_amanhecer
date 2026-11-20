@@ -161,4 +161,6 @@ Concluídas: **1. Núcleo** (monstros que perseguem, arco/machado/dardo de fogo,
 
 Feito depois: **árvore passiva, ascendência e auras** (substituem as trilhas de habilidades). Próximo em crafting: **afixos** (6 slots, 3 prefixos e 3 sufixos, de 1 a 6 abertos ao fabricar) e a estação **Upgrading Machine** (slots, refino e qualidade), GDD 8.4.
 
+Próxima virada: **RPG de exploração** (sem fome/sede, hotbar de habilidades, HUD nova, inimigos com nível). Plano em [docs/PROXIMOS_PASSOS.md](docs/PROXIMOS_PASSOS.md).
+
 Mudança de rumo: o jogo deixou o tema de zumbis e virou **fantasia com monstros**; as hordas e as armas de fogo saíram. Próxima: **9. Expansão** (mais conteúdo de fantasia). Detalhes no GDD, seção 17.
