@@ -290,7 +290,8 @@ func _bind_minimap(player: Player) -> void:
 	_minimap_frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
 	var exploration := player.get_node_or_null(^"Exploration") as Exploration
 	if exploration:
-		exploration.revealed.connect(MapTiles.invalidate_fog)
+		if not exploration.revealed.is_connected(MapTiles.invalidate_fog):
+			exploration.revealed.connect(MapTiles.invalidate_fog)
 	_bus(Settings.changed, _apply_minimap_setting)
 	_apply_minimap_setting()
 

@@ -179,10 +179,13 @@ static func fog(world: Node, c: Vector2i, exploration: Exploration) -> Texture2D
 		var mask := exploration.chunk_mask(c)
 		if mask.is_empty():
 			return null
-		var img := Image.create(PIXELS, PIXELS, false, Image.FORMAT_RGBA8)
-		for j in PIXELS:
-			for i in PIXELS:
-				img.set_pixel(i, j, Color(0.04, 0.05, 0.06, 0.0 if mask[j * PIXELS + i] == 1 else 0.96))
+		# Resolução da própria máscara de exploração (16 × 16, células de 4 m), não a do
+		# terreno (PIXELS): ampliada com filtro suave no MapView.
+		var side := Exploration.PER_SIDE
+		var img := Image.create(side, side, false, Image.FORMAT_RGBA8)
+		for j in side:
+			for i in side:
+				img.set_pixel(i, j, Color(0.04, 0.05, 0.06, 0.0 if mask[j * side + i] == 1 else 0.96))
 		_fog[c] = ImageTexture.create_from_image(img)
 	return _fog[c]
 
