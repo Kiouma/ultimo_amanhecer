@@ -169,6 +169,11 @@ static func primary_stats(p: Player) -> Array:
 	var mana := p.mana
 	var out: Array = []
 	out.append([tr_static(TranslationServer.translate("Vida")), "%d" % ceili(p.health.max_health)])
+	out.append([tr_static(TranslationServer.translate("Escudo de energia")), "%d" % roundi(maxf(prog.add("energy_shield_add"), 0.0)),
+		tr_static(TranslationServer.translate("Absorve o dano antes da vida. Recarrega 25% por segundo depois de 3 s sem levar dano."))])
+	for key: String in Progression.ATTRIBUTES:
+		out.append([tr_static(TranslationServer.translate(str(Progression.ATTRIBUTE_NAMES[key]))), "%d" % prog.attribute_total(key),
+			tr_static(TranslationServer.translate("Pontos em Personagem (P) > Atributos."))])
 	out.append([tr_static(TranslationServer.translate("Regeneração de vida")), "%.2f/s" % p.survival.life_regen_rate(),
 		tr_static(TranslationServer.translate("Base 0. Sobe com a árvore passiva, a ascendência, itens, auras e comida."))])
 	out.append([tr_static(TranslationServer.translate("Stamina")), "%d" % roundi(stamina.max_value)])
@@ -189,6 +194,8 @@ static func primary_stats(p: Player) -> Array:
 	out.append([tr_static(TranslationServer.translate("Dano mágico")), "%+d%%" % roundi((prog.mult("magic.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Dano de arremesso")), "%+d%%" % roundi((prog.mult("thrown.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Dano desarmado")), "%+d%%" % roundi((prog.mult("unarmed.damage") - 1.0) * 100.0)])
+	out.append([tr_static(TranslationServer.translate("Dano com armas pesadas")), "%+d%%" % roundi((prog.mult("heavy.damage") - 1.0) * 100.0)])
+	out.append([tr_static(TranslationServer.translate("Dano com armas leves")), "%+d%%" % roundi((prog.mult("light.damage") - 1.0) * 100.0)])
 	out.append([tr_static(TranslationServer.translate("Custo de mana")), "%+d%%" % roundi((prog.mult("magic.mana") - 1.0) * 100.0)])
 	return out
 

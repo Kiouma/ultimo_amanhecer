@@ -150,6 +150,10 @@ func stat(key: String, default: float) -> float:
 			value /= 1.0 + Progression.BOW_ATTACK_SPEED_SHARE * Progression.attack_speed(user)
 		if key == "damage":
 			value *= prog.mastery_mult(weapon_type())
+			# Categoria do item: pesada (Força) ou leve (Destreza). Mágica já usa "magic.damage".
+			var weight := weight_class()
+			if weight in ["heavy", "light"]:
+				value = prog.apply(weight + ".damage", value)
 	return value
 
 
@@ -165,6 +169,18 @@ func channel_label() -> String:
 ## "bow", "melee", "spell", "thrown" (maestria).
 func weapon_type() -> String:
 	return str(data.get("type", "melee"))
+
+
+## Categoria do item: "heavy" (pesada), "light" (leve) ou "magic" (mágica). Desarmado
+## conta como leve; feitiços e cajados como mágicos.
+func weight_class() -> String:
+	var c := str(data.get("category", ""))
+	if c != "":
+		return c
+	match weapon_type():
+		"unarmed": return "light"
+		"spell", "focus": return "magic"
+	return ""
 
 
 ## Grupo dos modificadores: "ranged" (arco e besta), "melee", "thrown" ou "magic".

@@ -281,7 +281,7 @@ func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
 		"progression": {"levels": prog.levels, "xp": prog.xp, "char_level": prog.char_level, "char_xp": prog.char_xp,
 			"class": prog.char_class, "passives": prog.passives.keys(), "ascendancy": prog.ascendancy,
-			"asc_nodes": prog.asc_nodes.keys(), "mastery_uses": prog.mastery_uses,
+			"asc_nodes": prog.asc_nodes.keys(), "attributes": prog.attributes, "mastery_uses": prog.mastery_uses,
 			"spells": prog.spells, "last_spell": prog.last_spell},
 		"auras": p.auras.to_save() if p.auras else {},
 	}
@@ -325,6 +325,9 @@ func apply_character(p: Player) -> bool:
 	prog.ascendancy = str(pd.get("ascendancy", ""))
 	if GameData.get_entry("ascendancies", prog.ascendancy).is_empty():
 		prog.ascendancy = ""
+	for key: String in Progression.ATTRIBUTES:
+		prog.attributes[key] = int(pd.get("attributes", {}).get(key, 0))
+	prog.validate_attributes()
 	prog.asc_nodes = {}
 	for id: Variant in pd.get("asc_nodes", []):
 		if not prog.ascendancy_node(str(id)).is_empty():

@@ -1,6 +1,6 @@
 # Próximos passos: virada para RPG de exploração
 
-Documento de planejamento. **Nada daqui está implementado ainda.** Complementa o [GDD](GDD.md) (seções 4.2 e 8.4) e substitui a seção 22 dele como lista do que vem a seguir.
+Documento de planejamento. As etapas marcadas com ✅ (e a seção 14) já estão implementadas; o resto ainda não. Complementa o [GDD](GDD.md) (seções 4.2 e 8.4) e substitui a seção 22 dele como lista do que vem a seguir.
 
 **Direção:** o jogo deixa de ser de sobrevivência e vira um **RPG de exploração mais dinâmico**, em mundo aberto, mantendo construção, coleta e crafting (com outras regras). Inspiração principal: Path of Exile (árvore passiva, ascendência, auras, afixos), com mais inimigos, níveis e combate com habilidades.
 
@@ -53,7 +53,7 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
   2. **Conversão do Pacto de Sangue** (parte vai para vida).
   3. **Eficiência de reserva de mana** aplicada só à parte que ficou em mana.
   4. **Eficiência de reserva de vida** aplicada só à parte que foi para vida.
-  5. Limite de 90% por recurso.
+  5. Limite de **100%** por recurso (com a vida toda reservada sobra 1 de vida; combina com escudo de energia).
 - Assim, a eficiência de mana **não afeta** a parte convertida, e vice-versa.
 
 **O que muda:** `data/auras/auras.json` (tirar os efeitos de dano do `blood_pact`, marcar como conversor e como "liberada por ascendência"); `data/ascendancies/ascendancies.json` (nó que libera a aura); `Auras.is_unlocked()` e `Auras.reserved_fraction()` (seguir a ordem acima).
@@ -269,7 +269,35 @@ Ver [GDD 8.4](GDD.md): 6 slots (3 prefixos, 3 sufixos) nos equipamentos fabricá
 
 ---
 
-## 14. Ordem sugerida
+## 14. Atributos, escudo de energia e categorias (feito)
+
+Implementado fora da ordem das etapas, a pedido:
+
+- **Limite de reserva = 100%** de mana e de vida (antes 90%). Vida 100% reservada deixa 1 de vida.
+- **Categorias** de armas e equipamentos: **Pesado**, **Leve** e **Mágico** (campo `"category"` em `data/items`). Pesadas: machados, picareta, martelo de guerra, besta, armaduras de ferro e de pedra. Leves: arco, lança, espada curta, adaga, faca de arremesso, desarmado, armaduras de couro, da sombra e de pugilista. Mágicas: cajado, feitiços, armaduras arcana e de aprendiz. A dica do item mostra a categoria.
+- **Escudo de energia:** protege a barra de vida (absorve o dano antes dela). Recarrega 25% do máximo por segundo depois de 3 s sem levar dano; renasce cheio. Vem em valores fixos da árvore (`energy_shield_add`), de itens (peças arcanas e de aprendiz) e da Inteligência. No HUD, faixa **azul clara** por cima da barra de vida e "Escudo X / Y" no texto (o visual definitivo vem na etapa 4).
+- **Atributos:** **5 pontos por nível** para distribuir em **Força, Destreza, Inteligência e Sorte** (Personagem → aba Atributos; dá para tirar e pôr). Cada ponto:
+  - **Força:** +1 de vida, +0,01 de regeneração de vida/s, +0,2% de dano com armas pesadas.
+  - **Destreza:** +0,05% de velocidade de movimento, +0,3% de regeneração de stamina, +0,2% de dano com armas leves.
+  - **Inteligência:** +1 de mana máxima, +1 de escudo de energia.
+  - **Sorte:** +0,1% de aumento de loot (provisório; ver abaixo).
+- **Árvore com mais variedade:** nós de +10 Força/Destreza/Inteligência nos setores das classes, mistos (+5/+5) nos híbridos, +4 em todos no centro, Sorte, escudo de energia e dano com armas pesadas/leves. 46 tipos de efeito ao todo.
+
+**A decidir:** o que mais a **Sorte** faz (sugestão: chance de crítico e de drop raro, junto do magic find); valores de cada atributo depois de jogar.
+
+## 15. Status e mecânicas futuras
+
+Planejados para depois; entram nas etapas indicadas.
+
+- **Magic find (%)** — etapa 8 (mundo RPG e loot): aumenta a chance de drop de **todos os aliados ao redor** (como uma aura de loot). Vem de **itens** e **poções**. Calculado no servidor ao sortear o drop (hoje existe `loot_bonus` por jogador; o magic find soma o melhor valor do grupo por perto).
+- **Debuffs** — etapa 5 (o sistema de buffs temporários serve para os dois) e etapa 6 (habilidades que aplicam), depois os monstros (etapa 8):
+  - **Veneno** (dano por segundo, acumula), **queimadura** (dano por segundo, não acumula, fogo), **lentidão** (menos velocidade de movimento e de ataque), **sangramento** (dano por segundo, maior em movimento), **dano recebido aumentado (%)**.
+- **Mecânicas de combate** — etapa 6 (habilidades) e etapa 10 (afixos de itens):
+  - **Puxão** e **empurrão** (deslocam o alvo), **atordoamento (stun)**.
+  - **Roubo de vida / de mana** (parte do dano causado volta como vida/mana).
+  - **Transferência de mana** (classe mágica): passa mana para um aliado alvo como regeneração (usa o alvo em aliados da seção 10).
+
+## 16. Ordem sugerida
 
 Cada passo termina jogável:
 
@@ -277,16 +305,16 @@ Cada passo termina jogável:
 2. ✅ **Auras (feito):** interface nova (1), eficiências separadas (3), Pacto de Sangue conversor liberado por ascendência (2). Pacto liberado pela Vanguarda e pelo Rompe-Ossos (7º nó de cada), custo próprio de 10% de vida.
 3. ✅ **Telas e controles (feito):** inventário menor e equipamentos separados (V), câmera no F1, Alt e mouse livre com hotbar e botões do minimapa clicáveis (5, 7). O círculo de magia em área no mouse livre fica para a etapa das habilidades (6).
 4. **HUD:** esferas, arco de stamina, números, ícones de buff, engrenagem e layout (8.2, 8.3).
-5. **Ouro, morte sem bag, buffs temporários e fogueira "Descansado"** (13, 10, 4).
-6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5).
+5. **Ouro, morte sem bag, buffs temporários e debuffs, fogueira "Descansado"** (13, 10, 4, 15).
+6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5); debuffs e mecânicas (puxão, empurrão, stun, roubo de vida/mana, transferência de mana) nas habilidades (15).
 7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).
-8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops (9, 13).
+8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops; magic find em grupo; monstros com debuffs (9, 13, 15).
 9. **Grupo:** party lateral, alvo em aliados, trade e follow (8.1, 10, 11).
-10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1).
+10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1); afixos de roubo de vida/mana, magic find e atributos (15).
 
 ---
 
-## 15. Ideias para aproximar de Path of Exile e outros ARPGs
+## 17. Ideias para aproximar de Path of Exile e outros ARPGs
 
 Sugestões para discutir, não compromissos.
 

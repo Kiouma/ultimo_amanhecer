@@ -11,6 +11,17 @@ signal changed(current: float, maximum: float)
 signal damaged(amount: float, source: Node)
 signal died(source: Node)
 signal revived
+## Escudo de energia mudou (todas as máquinas).
+signal shield_changed(current: float, maximum: float)
+
+## Escudo de energia: absorve o dano antes da vida. Recarrega SHIELD_RECHARGE do máximo
+## por segundo depois de SHIELD_DELAY segundos sem levar dano. O dono pede o máximo
+## (set_owner_vitals); o servidor guarda, gasta, recarrega e espalha.
+const SHIELD_DELAY := 3.0
+const SHIELD_RECHARGE := 0.25
+const MAX_SHIELD := 5000.0
+## Fração máxima de vida reservável (auras). Com tudo reservado, sobra 1 de vida.
+const MAX_RESERVED := 1.0
 
 ## Teto de dano por pedido de cliente (proteção simples contra valores absurdos).
 const MAX_DAMAGE_PER_HIT := 500.0
@@ -29,12 +40,17 @@ var spell_taken_multiplier := 1.0
 ## Não recebe dano (jogador no modo criativo). O dono pede; o servidor guarda.
 var invulnerable := false
 var is_dead := false
-## Fração da vida reservada por auras de vida (0 a 0,9): a vida não passa de cap().
+## Fração da vida reservada por auras de vida (0 a 1): a vida não passa de cap() (mínimo 1).
 ## O dono pede (set_owner_vitals); o servidor guarda; o dono guarda uma cópia para o HUD.
 var reserved := 0.0
+var shield := 0.0
+var max_shield := 0.0
+var _since_hit := 99.0
+var _shield_sync := 0.0
 
 
 func _ready() -> void:
+	set_process(false)
 	current = max_health
 
 
@@ -43,10 +59,45 @@ func take_damage(amount: float, source: Node = null, magic := false) -> void:
 	if is_dead or invulnerable or amount <= 0.0 or _ignores(source):
 		return
 	if multiplayer.is_server():
-		amount *= _taken_factor(source, magic)
-		_apply(maxf(current - amount, 0.0), amount, source)
+		_hit(amount * _taken_factor(source, magic), source)
 	elif Network.is_online():
 		_request_damage.rpc_id(1, amount, source.get_path() if source else NodePath())
+
+
+## Servidor: o escudo de energia absorve primeiro; o resto vai para a vida. O sinal
+## "damaged" leva o dano todo (reações, XP de Resistência).
+func _hit(amount: float, source: Node) -> void:
+	_since_hit = 0.0
+	var absorbed := minf(shield, amount)
+	if absorbed > 0.0:
+		_set_shield(shield - absorbed)
+	_apply(maxf(current - (amount - absorbed), 0.0), amount, source)
+
+
+func _process(delta: float) -> void:
+	# Só roda no servidor e com escudo (set_process liga em _set_vitals).
+	_since_hit += delta
+	if _since_hit < SHIELD_DELAY or shield >= max_shield or is_dead:
+		return
+	shield = minf(shield + max_shield * SHIELD_RECHARGE * delta, max_shield)
+	_shield_sync -= delta
+	if _shield_sync <= 0.0 or shield >= max_shield:
+		_shield_sync = 0.25
+		_set_shield(shield)
+
+
+func _set_shield(value: float) -> void:
+	shield = clampf(value, 0.0, max_shield)
+	shield_changed.emit(shield, max_shield)
+	if Network.is_online() and multiplayer.is_server():
+		_sync_shield.rpc(shield, max_shield)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _sync_shield(value: float, maximum: float) -> void:
+	max_shield = maximum
+	shield = value
+	shield_changed.emit(shield, max_shield)
 
 
 ## Cura. Num cliente, pede ao servidor (só o dono do personagem pode pedir).
@@ -101,25 +152,35 @@ func configure(new_max: float) -> void:
 
 ## Vida máxima utilizável (sem a parte reservada por auras de vida).
 func cap() -> float:
-	return max_health * (1.0 - reserved)
+	return maxf(max_health * (1.0 - reserved), 1.0)
 
 
 ## Dono do personagem: vida máxima (árvore passiva, itens) e fração reservada por
 ## auras de vida. Num cliente, pede ao servidor.
-func set_owner_vitals(new_max: float, new_reserved: float) -> void:
+## Dono do personagem: vida máxima (árvore, atributos, itens), fração reservada por
+## auras de vida e escudo de energia máximo. Num cliente, pede ao servidor.
+func set_owner_vitals(new_max: float, new_reserved: float, new_shield := 0.0) -> void:
 	new_max = clampf(new_max, 10.0, 5000.0)
-	new_reserved = clampf(new_reserved, 0.0, 0.9)
+	new_reserved = clampf(new_reserved, 0.0, MAX_RESERVED)
+	new_shield = clampf(new_shield, 0.0, MAX_SHIELD)
 	if multiplayer.is_server():
-		_set_vitals(new_max, new_reserved)
+		_set_vitals(new_max, new_reserved, new_shield)
 	else:
 		reserved = new_reserved
 		if Network.is_online():
-			_request_vitals.rpc_id(1, new_max, new_reserved)
+			_request_vitals.rpc_id(1, new_max, new_reserved, new_shield)
 
 
-func _set_vitals(new_max: float, new_reserved: float) -> void:
+func _set_vitals(new_max: float, new_reserved: float, new_shield := 0.0) -> void:
 	new_max = clampf(new_max, 10.0, 5000.0)
-	new_reserved = clampf(new_reserved, 0.0, 0.9)
+	new_reserved = clampf(new_reserved, 0.0, MAX_RESERVED)
+	new_shield = clampf(new_shield, 0.0, MAX_SHIELD)
+	if not is_equal_approx(new_shield, max_shield):
+		# O que o máximo aumentou entra na hora (personagem novo nasce com o escudo cheio).
+		var gained := maxf(new_shield - max_shield, 0.0)
+		max_shield = new_shield
+		set_process(max_shield > 0.0)
+		_set_shield(minf(shield + gained, max_shield))
 	if is_equal_approx(new_max, max_health) and is_equal_approx(new_reserved, reserved):
 		return
 	max_health = new_max
@@ -179,6 +240,8 @@ func _apply(new_current: float, amount: float, source: Node, revive := false) ->
 	_set_state(new_current, revive, amount, source)
 	if Network.is_online():
 		_sync_state.rpc(current, is_dead, max_health, amount, source_path)
+	if revive and max_shield > 0.0:
+		_set_shield(max_shield)  # renasce com o escudo cheio
 
 
 func _set_state(new_current: float, revive: bool, amount: float, source: Node) -> void:
@@ -207,8 +270,7 @@ func _request_damage(amount: float, source_path: NodePath) -> void:
 		return
 	if _ignores(source):
 		return
-	amount = clampf(amount, 0.0, MAX_DAMAGE_PER_HIT) * _taken_factor(source)
-	_apply(maxf(current - amount, 0.0), amount, source)
+	_hit(clampf(amount, 0.0, MAX_DAMAGE_PER_HIT) * _taken_factor(source), source)
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -224,9 +286,9 @@ func _request_reset() -> void:
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_vitals(new_max: float, new_reserved: float) -> void:
+func _request_vitals(new_max: float, new_reserved: float, new_shield: float) -> void:
 	if multiplayer.is_server() and get_multiplayer_authority() == multiplayer.get_remote_sender_id():
-		_set_vitals(new_max, new_reserved)
+		_set_vitals(new_max, new_reserved, new_shield)
 
 
 @rpc("any_peer", "call_remote", "reliable")

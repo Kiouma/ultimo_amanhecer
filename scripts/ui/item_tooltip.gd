@@ -36,6 +36,9 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 	if float(data.get("regen", 0.0)) > 0.0:
 		var secs := float(data.get("regen_time", 10.0))
 		lines.append(t("Regenera %d de vida em %d s") % [roundi(float(data.regen) * secs), roundi(secs)])
+	var category := str(data.get("category", ""))
+	if category != "":
+		lines.append(t("Categoria: %s") % t(str({"heavy": "Pesado", "light": "Leve", "magic": "Mágico"}.get(category, category))))
 	match type:
 		"melee", "thrown":
 			lines.append(t("Dano: %d") % roundi(float(data.get("damage", 0.0)) * power))

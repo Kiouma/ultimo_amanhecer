@@ -10,6 +10,11 @@ extends Node
 ## - Ascendência (data/ascendancies): no nível 30 escolhe-se uma das 2 da classe; dá um
 ##   bônus fixo e pontos de ascendência (níveis 30, 45, 60 e 75) para os nós dela.
 ## - Auras (nó Auras): os bônus recebidos de auras próximas entram como modificadores.
+## - Atributos: 5 pontos por nível para Força, Destreza, Inteligência e Sorte (livres para
+##   tirar e pôr). A árvore e os itens somam ("str_add"...). Cada ponto vira modificadores
+##   (ATTRIBUTE_EFFECTS): Força = vida, regeneração de vida e dano com armas pesadas;
+##   Inteligência = mana máxima e escudo de energia; Destreza = velocidade de movimento,
+##   regeneração de stamina e dano com armas leves; Sorte = aumento de loot.
 ## - Maestria de arma: usar um tipo de arma (arco, melee, feitiço, arremesso) dá
 ##   até +10% de dano com ele.
 ## Todos os bônus viram modificadores por chave ("melee.damage", "move_speed"...), que
@@ -27,6 +32,16 @@ const MAX_CHAR_LEVEL := 100
 ## Nível em que a ascendência é escolhida e níveis que dão pontos de ascendência.
 const ASCENDANCY_LEVEL := 30
 const ASCENDANCY_POINT_LEVELS := [30, 45, 60, 75]
+## Atributos (ordem da tela) e o que cada ponto dá.
+const ATTRIBUTES := ["str", "dex", "int", "luck"]
+const ATTRIBUTE_NAMES := {"str": "Força", "dex": "Destreza", "int": "Inteligência", "luck": "Sorte"}
+const ATTRIBUTE_POINTS_PER_LEVEL := 5
+const ATTRIBUTE_EFFECTS := {
+	"str": {"max_health_add": 1.0, "life_regen_add": 0.01, "heavy.damage": 0.002},
+	"dex": {"move_speed": 0.0005, "stamina_regen": 0.003, "light.damage": 0.002},
+	"int": {"max_mana_add": 1.0, "energy_shield_add": 1.0},
+	"luck": {"loot_bonus": 0.001},
+}
 const MAX_MASTERY := 10
 ## XP por minuto de cada proficiência acima da qual o ganho cai para SOFT_CAP_FACTOR
 ## (evita subir pulando em loop, GDD 4.1).
@@ -46,6 +61,8 @@ var passives := {}
 ## Ascendência escolhida ("" = nenhuma) e nós dela desbloqueados (id → true).
 var ascendancy := ""
 var asc_nodes := {}
+## Pontos de atributo distribuídos: "str", "dex", "int", "luck" → pontos.
+var attributes := {"str": 0, "dex": 0, "int": 0, "luck": 0}
 ## Pontos passivos livres: 1 por nível acima do 1, menos os nós alocados.
 var skill_points: int:
 	get:
@@ -60,6 +77,8 @@ var last_spell := ""
 var _mods := {}
 ## Bônus de auras recebidos agora (o nó Auras calcula pela distância dos aliados).
 var _aura_mods := {}
+## Atributos vindos da árvore e dos itens (calculado no _rebuild).
+var _attr_bonus := {}
 var _recent := {}  # proficiência → [início da janela (s), XP na janela]
 
 
@@ -171,7 +190,7 @@ func gain_character(amount: float, emit := true) -> void:
 
 func _on_level_up() -> void:
 	char_level += 1
-	leveled.emit(tr("Nível %d! +1 ponto passivo (P)") % char_level)
+	leveled.emit(tr("Nível %d! +1 ponto passivo e +%d de atributo (P)") % [char_level, ATTRIBUTE_POINTS_PER_LEVEL])
 	if char_level == ASCENDANCY_LEVEL:
 		leveled.emit(tr("Ascendência liberada! Escolha a sua em Personagem (P)"))
 	elif char_level in ASCENDANCY_POINT_LEVELS:
@@ -186,6 +205,53 @@ func use_weapon(weapon_type: String) -> void:
 	if mastery_level(weapon_type) > before:
 		leveled.emit(tr("Maestria de %s: nível %d") % [mastery_name(weapon_type), mastery_level(weapon_type)])
 		changed.emit()
+
+
+# --- Atributos -----------------------------------------------------------------------
+
+## Pontos de atributo ainda livres.
+func attribute_points() -> int:
+	var spent := 0
+	for key: String in attributes:
+		spent += int(attributes[key])
+	return maxi(ATTRIBUTE_POINTS_PER_LEVEL * (char_level - 1) - spent, 0)
+
+
+## Põe (amount > 0) ou tira (amount < 0) pontos de um atributo. Retorna quanto mudou.
+func spend_attribute(key: String, amount: int) -> int:
+	if key not in ATTRIBUTES or amount == 0:
+		return 0
+	var current := int(attributes.get(key, 0))
+	var change := mini(amount, attribute_points()) if amount > 0 else maxi(amount, -current)
+	if change == 0:
+		return 0
+	attributes[key] = current + change
+	_rebuild()
+	changed.emit()
+	return change
+
+
+## Total do atributo: pontos distribuídos + árvore + itens ("str_add"...).
+func attribute_total(key: String) -> int:
+	return int(attributes.get(key, 0)) + roundi(float(_attr_bonus.get(key, 0.0)))
+
+
+## Só os pontos que vêm da árvore e dos itens.
+func attribute_bonus(key: String) -> int:
+	return roundi(float(_attr_bonus.get(key, 0.0)))
+
+
+## Tira pontos a mais (save de outra versão, nível que caiu...).
+func validate_attributes() -> void:
+	for key: String in ATTRIBUTES:
+		attributes[key] = maxi(int(attributes.get(key, 0)), 0)
+	var budget := ATTRIBUTE_POINTS_PER_LEVEL * (char_level - 1)
+	var spent := 0
+	for key: String in ATTRIBUTES:
+		spent += int(attributes[key])
+	if spent > budget:
+		for key: String in ATTRIBUTES:
+			attributes[key] = 0
 
 
 # --- Árvore passiva (GDD 4.2) --------------------------------------------------------
@@ -477,6 +543,15 @@ func _rebuild() -> void:
 		var gear: Dictionary = equipment.mods()
 		for key: String in gear:
 			mods[key] = float(mods.get(key, 0.0)) + float(gear[key])
+	# Atributos: pontos distribuídos + "str_add" etc. (árvore, itens); cada ponto vira
+	# os modificadores de ATTRIBUTE_EFFECTS.
+	_attr_bonus = {}
+	for key: String in ATTRIBUTES:
+		_attr_bonus[key] = float(mods.get(key + "_add", 0.0))
+		var total := float(attributes.get(key, 0)) + float(_attr_bonus[key])
+		var per: Dictionary = ATTRIBUTE_EFFECTS[key]
+		for mod: String in per:
+			mods[mod] = float(mods.get(mod, 0.0)) + float(per[mod]) * total
 	_mods = mods
 	_apply_to_player()
 
@@ -510,10 +585,11 @@ func _apply_to_player() -> void:
 		health.set_damage_taken_multiplier(mult("damage_taken"), 1.0 - spell_resist(player))
 		if not has_meta(&"base_health"):
 			set_meta(&"base_health", health.max_health)
-		var vitals := Vector2(float(get_meta(&"base_health")) + add("max_health_add"), auras.reserved_fraction("life") if auras else 0.0)
+		var vitals := Vector3(float(get_meta(&"base_health")) + add("max_health_add"), auras.reserved_fraction("life") if auras else 0.0,
+			maxf(add("energy_shield_add"), 0.0))
 		if vitals != _sent_vitals:  # evita um RPC a cada recálculo
 			_sent_vitals = vitals
-			health.set_owner_vitals(vitals.x, vitals.y)
+			health.set_owner_vitals(vitals.x, vitals.y, vitals.z)
 	# Aumento de loot: os drops são sorteados no servidor, que precisa saber o bônus.
 	if is_multiplayer_authority():
 		var loot := clampf(add("loot_bonus"), 0.0, 2.0)
@@ -526,7 +602,7 @@ func _apply_to_player() -> void:
 ## Servidor: aumento de loot do dono deste personagem (ver _drop_loot do zumbi).
 var server_loot_bonus := 0.0
 ## Última vida máxima / reserva enviada ao Health.
-var _sent_vitals := Vector2(-1, -1)
+var _sent_vitals := Vector3(-1, -1, -1)
 
 
 @rpc("any_peer", "call_remote", "reliable")

@@ -18,7 +18,7 @@ const CHANNEL_REGEN := 0.25
 const OUT_OF_ACTION := 3.0
 
 var current: float
-## Fração reservada por auras (0 a 0,9): o recurso não passa de cap().
+## Fração reservada por auras (0 a 1): o recurso não passa de cap().
 var reserved := 0.0
 var channeling := false
 var _since_spent := 0.0
@@ -88,7 +88,7 @@ func cap() -> float:
 
 
 func set_reserved(fraction: float) -> void:
-	reserved = clampf(fraction, 0.0, 0.9)
+	reserved = clampf(fraction, 0.0, 1.0)
 	current = minf(current, cap())
 	changed.emit(current, max_value)
 

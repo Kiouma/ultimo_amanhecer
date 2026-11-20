@@ -39,23 +39,23 @@ def e(**kw):
 
 # Nós pequenos dos caminhos, por setor (ciclados).
 PATH_SMALLS = {
-    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04)), ("Sangue forte", e(life_regen_add=0.15)), ("Sangue firme", e(life_reservation_efficiency=0.02))],
-    "archer": [("Precisão", e(ranged__damage=0.04)), ("Mão ágil", e(ranged__draw_time=-0.03)), ("Passo leve", e(move_speed=0.015)), ("Reflexos", e(attack_speed=0.02)), ("Arremesso", e(thrown__damage=0.05))],
-    "mage": [("Intelecto", e(magic__damage=0.04)), ("Reserva arcana", e(max_mana_add=8)), ("Fluxo de mana", e(mana_regen=0.06)), ("Foco", e(magic__mana=-0.03)), ("Ressonância", e(aura_effect=0.02)), ("Disciplina arcana", e(mana_reservation_efficiency=0.02))],
-    "brawler": [("Punho", e(unarmed__damage=0.05)), ("Resiliência", e(max_health_add=6)), ("Ritmo", e(attack_speed=0.02)), ("Ímpeto", e(unarmed__stamina_cost=-0.04)), ("Recuperação", e(stamina_regen=0.06)), ("Fôlego vital", e(life_regen_add=0.15))],
-    "monk": [("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02)), ("Meditação", e(mana_regen=0.04, stamina_regen=0.04)), ("Espírito", e(aura_effect=0.02)), ("Desapego", e(mana_reservation_efficiency=0.02))],
-    "spellbow": [("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025)), ("Recarga", e(magic__cooldown=-0.03)), ("Vento", e(move_speed=0.012))],
-    "hunter": [("Caça", e(ranged__damage=0.025, melee__damage=0.025)), ("Rastreio", e(noise=-0.03)), ("Emboscada", e(sneak_damage=0.06))],
-    "barbarian": [("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03)), ("Couro grosso", e(max_health_add=7)), ("Teimosia", e(damage_taken=-0.012)), ("Veias grossas", e(life_reservation_efficiency=0.02))],
-    "center": [("Sobrevivência", e(gather_yield=0.04)), ("Vitalidade", e(max_health_add=5)), ("Remendo", e(heal=0.05)), ("Carga", e(carry_weight_add=3)), ("Artesão", e(craft_time=-0.04)), ("Regeneração", e(life_regen_add=0.1))],
+    "warrior": [("Força", e(melee__damage=0.04)), ("Vigor", e(max_health_add=8)), ("Couraça", e(damage_taken=-0.015)), ("Fôlego", e(max_stamina_add=6)), ("Golpe econômico", e(melee__stamina_cost=-0.04)), ("Sangue forte", e(life_regen_add=0.15)), ("Sangue firme", e(life_reservation_efficiency=0.02)), ("+10 de Força", e(str_add=10)), ("Peso", e(heavy__damage=0.04)), ("+10 de Força", e(str_add=10))],
+    "archer": [("Precisão", e(ranged__damage=0.04)), ("Mão ágil", e(ranged__draw_time=-0.03)), ("Passo leve", e(move_speed=0.015)), ("Reflexos", e(attack_speed=0.02)), ("Arremesso", e(thrown__damage=0.05)), ("+10 de Destreza", e(dex_add=10)), ("Leveza", e(light__damage=0.04)), ("+10 de Destreza", e(dex_add=10))],
+    "mage": [("Intelecto", e(magic__damage=0.04)), ("Reserva arcana", e(max_mana_add=8)), ("Fluxo de mana", e(mana_regen=0.06)), ("Foco", e(magic__mana=-0.03)), ("Ressonância", e(aura_effect=0.02)), ("Disciplina arcana", e(mana_reservation_efficiency=0.02)), ("+10 de Inteligência", e(int_add=10)), ("Barreira", e(energy_shield_add=10)), ("+10 de Inteligência", e(int_add=10))],
+    "brawler": [("Punho", e(unarmed__damage=0.05)), ("Resiliência", e(max_health_add=6)), ("Ritmo", e(attack_speed=0.02)), ("Ímpeto", e(unarmed__stamina_cost=-0.04)), ("Recuperação", e(stamina_regen=0.06)), ("Fôlego vital", e(life_regen_add=0.15)), ("+5 de Força e Destreza", e(str_add=5, dex_add=5)), ("Leveza", e(light__damage=0.04))],
+    "monk": [("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02)), ("Meditação", e(mana_regen=0.04, stamina_regen=0.04)), ("Espírito", e(aura_effect=0.02)), ("Desapego", e(mana_reservation_efficiency=0.02)), ("+5 de Destreza e Inteligência", e(dex_add=5, int_add=5)), ("Véu", e(energy_shield_add=6))],
+    "spellbow": [("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025)), ("Recarga", e(magic__cooldown=-0.03)), ("Vento", e(move_speed=0.012)), ("+5 de Destreza e Inteligência", e(dex_add=5, int_add=5)), ("Barreira", e(energy_shield_add=6))],
+    "hunter": [("Caça", e(ranged__damage=0.025, melee__damage=0.025)), ("Rastreio", e(noise=-0.03)), ("Emboscada", e(sneak_damage=0.06)), ("+5 de Força e Destreza", e(str_add=5, dex_add=5)), ("Sorte do caçador", e(luck_add=8))],
+    "barbarian": [("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03)), ("Couro grosso", e(max_health_add=7)), ("Teimosia", e(damage_taken=-0.012)), ("Veias grossas", e(life_reservation_efficiency=0.02)), ("+10 de Força", e(str_add=10)), ("Peso", e(heavy__damage=0.04))],
+    "center": [("Sobrevivência", e(gather_yield=0.04)), ("Vitalidade", e(max_health_add=5)), ("Remendo", e(heal=0.05)), ("Carga", e(carry_weight_add=3)), ("Artesão", e(craft_time=-0.04)), ("Regeneração", e(life_regen_add=0.1)), ("+4 em todos os atributos", e(str_add=4, dex_add=4, int_add=4)), ("Sorte", e(luck_add=6))],
 }
 
 # Notáveis dos setores de classe: 6 de cluster (2 por ramo, na ordem ramo esquerdo,
 # meio, direito) + 2 de fim dos ramos laterais. Cada um: (nome, efeitos, pequeno do anel).
 NOTABLES = {
     "warrior": [
-        ("Braço de Ferro", e(melee__damage=0.15, melee__stamina_cost=-0.1), ("Força", e(melee__damage=0.03))),
-        ("Muralha Viva", e(damage_taken=-0.06, max_health_add=25), ("Vigor", e(max_health_add=6))),
+        ("Braço de Ferro", e(melee__damage=0.1, heavy__damage=0.1, melee__stamina_cost=-0.1), ("Força", e(melee__damage=0.03))),
+        ("Muralha Viva", e(damage_taken=-0.06, max_health_add=25, str_add=15), ("Vigor", e(max_health_add=6))),
         ("Golpe Carregado", e(melee__channel=0.3, melee__damage=0.08), ("Concentração", e(melee__channel=0.05))),
         ("Lâmina Veloz", e(melee__attack_time=-0.1, attack_speed=0.04), ("Agilidade", e(attack_speed=0.015))),
         ("Fôlego de Batalha", e(max_stamina_add=25, stamina_regen=0.15), ("Fôlego", e(max_stamina_add=5))),
@@ -64,10 +64,10 @@ NOTABLES = {
         ("Inabalável", e(damage_taken=-0.08, max_stamina_add=15), None),
     ],
     "archer": [
-        ("Olho de Águia", e(ranged__damage=0.15, headshot_damage=0.2), ("Precisão", e(ranged__damage=0.03))),
+        ("Olho de Águia", e(ranged__damage=0.1, light__damage=0.08, headshot_damage=0.2), ("Precisão", e(ranged__damage=0.03))),
         ("Corda Tensa", e(ranged__draw_time=-0.12, ranged__arrow_speed=0.15), ("Mão ágil", e(ranged__draw_time=-0.025))),
         ("Aljava Infinita", e(ranged__recover_chance=0.3, ranged__damage=0.06), ("Recolher", e(ranged__recover_chance=0.05))),
-        ("Pés Ligeiros", e(move_speed=0.05, sprint_stamina=-0.1), ("Passo leve", e(move_speed=0.012))),
+        ("Pés Ligeiros", e(move_speed=0.05, sprint_stamina=-0.1, dex_add=15), ("Passo leve", e(move_speed=0.012))),
         ("Lâminas Arremessadas", e(thrown__damage=0.2, thrown__attack_time=-0.08), ("Arremesso", e(thrown__damage=0.04))),
         ("Sombra", e(noise=-0.12, sneak_damage=0.25), ("Silêncio", e(noise=-0.03))),
         ("Mestre Atirador", e(ranged__damage=0.12, attack_speed=0.05, headshot_damage=0.15), None),
@@ -75,11 +75,11 @@ NOTABLES = {
     ],
     "mage": [
         ("Chama Interior", e(magic__damage=0.15, magic__channel=0.15), ("Intelecto", e(magic__damage=0.03))),
-        ("Poço de Mana", e(max_mana_add=30, mana_regen=0.15), ("Reserva arcana", e(max_mana_add=6))),
+        ("Poço de Mana", e(max_mana_add=30, mana_regen=0.15, int_add=15), ("Reserva arcana", e(max_mana_add=6))),
         ("Coração das Auras", e(aura_effect=0.12, mana_reservation_efficiency=0.08), ("Ressonância", e(aura_effect=0.02))),
         ("Mente Clara", e(magic__cooldown=-0.1, magic__cast_time=-0.1), ("Clareza", e(magic__cooldown=-0.025))),
         ("Economia Arcana", e(magic__mana=-0.12), ("Foco", e(magic__mana=-0.025))),
-        ("Escudo Místico", e(spell_resist=0.08, max_mana_add=15), ("Proteção", e(spell_resist=0.015))),
+        ("Escudo Místico", e(spell_resist=0.08, energy_shield_add=40), ("Barreira", e(energy_shield_add=8))),
         ("Arquimago", e(magic__damage=0.14, max_mana_add=20, magic__cooldown=-0.05), None),
         ("Fonte Eterna", e(mana_regen=0.3, magic__mana=-0.06), None),
     ],
@@ -94,11 +94,11 @@ NOTABLES = {
         ("Pele de Ferro", e(damage_taken=-0.07, max_health_add=15), None),
     ],
     "monk": [
-        ("Harmonia Interior", e(unarmed__damage=0.1, magic__damage=0.1), ("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02))),
+        ("Harmonia Interior", e(unarmed__damage=0.1, magic__damage=0.1, dex_add=10, int_add=10), ("Disciplina", e(unarmed__damage=0.03, magic__damage=0.02))),
         ("Mantra", e(aura_effect=0.1, mana_regen=0.1, mana_reservation_efficiency=0.06), ("Espírito", e(aura_effect=0.02))),
     ],
     "spellbow": [
-        ("Flecha Encantada", e(ranged__damage=0.1, magic__damage=0.1), ("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025))),
+        ("Flecha Encantada", e(ranged__damage=0.1, magic__damage=0.1, energy_shield_add=15), ("Flecha arcana", e(ranged__damage=0.025, magic__damage=0.025))),
         ("Tempo Dobrado", e(magic__cooldown=-0.08, ranged__draw_time=-0.08), ("Recarga", e(magic__cooldown=-0.03))),
     ],
     "hunter": [
@@ -106,7 +106,7 @@ NOTABLES = {
         ("Tocaia", e(sneak_damage=0.25, noise=-0.08), ("Emboscada", e(sneak_damage=0.06))),
     ],
     "barbarian": [
-        ("Fúria Bárbara", e(melee__damage=0.1, unarmed__damage=0.12), ("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03))),
+        ("Fúria Bárbara", e(heavy__damage=0.12, unarmed__damage=0.12, str_add=10), ("Brutalidade", e(melee__damage=0.025, unarmed__damage=0.03))),
         ("Couro de Fera", e(max_health_add=25, damage_taken=-0.03, life_reservation_efficiency=0.08), ("Couro grosso", e(max_health_add=7))),
     ],
 }
@@ -115,7 +115,7 @@ NOTABLES = {
 KEYSTONES = {
     "warrior": ("Fúria Imprudente", e(melee__damage=0.4, damage_taken=0.15), "Muito mais dano corpo a corpo, mas recebe mais dano"),
     "archer": ("Tiro Certeiro", e(headshot_damage=1.0, ranged__draw_time=0.2), "Tiros na cabeça dobram de dano, mas o arco puxa mais devagar"),
-    "mage": ("Pacto Arcano", e(magic__damage=0.35, max_mana_add=60, max_health_add=-40), "Troca vida por mana e poder mágico"),
+    "mage": ("Pacto Arcano", e(magic__damage=0.35, max_mana_add=60, energy_shield_add=60, max_health_add=-40), "Troca vida por mana e poder mágico"),
     "brawler": ("Punho Ascético", e(unarmed__damage=0.6, melee__damage=-0.3, ranged__damage=-0.3), "Socos devastadores; armas rendem menos"),
     "monk": ("Voto de Silêncio", e(aura_effect=0.3, magic__mana=0.25), "Auras muito mais fortes; feitiços custam mais mana"),
     "spellbow": ("Sobrecarga Arcana", e(magic__damage=0.3, ranged__damage=0.15, magic__cooldown=0.2), "Mais dano mágico e à distância; feitiços recarregam devagar"),
@@ -123,7 +123,7 @@ KEYSTONES = {
     "barbarian": ("Sede de Sangue", e(life_regen_add=3.0, max_mana_add=-40), "Regenera vida rápido; perde mana máxima"),
 }
 
-CENTER_NOTABLE = ("Último Amanhecer", e(melee__damage=0.05, ranged__damage=0.05, magic__damage=0.05, unarmed__damage=0.05, thrown__damage=0.05, max_health_add=10))
+CENTER_NOTABLE = ("Último Amanhecer", e(melee__damage=0.05, ranged__damage=0.05, magic__damage=0.05, unarmed__damage=0.05, thrown__damage=0.05, str_add=8, dex_add=8, int_add=8, luck_add=8))
 
 CLASS_NAMES = {"warrior": "Guerreiro", "archer": "Arqueiro", "mage": "Mago", "brawler": "Pugilista"}
 

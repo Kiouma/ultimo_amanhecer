@@ -68,6 +68,13 @@ O sistema de classes segue a ideia dos ARPGs de árvore passiva grande: **a clas
 - **Efeitos** são os mesmos modificadores do resto do jogo (`melee.damage`, `max_mana_add`...) mais os novos: `max_health_add` (vida máxima), `life_regen_add` (vida/s, sempre ligada), `mana_regen` e `stamina_regen` (multiplicam a regeneração), `aura_effect`, `aura_radius`, `mana_reservation_efficiency` e `life_reservation_efficiency` (auras; 5 nós pequenos e 2 notáveis de cada na árvore).
 - **Tela:** Personagem (P) → aba *Árvore passiva*. Arrastar move, roda dá zoom, a busca destaca nós pelo nome ou efeito, passar o mouse mostra o nó, o efeito e se dá para alocar.
 
+#### 4.2.1b Atributos, escudo de energia e categorias (implementado)
+
+- **Atributos:** 5 pontos por nível em **Força** (vida, regeneração de vida, dano com armas pesadas), **Destreza** (velocidade de movimento, regeneração de stamina, dano com armas leves), **Inteligência** (mana máxima, escudo de energia) e **Sorte** (aumento de loot, provisório). A árvore e os itens somam (`str_add`, `dex_add`, `int_add`, `luck_add`). Personagem (P) → aba Atributos.
+- **Escudo de energia** (`energy_shield_add`): absorve o dano antes da vida; recarrega 25%/s depois de 3 s sem dano. Faixa azul clara por cima da barra de vida.
+- **Categorias** de armas e equipamentos: Pesado, Leve, Mágico (`"category"` nos itens). Dano com armas pesadas/leves: `heavy.damage` / `light.damage`.
+- Detalhes e valores em [PROXIMOS_PASSOS.md](PROXIMOS_PASSOS.md), seção 14.
+
 #### 4.2.2 Ascendência (implementado)
 
 - Escolhida a partir do **nível 30**, uma das 2 da classe, **definitiva**. Dá um bônus fixo na hora e **pontos de ascendência** nos níveis 30, 45, 60 e 75 (4 no total) para desbloquear 4 dos 6 nós dela (livres, sem ordem).
@@ -78,7 +85,7 @@ O sistema de classes segue a ideia dos ARPGs de árvore passiva grande: **a clas
 
 - **Bônus em área** para o jogador e os aliados próximos (raio base 12 m), pagos com uma **reserva de mana** (ou de vida, no *Pacto de Sangue*) enquanto ficam ligadas. A parte reservada não pode ser usada: com 40% de mana reservada, a barra só enche até 60%.
 - **Tela (tecla C):** em cima, só os ícones das auras, com o nome completo em cima de cada um. **Clicar seleciona** (não liga/desliga): embaixo, no centro, aparece uma cópia do ícone, o **nível como título**, a descrição completa, o efeito atual, e a **barra de reserva** (estreita, % no topo): de **1% a 35%**, com o efeito crescendo na mesma proporção (os efeitos do JSON são por 1% reservado). Por último, o **interruptor** Ativado (verde) / Desativado (vermelho).
-- **Ordem da reserva:** (1) soma das % das auras de mana ligadas; (2) o **Pacto de Sangue** converte de 0% a 50% dessa soma em reserva de vida, mais um custo próprio de 10% de vida; (3) `mana_reservation_efficiency` reduz só a parte que ficou em mana; (4) `life_reservation_efficiency` reduz só a parte em vida. Cada recurso vai até 90%.
+- **Ordem da reserva:** (1) soma das % das auras de mana ligadas; (2) o **Pacto de Sangue** converte de 0% a 50% dessa soma em reserva de vida, mais um custo próprio de 10% de vida; (3) `mana_reservation_efficiency` reduz só a parte que ficou em mana; (4) `life_reservation_efficiency` reduz só a parte em vida. Cada recurso vai até 100% (vida toda reservada deixa 1 de vida).
 - **Pacto de Sangue:** não é bônus em área (não vai para os aliados) e só abre pelo 7º nó da **Vanguarda** ou do **Rompe-Ossos** (`"unlocks_aura"` no nó de ascendência).
 - **Nível 1 a 20:** sobe com o tempo ligada **com a reserva no máximo (35%)**; com menos, os segundos não contam (90·N^1,3 segundos para o próximo); cada nível dá +4% de efeito.
 - **Não acumula:** a mesma aura de dois jogadores não soma, vale a mais forte. Auras diferentes somam.

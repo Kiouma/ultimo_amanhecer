@@ -2,6 +2,7 @@ class_name ProgressionUI
 extends Control
 ## Painel do personagem (tecla P): nível, XP e três abas (GDD 4.1, 4.2 e 12):
 ## - Árvore passiva: os pontos de nível (PassiveTreeView).
+## - Atributos: 5 pontos por nível em Força, Destreza, Inteligência e Sorte.
 ## - Ascendência: escolha no nível 30 e os nós dela.
 ## - Proficiências: as que sobem pelo uso e a maestria de armas.
 ## O equipamento e os status ficam no inventário (EquipmentPanel).
@@ -16,6 +17,7 @@ var _tree: PassiveTreeView
 var _status: Label
 var _search: LineEdit
 var _asc_box: VBoxContainer
+var _attr_box: VBoxContainer
 var _profs: VBoxContainer
 var _mastery: Label
 var _confirm: ConfirmationDialog
@@ -71,15 +73,17 @@ func _refresh() -> void:
 	_xp_bar.max_value = Progression.char_xp_to_next(prog.char_level)
 	_xp_bar.value = prog.char_xp
 	_xp_bar.tooltip_text = tr("%d / %d XP") % [int(prog.char_xp), int(_xp_bar.max_value)]
-	var points := tr("Pontos passivos: %d") % prog.skill_points
+	var points := tr("Pontos passivos: %d") % prog.skill_points + "  ·  " + tr("Atributo: %d") % prog.attribute_points()
 	if prog.ascendancy != "":
 		points += "  ·  " + tr("Pontos de ascendência: %d") % prog.ascendancy_points()
 	elif prog.char_level >= Progression.ASCENDANCY_LEVEL:
 		points += "  ·  " + tr("Ascendência disponível!")
 	_points.text = points
-	_tabs.set_tab_title(1, tr("Ascendência") + (" (!)" if (prog.ascendancy == "" and prog.char_level >= Progression.ASCENDANCY_LEVEL) or prog.ascendancy_points() > 0 else ""))
+	_tabs.set_tab_title(1, tr("Atributos") + (" (!)" if prog.attribute_points() > 0 else ""))
+	_tabs.set_tab_title(2, tr("Ascendência") + (" (!)" if (prog.ascendancy == "" and prog.char_level >= Progression.ASCENDANCY_LEVEL) or prog.ascendancy_points() > 0 else ""))
 	_tree.queue_redraw()
 	_tree._update_tip()
+	_refresh_attributes()
 	_refresh_ascendancy()
 	_refresh_profs()
 
@@ -116,6 +120,44 @@ func _refresh_profs() -> void:
 	for t in ["bow", "melee", "unarmed", "spell", "thrown"]:
 		parts.append("%s %d" % [Progression.mastery_name(t).capitalize(), prog.mastery_level(t)])
 	_mastery.text = tr("Maestria (até +10% de dano): ") + " · ".join(parts)
+
+
+# --- Atributos ----------------------------------------------------------------------------
+
+func _refresh_attributes() -> void:
+	var prog := player.progression
+	for c in _attr_box.get_children():
+		c.queue_free()
+	_attr_box.add_child(_text(tr("Pontos livres: %d  (+%d por nível; clique com Shift para 10 de uma vez; pode tirar e pôr à vontade)") % [prog.attribute_points(), Progression.ATTRIBUTE_POINTS_PER_LEVEL], 14, Color(1.0, 0.85, 0.55)))
+	for key: String in Progression.ATTRIBUTES:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		var info := VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var bonus := prog.attribute_bonus(key)
+		var head := tr("%s: %d") % [tr(str(Progression.ATTRIBUTE_NAMES[key])), prog.attribute_total(key)]
+		if bonus != 0:
+			head += "  " + tr("(%d distribuídos, %+d da árvore e itens)") % [int(prog.attributes[key]), bonus]
+		info.add_child(_text(head, 17))
+		var per: Dictionary = Progression.ATTRIBUTE_EFFECTS[key]
+		info.add_child(_text(tr("Cada ponto: %s") % bonus_text(per), 12, Color(0.75, 0.75, 0.72)))
+		var total := {}
+		for mod: String in per:
+			total[mod] = float(per[mod]) * prog.attribute_total(key)
+		info.add_child(_text(tr("Total: %s") % bonus_text(total), 12, Color(0.56, 0.78, 1.0)))
+		row.add_child(info)
+		for step: Array in [["−", -1], ["+", 1]]:
+			var b := Button.new()
+			b.text = step[0]
+			b.custom_minimum_size = Vector2(36, 32)
+			b.focus_mode = Control.FOCUS_NONE
+			var amount: int = step[1]
+			b.disabled = (amount > 0 and prog.attribute_points() <= 0) or (amount < 0 and int(prog.attributes[key]) <= 0)
+			b.pressed.connect(func() -> void:
+				prog.spend_attribute(key, amount * (10 if Input.is_key_pressed(KEY_SHIFT) else 1)))
+			row.add_child(b)
+		_attr_box.add_child(row)
+		_attr_box.add_child(HSeparator.new())
 
 
 # --- Ascendência --------------------------------------------------------------------------
@@ -214,6 +256,8 @@ const BONUS_NAMES := {
 	"stamina_regen": "Regeneração de stamina", "aura_effect": "Efeito das auras", "aura_radius": "Raio das auras",
 	"mana_reservation_efficiency": "Eficiência de reserva de mana", "life_reservation_efficiency": "Eficiência de reserva de vida", "melee.attack_time": "Tempo do golpe", "unarmed.attack_time": "Tempo do soco",
 	"thrown.attack_time": "Tempo do arremesso", "magic.cast_time": "Tempo de conjuração", "sprint_stamina": "Stamina ao correr",
+	"str_add": "Força", "dex_add": "Destreza", "int_add": "Inteligência", "luck_add": "Sorte", "energy_shield_add": "Escudo de energia",
+	"heavy.damage": "Dano com armas pesadas", "light.damage": "Dano com armas leves",
 }
 
 
@@ -225,7 +269,7 @@ static func bonus_lines(bonus: Dictionary) -> PackedStringArray:
 		var label := TranslationServer.translate(str(BONUS_NAMES.get(key, key)))
 		var value := ""
 		if key == "life_regen_add":
-			value = "%+.1f/s" % v
+			value = ("%+.2f/s" if absf(v) < 0.1 else "%+.1f/s") % v
 		elif key.ends_with("_add"):
 			value = "%+d" % roundi(v)
 		else:
@@ -328,7 +372,17 @@ func _build() -> void:
 	center.pressed.connect(func() -> void: _tree.center_on_start())
 	_tree.message.connect(func(text: String) -> void: _status.text = text)
 
-	# Aba 2: ascendência.
+	# Aba 2: atributos.
+	var attr_scroll := ScrollContainer.new()
+	attr_scroll.name = "Atributos"
+	attr_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tabs.add_child(attr_scroll)
+	_attr_box = VBoxContainer.new()
+	_attr_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_attr_box.add_theme_constant_override("separation", 8)
+	attr_scroll.add_child(_attr_box)
+
+	# Aba 3: ascendência.
 	var asc_scroll := ScrollContainer.new()
 	asc_scroll.name = "Ascendência"
 	asc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -338,7 +392,7 @@ func _build() -> void:
 	_asc_box.add_theme_constant_override("separation", 10)
 	asc_scroll.add_child(_asc_box)
 
-	# Aba 3: proficiências.
+	# Aba 4: proficiências.
 	var prof_tab := VBoxContainer.new()
 	prof_tab.name = "Proficiências"
 	_tabs.add_child(prof_tab)

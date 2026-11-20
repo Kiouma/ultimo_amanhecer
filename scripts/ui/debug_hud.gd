@@ -20,6 +20,7 @@ var _equipment_ui: EquipmentUI
 ## com alguma aberta, o minimapa some.
 var _screens: Array[Control] = []
 var _health: Health
+var _shield_bar: ProgressBar
 var _map_ui: MapUI
 var _creative_ui: CreativeUI
 var _weakness_label: Label
@@ -66,6 +67,22 @@ func _on_player_spawned(player: Node) -> void:
 		return
 	var health := Health.find_in(player)
 	_health = health
+	if health and _shield_bar == null:
+		# Escudo de energia: faixa azul clara por cima da barra de vida.
+		_shield_bar = ProgressBar.new()
+		_shield_bar.show_percentage = false
+		_shield_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_shield_bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var clear := StyleBoxEmpty.new()
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = Color(0.55, 0.85, 1.0, 0.75)
+		fill.set_corner_radius_all(3)
+		_shield_bar.add_theme_stylebox_override("background", clear)
+		_shield_bar.add_theme_stylebox_override("fill", fill)
+		_shield_bar.visible = false
+		health_bar.add_child(_shield_bar)
+		health.shield_changed.connect(func(_c: float, _m: float) -> void:
+			_on_health_changed(health.current, health.max_health))
 	if health and not health.changed.is_connected(_on_health_changed):
 		health.changed.connect(_on_health_changed)
 		_on_health_changed(health.current, health.max_health)
@@ -683,5 +700,11 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	health_label.text = tr("Vida %d / %d") % [ceili(current), ceili(maximum)]
 	if _health and _health.reserved > 0.0:
 		health_label.text += "  " + tr("(%d reservada)") % roundi(maximum * _health.reserved)
+	if _shield_bar and _health:
+		_shield_bar.visible = _health.max_shield > 0.0
+		_shield_bar.max_value = maxf(maximum, _health.max_shield)
+		_shield_bar.value = _health.shield
+		if _health.max_shield > 0.0:
+			health_label.text += "  ·  " + tr("Escudo %d / %d") % [ceili(_health.shield), ceili(_health.max_shield)]
 	if current > 0.0:
 		death_label.visible = false
