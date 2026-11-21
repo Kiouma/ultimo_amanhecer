@@ -116,7 +116,7 @@ func block_reason() -> String:
 			if data.get("grab", false) and _grab_target() == null:
 				return tr("Nenhum inimigo ao alcance")
 		"link":
-			if not user.has_target() and _nearest_ally() == null:
+			if not user.has_target() and not user.has_ally_target(stat("range", 20.0)) and _nearest_ally() == null:
 				return tr("Selecione um inimigo (Tab) ou fique perto de um aliado")
 		"wall":
 			var slot := Structures.wall_slot_in_front(user)
@@ -430,13 +430,13 @@ func _chain() -> void:
 ## Elo Arcano: drena o inimigo alvo (dano e mana de volta) ou passa mana a um aliado.
 func _link() -> void:
 	var amount := stat("amount", 40.0)
-	if user.has_target():
+	if user.has_target() and not user.has_ally_target(stat("range", 20.0)):
 		var t: Node3D = user.target
 		spawn_tracer(user, user.shot_origin(t.global_position), t.global_position + Vector3.UP * 1.2)
 		if _hit(t):
 			user.mana.restore(amount)
 		return
-	var ally := _nearest_ally()
+	var ally: Player = user.ally_target if user.has_ally_target(stat("range", 20.0)) else _nearest_ally()
 	if ally:
 		spawn_tracer(user, user.shot_origin(ally.global_position), ally.global_position + Vector3.UP * 1.2)
 		ally.give_mana(amount)
@@ -458,6 +458,13 @@ func _nearest_ally() -> Player:
 func _heal() -> void:
 	var amount := stat("heal", 30.0) * user.progression.mult("heal") * user.progression.mult("magic.damage")
 	var radius := stat("radius", 5.0)
+	# Com um aliado selecionado (perto), a cura vai inteira nele (etapa 9).
+	if user.has_ally_target(25.0):
+		var ally: Player = user.ally_target
+		ally.health.heal_by(amount * 1.3, user)
+		spawn_tracer(user, user.shot_origin(ally.global_position), ally.global_position + Vector3.UP * 1.2)
+		_ring(ally.global_position, 1.5)
+		return
 	for p: Node3D in get_tree().get_nodes_in_group("player"):
 		if p.global_position.distance_to(user.global_position) <= radius:
 			var h := Health.find_in(p)

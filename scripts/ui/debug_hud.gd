@@ -201,6 +201,14 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_skills_ui)
 	_skills_ui.bind(player)
 
+	var party := PartyFrames.new()
+	party.player = player
+	add_child(party)
+
+	var trade_ui := TradeUI.new()
+	add_child(trade_ui)
+	trade_ui.bind(player)
+
 	_map_ui = MapUI.new()
 	add_child(_map_ui)
 	_map_ui.bind(player)
@@ -216,7 +224,7 @@ func _bind_inventory(player: Player) -> void:
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.bind(player)
-	_screens = [_inventory_ui, _equipment_ui, crafting_ui, _progression_ui, _aura_ui, _skills_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
+	_screens = [_inventory_ui, _equipment_ui, crafting_ui, _progression_ui, _aura_ui, _skills_ui, trade_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
 
 
 func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:

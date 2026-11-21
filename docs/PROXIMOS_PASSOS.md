@@ -392,7 +392,11 @@ Cada passo termina jogável:
    - **Mais inimigos:** densidade ~40% maior por bioma (teto 75) e 3 tipos novos: **Arqueiro esqueleto** (à distância, sangramento), **Cavaleiro caído** (deixa Vulnerável) e o chefe **Rei esqueleto** (invoca). Debuffs nos golpes: Goblin sangra, Ogro deixa lento, Espectro envenena.
    - **Chefes guardiões:** lugares (ruínas, vilarejos, cabanas) a mais de 250 m do começo têm um chefe (Rei esqueleto, Troll ancião ou Necromante) que aparece quando alguém chega perto; volta depois de 20 min. Continuam o Necromante e o Troll das noites.
    - **Magic find em grupo:** no drop e no ouro vale o maior aumento de loot entre quem matou e os jogadores vivos a até 40 m.
-9. **Grupo:** party lateral, alvo em aliados, trade e follow (8.1, 10, 11).
+9. ✅ **Grupo (feito)** (8.1, 10, 11):
+   - **Barra da party** na lateral esquerda (aparece com 2+ jogadores): nome, nível e barras de vida, stamina e mana de cada um (stamina, mana e nível dos outros chegam pela rede). Clicar no quadro de um aliado: **Selecionar (alvo)**, **Trocar itens**, **Seguir**.
+   - **Alvo aliado:** clique no aliado no mundo ou no quadro (anel verde). **Remendar** vai inteiro nele (+30%) se estiver a até 25 m; sem aliado selecionado, cura em volta como antes. **Elo Arcano** passa mana ao aliado selecionado (senão, drena o inimigo alvo ou passa ao aliado mais perto).
+   - **Seguir:** anda sozinho atrás do aliado pelo mapa de navegação (desvia de obstáculos), parando a 3 m; qualquer tecla de movimento cancela.
+   - **Troca:** convite (o outro aceita ou recusa), janela com as duas ofertas (itens do inventário e ouro), os dois confirmam e cada lado entrega o que ofereceu; mudar a oferta tira as confirmações. Só a até 10 m; se afastar ou morrer cancela. Testado com host e cliente na mesma máquina.
 10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1); afixos de roubo de vida/mana, magic find e atributos (15).
 
 ---

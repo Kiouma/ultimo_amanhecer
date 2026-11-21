@@ -148,6 +148,8 @@ var equipment: Equipment
 var skills: Skills
 ## Coleta com tempo e pesca (etapa 7).
 var gathering: Gathering
+## Troca de itens com outro jogador (etapa 9).
+var trade: Trade
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
@@ -220,6 +222,9 @@ func _ready() -> void:
 	gathering = Gathering.new()
 	gathering.name = "Gathering"
 	add_child(gathering)
+	trade = Trade.new()
+	trade.name = "Trade"
+	add_child(trade)
 	equipment.changed.connect(_update_outfit)
 	model.fill_lit = true  # luz de preenchimento da câmera ilumina os jogadores
 	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
@@ -391,6 +396,14 @@ func _physics_process(delta: float) -> void:
 	if _sprint_on and (input.length() < 0.1 or stamina.current <= 0.0):
 		_sprint_on = false  # corrida alternada para quando o jogador para ou cansa
 	var direction := (Basis(Vector3.UP, camera_yaw) * Vector3(input.x, 0.0, input.y)).normalized()
+	_update_ally_ring()
+	_update_net_pools(delta)
+	if follow_target:
+		# Seguindo um aliado: anda sozinho; qualquer tecla de movimento cancela.
+		if input.length() > 0.1:
+			stop_follow()
+		else:
+			direction = _follow_direction(delta)
 	if direction.length() > 0.1 and Time.get_ticks_msec() >= _attack_until:
 		# O corpo vira para onde anda (atacando, fica virado para o alvo).
 		rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), minf(12.0 * delta, 1.0))
@@ -678,12 +691,117 @@ func target_nearest(max_range := TARGET_RANGE, cycle := false) -> bool:
 	return true
 
 
-## Clique: se o cursor está em cima de um inimigo, ele vira o alvo.
+## Clique: se o cursor está em cima de um inimigo, ele vira o alvo; em cima de um
+## aliado, ele vira o alvo aliado (feitiços de suporte).
 func _pick_target() -> void:
-	var hit := cursor_ray(TARGET_RANGE, 4)
+	var hit := cursor_ray(TARGET_RANGE, 2 | 4)
 	var collider: Object = hit.get("collider")
 	if collider is Node3D and (collider as Node).is_in_group("zombies"):
 		target = collider
+	elif collider is Player and collider != self:
+		set_ally_target(collider)
+
+
+# --- Grupo: alvo aliado, seguir e mana/stamina visíveis (etapa 9) --------------------------
+
+## Aliado selecionado (clique nele ou no quadro da party): Remendar e Elo Arcano vão nele.
+var ally_target: Player = null
+## Aliado que o personagem segue sozinho (qualquer tecla de movimento cancela).
+var follow_target: Player = null
+## Stamina e mana (frações 0 a 1) e nível do personagem, replicados para o quadro da
+## party dos outros.
+var net_pools := Vector3(1.0, 1.0, 1.0)
+signal ally_target_changed
+
+const FOLLOW_DISTANCE := 3.0
+var _ally_ring: MeshInstance3D
+var _pools_timer := 0.0
+var _follow_path := PackedVector3Array()
+var _follow_repath := 0.0
+
+
+func set_ally_target(p: Player) -> void:
+	ally_target = p if p != self else null
+	if ally_target:
+		notify(tr("Alvo aliado: %s") % ally_target.display_name())
+	ally_target_changed.emit()
+
+
+func has_ally_target(max_range := 40.0) -> bool:
+	return is_instance_valid(ally_target) and not ally_target.health.is_dead \
+		and ally_target.global_position.distance_to(global_position) <= max_range
+
+
+func start_follow(p: Player) -> void:
+	if p == null or p == self:
+		return
+	follow_target = p
+	_follow_path = PackedVector3Array()
+	_follow_repath = 0.0
+	notify(tr("Seguindo %s (ande para parar)") % p.display_name())
+
+
+func stop_follow() -> void:
+	if follow_target:
+		follow_target = null
+		notify(tr("Parou de seguir"))
+
+
+## Direção para ir atrás do aliado seguido, pelo mapa de navegação (desvia de obstáculos).
+func _follow_direction(delta: float) -> Vector3:
+	if not is_instance_valid(follow_target) or follow_target.health.is_dead:
+		follow_target = null
+		return Vector3.ZERO
+	var goal := follow_target.global_position
+	if global_position.distance_to(goal) <= FOLLOW_DISTANCE:
+		return Vector3.ZERO
+	_follow_repath -= delta
+	if _follow_repath <= 0.0 or _follow_path.is_empty():
+		_follow_repath = 0.5
+		_follow_path = NavigationServer3D.map_get_path(get_world_3d().navigation_map, global_position, goal, true)
+	while _follow_path.size() > 1 and Vector2(_follow_path[0].x - global_position.x, _follow_path[0].z - global_position.z).length() < 0.8:
+		_follow_path.remove_at(0)
+	var next := _follow_path[0] if not _follow_path.is_empty() else goal
+	var dir := Vector3(next.x - global_position.x, 0.0, next.z - global_position.z)
+	if dir.length() < 0.05:
+		dir = Vector3(goal.x - global_position.x, 0.0, goal.z - global_position.z)
+	return dir.normalized()
+
+
+## Dono: manda stamina/mana para os outros (4 vezes por segundo, só se mudou).
+func _update_net_pools(delta: float) -> void:
+	_pools_timer -= delta
+	if _pools_timer > 0.0:
+		return
+	_pools_timer = 0.25
+	var v := Vector3(stamina.current / maxf(stamina.max_value, 1.0), mana.current / maxf(mana.max_value, 1.0), progression.char_level)
+	if not v.is_equal_approx(net_pools):
+		net_pools = v
+
+
+func _update_ally_ring() -> void:
+	if not has_ally_target(TARGET_RANGE):
+		if _ally_ring:
+			_ally_ring.visible = false
+		return
+	if _ally_ring == null:
+		_ally_ring = MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.55
+		torus.outer_radius = 0.68
+		torus.rings = 32
+		torus.ring_segments = 4
+		_ally_ring.mesh = torus
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = Color(0.3, 1.0, 0.45, 0.85)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_ally_ring.material_override = mat
+		_ally_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_ally_ring.top_level = true
+		add_child(_ally_ring)
+	_ally_ring.visible = true
+	_ally_ring.global_position = ally_target.global_position + Vector3.UP * 0.06
 
 
 func _update_target_ring() -> void:
