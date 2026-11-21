@@ -208,11 +208,20 @@ func _setup_rigid() -> void:
 
 # --- Aparência -----------------------------------------------------------------------------
 
-## 1ª pessoa: o corpo (e a arma) só projeta sombra.
+## Camada de render só dos personagens dos jogadores: a luz de preenchimento da câmera
+## (Player) ilumina só ela, para o personagem não sumir na sombra.
+const FILL_LAYER := 1 << 1
+## Este modelo recebe a luz de preenchimento (jogadores; monstros não).
+var fill_lit := false
+
+
+## Sombra do corpo e das armas (e a camada da luz de preenchimento, nos jogadores).
 func set_shadow_mode(mode: GeometryInstance3D.ShadowCastingSetting) -> void:
 	_shadow_mode = mode
 	for mesh: GeometryInstance3D in find_children("*", "GeometryInstance3D", true, false):
 		mesh.cast_shadow = mode
+		if fill_lit:
+			mesh.layers |= FILL_LAYER
 
 
 func set_skin_tint(color: Color) -> void:
@@ -273,8 +282,7 @@ func set_held_model(model_path: String) -> void:
 		node.rotation = Vector3(deg_to_rad(-25), 0, 0)  # em pé, um pouco para a frente
 	_hand.add_child(node)
 	_held_node = node
-	for mesh: GeometryInstance3D in node.find_children("*", "GeometryInstance3D", true, false):
-		mesh.cast_shadow = _shadow_mode
+	set_shadow_mode(_shadow_mode)
 
 
 ## Arma secundária (escudo, aljava, grimório, segunda adaga) pelo id do item; "" = nada.
@@ -306,8 +314,7 @@ func set_offhand_model(model_path: String) -> void:
 		node.rotation = Vector3(deg_to_rad(-25), 0, 0)
 	parent.add_child(node)
 	_off_node = node
-	for mesh: GeometryInstance3D in node.find_children("*", "GeometryInstance3D", true, false):
-		mesh.cast_shadow = _shadow_mode
+	set_shadow_mode(_shadow_mode)
 
 
 # --- Animação ------------------------------------------------------------------------------

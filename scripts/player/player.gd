@@ -215,7 +215,9 @@ func _ready() -> void:
 	skills.name = "Skills"
 	add_child(skills)
 	equipment.changed.connect(_update_outfit)
+	model.fill_lit = true  # luz de preenchimento da câmera ilumina os jogadores
 	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
+	model.set_shadow_mode(GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
 	_show_held(net_held)
 	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
@@ -233,6 +235,7 @@ func _ready() -> void:
 		add_child(build)
 		build.setup(self)
 		camera.current = true
+		_make_fill_light()
 		mouse_sensitivity = Settings.mouse_sensitivity
 		Settings.changed.connect(_on_settings_changed)
 		# Personagem escolhido no menu: o salvo (itens, níveis...) ou, se for novo, kit
@@ -405,6 +408,7 @@ func _physics_process(delta: float) -> void:
 	net_on_floor = is_on_floor()
 	model.update_locomotion(velocity * transform.basis, is_on_floor(), crouching, sprinting)
 	_update_camera_rig()
+	_update_fill_light(delta)
 	_emit_footstep_noise(delta, crouching, sprinting)
 	_update_focus()
 	_auto_pickup(delta)
@@ -917,6 +921,38 @@ func _apply_camera_mode() -> void:
 	spring_arm.position = third_person_offset
 	weapons.visible = false
 	model.set_shadow_mode(GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+
+
+## Luz de preenchimento: fica entre a câmera e o personagem e ilumina só os modelos dos
+## jogadores (CharacterModel.FILL_LAYER), sem sombra. Assim o personagem não some na
+## sombra das árvores nem fica escuro de costas para o sol. Mais fraca à noite.
+var _fill_light: OmniLight3D
+var _fill_timer := 0.0
+
+
+func _make_fill_light() -> void:
+	_fill_light = OmniLight3D.new()
+	_fill_light.name = "FillLight"
+	_fill_light.light_color = Color(1.0, 0.97, 0.92)
+	_fill_light.omni_range = 6.0
+	_fill_light.omni_attenuation = 0.6
+	_fill_light.shadow_enabled = false
+	_fill_light.light_specular = 0.2
+	_fill_light.light_cull_mask = CharacterModel.FILL_LAYER
+	_fill_light.position = Vector3(0.0, 0.8, 2.2)  # acima e atrás, do lado da câmera
+	head.add_child(_fill_light)
+	_update_fill_light(1.0)
+
+
+func _update_fill_light(delta: float) -> void:
+	if _fill_light == null:
+		return
+	_fill_timer -= delta
+	if _fill_timer > 0.0:
+		return
+	_fill_timer = 0.5
+	var dn := DayNight.find(get_tree())
+	_fill_light.light_energy = 0.5 if dn and dn.is_night() else 1.1
 
 
 ## A câmera tem giro próprio: o Head (filho do corpo) desfaz o giro do corpo.
