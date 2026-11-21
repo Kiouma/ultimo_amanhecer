@@ -31,11 +31,11 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 
 - **Câmera em 3ª pessoa** (estilo RPG de ação): o mouse fica sempre livre; **segure o botão direito** para girar a câmera; **roda do mouse** aproxima/afasta (até 2x a distância padrão).
 - **WASD** anda em relação à câmera e o personagem vira para onde anda. **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **Esc** abre o menu de pausa.
-- **Clique esquerdo** ataca; clicar num inimigo o seleciona como **alvo** (anel vermelho): arco, feitiços e arremesso vão nele. Sem alvo, o ataque vai **para onde o personagem está olhando**; segurando o **botão direito**, vai para onde a **câmera** aponta (o corpo vira para ela). A câmera nunca gira sozinha ao atacar. Atacando, o personagem anda mais devagar; a animação acelera com a velocidade de ataque.
+- **Clique esquerdo** ataca. **Tab** seleciona o inimigo mais próximo como **alvo** (anel vermelho; apertar de novo passa para o próximo); clicar num inimigo também o seleciona. **Arco, magia e arremesso vão sempre no alvo**, segurando ou não o botão direito; sem alvo, pegam sozinhos o inimigo mais próximo. Os tiros voam reto (sem queda), mas batem em paredes e no terreno. Golpes corpo a corpo vão **para onde o personagem está olhando**; segurando o **botão direito**, para onde a **câmera** aponta (o corpo vira para ela). A câmera nunca gira sozinha ao atacar. Atacando, o personagem anda mais devagar; a animação acelera com a velocidade de ataque.
 - **Hotbar:** teclas **1–9** escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
 - **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
 - **E** interage com o que está sob o cursor (ou o mais perto) (portas, baús, estações); passar por cima de itens pega sozinho.
-- **Tab** inventário (mochila e fabricação), **V** equipamentos e status, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **B** modo construção.
+- **B** inventário (mochila e fabricação), **V** equipamentos e status, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **T** modo construção.
 - **F8** (host) adianta 1 hora; **F10** (host) troca o clima.
 
 O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
@@ -61,13 +61,13 @@ Em **Esc → Configurações** (ou no menu inicial):
 
 Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da árvore passiva, da ascendência, de itens, de auras e da **comida** (frutas silvestres regeneram vida por alguns segundos). **Poções de cura** curam na hora. A madeira se junta no chão (não existe mais graveto).
 
-**Inventário (Tab):** fabricação nas mãos (ex.: flecha = pena + madeira). **Clique duplo** num item: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
+**Inventário (B):** fabricação nas mãos (ex.: flecha = pena + madeira). **Clique duplo** num item: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
 
 **Estações:** fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar. **E** numa estação abre a tela dela, só com as receitas daquela estação (na bancada, também reparar/refinar/desmontar). Cada receita mostra os recursos como "Madeira 12/5" (o que você tem / o que pede; verde se tem, vermelho se falta) e o botão Fabricar fica verde ou vermelho. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela).
 
 **Base:** **Baú** (guarda 30 pilhas para o grupo) e **Cama** (E: renasce nela).
 
-**Equipamento** (Tab, à esquerda do inventário, arrumado como um corpo): capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. Embaixo, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
+**Equipamento** (B, à esquerda do inventário, arrumado como um corpo): capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. Embaixo, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
 
 ## Combate e progressão
 
@@ -90,7 +90,7 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 
 ## Construção
 
-**B** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **T** troca madeira/pedra, **R** gira, clique constrói e botão direito desmonta. Porta abre com **E**. A grade acompanha o relevo: cada célula tem a altura do chão e as fundações descem até ele. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Peças sem apoio até o chão desabam em cadeia (piso pode avançar até 2 células sem parede embaixo). Monstros presos do lado de fora batem na peça mais fraca. Armadilhas (bancada): **espetos** ferem e deixam lento, **mandíbula** prende; **E** recolhe.
+**T** liga o modo construção (prévia verde/vermelha na grade). Roda troca a peça (fundação, parede, porta, piso/teto, escada), **G** troca madeira/pedra, **R** gira, clique constrói e **X** desmonta. Porta abre com **E**. A grade acompanha o relevo: cada célula tem a altura do chão e as fundações descem até ele. Com o **Martelo** na mão: clique conserta a peça na mira, **R** melhora de madeira para pedra. Peças sem apoio até o chão desabam em cadeia (piso pode avançar até 2 células sem parede embaixo). Monstros presos do lado de fora batem na peça mais fraca. Armadilhas (bancada): **espetos** ferem e deixam lento, **mandíbula** prende; **E** recolhe.
 
 ## Mundo
 

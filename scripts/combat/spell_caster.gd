@@ -69,7 +69,7 @@ func cast(power := 1.0, prepaid := false) -> bool:
 		mana.mark_action()
 	casting = true
 	cooldown = stat("cooldown", 1.0) + stat("cast_time", 0.4)
-	play_body_anim(&"Spell_Simple_Shoot", maxf(stat("cast_time", 0.0), 0.5))
+	play_body_anim(&"Spell_Simple_Shoot", maxf(stat("cast_time", 0.0), 0.5), true)
 	hud_changed.emit()
 	await get_tree().create_timer(stat("cast_time", 0.4)).timeout
 	casting = false

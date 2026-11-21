@@ -62,7 +62,7 @@ func _release() -> void:
 	var power := draw
 	var aim_point: Vector3 = aim_ray(120.0).position
 	var from: Vector3 = user.shot_origin(aim_point)
-	play_body_anim(&"Ranged_Bow_Release", 0.5)
+	play_body_anim(&"Ranged_Bow_Release", 0.5, true)
 	var direction := (aim_point - from).normalized()
 	var speed := lerpf(15.0, stat("arrow_speed", 45.0), power)
 

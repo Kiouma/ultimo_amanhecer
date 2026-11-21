@@ -53,7 +53,7 @@ func _ready() -> void:
 	_mode.item_selected.connect(func(index: int) -> void:
 		if player:
 			player.creative = index == 1
-			_status.text = tr("Modo criativo: abra o Tab e use a aba Criativo.") if player.creative else tr("Modo sobrevivência."))
+			_status.text = tr("Modo criativo: abra o inventário (B) e use a aba Criativo.") if player.creative else tr("Modo sobrevivência."))
 	_main_box.add_child(_mode)
 	# Hospedando: como os amigos entram (IP público e porta, ou aviso de CGNAT/VPN).
 	_share_box = VBoxContainer.new()
@@ -76,7 +76,7 @@ func _ready() -> void:
 	_status.modulate = Color(0.7, 1.0, 0.7)
 	_main_box.add_child(_status)
 	var help := Label.new()
-	help.text = "Tab inventário · P personagem · M mapa · B construir\nE usar · R girar/melhorar · Q habilidade (segure: escolher) · V câmera"
+	help.text = "B inventário · Tab alvo · P personagem · M mapa · T construir\nE usar · R girar/melhorar · Q habilidade (segure: escolher) · V equipamentos"
 	help.add_theme_font_size_override("font_size", 11)
 	help.modulate = Color(0.75, 0.75, 0.72)
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

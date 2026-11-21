@@ -2,8 +2,8 @@ class_name CraftingUI
 extends Control
 ## Tela de uma estação de fabricação (E na fogueira, bancada...): só as receitas daquela
 ## estação, em cartões (RecipeCard), a fila de fabricação e, na bancada, reparar,
-## refinar e desmontar. Fecha com E, Tab, Esc ou ao se afastar da estação.
-## As receitas das mãos ficam no inventário (Tab).
+## refinar e desmontar. Fecha com E, B, Esc ou ao se afastar da estação.
+## As receitas das mãos ficam no inventário (B).
 
 const PANEL_SIZE := Vector2(660, 580)
 
@@ -62,7 +62,7 @@ func _ready() -> void:
 	_queue_box = VBoxContainer.new()
 	box.add_child(_queue_box)
 	var hint := Label.new()
-	hint.text = "E, Tab ou Esc fecha"
+	hint.text = "E, B ou Esc fecha"
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.modulate = Color(0.65, 0.65, 0.6)
 	box.add_child(hint)

@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## HUD provisório: vida, stamina, mana, item na mão, hotbar, aviso de interação,
-## tela de inventário (Tab) e aviso de morte. Visual final do HUD (GDD 13.1) fica para o polimento.
+## tela de inventário (B) e aviso de morte. Visual final do HUD (GDD 13.1) fica para o polimento.
 
 @onready var health_bar: ProgressBar = %HealthBar
 @onready var health_label: Label = %HealthLabel

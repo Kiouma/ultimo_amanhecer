@@ -1,6 +1,6 @@
 class_name EquipmentPanel
 extends VBoxContainer
-## Coluna da esquerda do inventário (Tab): equipamento vestido, arrumado como um corpo
+## Coluna da esquerda do inventário (B): equipamento vestido, arrumado como um corpo
 ## (capacete em cima, colar ao lado, anéis dos lados da armadura, luvas e botas embaixo)
 ## e, colado embaixo, o painel de status com duas abas:
 ## - Primários: vida, stamina, mana (e regenerações), redução de recarga, velocidade,

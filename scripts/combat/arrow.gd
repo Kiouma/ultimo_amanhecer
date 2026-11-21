@@ -1,12 +1,10 @@
 extends Node3D
-## Flecha disparada pelo arco: voa com gravidade, aponta para onde está indo,
+## Flecha (ou faca) disparada: voa reto, sem queda (ainda bate em paredes e no chão),
 ## causa dano no primeiro corpo vivo que acertar (cabeça = dano dobrado).
 ## Se cravar no chão/parede, fica alguns segundos e pode virar uma flecha
 ## recuperável no chão (recover_chance).
 ## visual_only: cópia nas telas dos outros jogadores (não causa dano nem deixa item).
 
-## Gravidade "de jogo" (mais leve que a real): queda perceptível sem frustrar.
-const GRAVITY := 6.0
 const HEADSHOT_HEIGHT := 1.45
 const HEADSHOT_MULTIPLIER := 2.0
 
@@ -42,7 +40,6 @@ func _physics_process(delta: float) -> void:
 	if _age > max_lifetime:
 		queue_free()
 		return
-	velocity.y -= GRAVITY * delta
 	var step := velocity * delta
 	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + step, 1 | 4 | 8 | 64)
 	if caster is CollisionObject3D:

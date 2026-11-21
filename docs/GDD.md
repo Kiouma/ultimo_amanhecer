@@ -362,14 +362,14 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Atacar / disparar | Botão esquerdo |
 | Mirar / bloquear | Botão direito |
 | Usar / interagir | E |
-| Inventário | Tab |
+| Inventário | B |
 | Equipamentos e status | V |
-| Alvo | Clique esquerdo num inimigo (ataques à distância vão nele) |
-| Trocar arma | 1 a 9, roda do mouse |
+| Alvo | Tab (inimigo mais próximo; de novo, o próximo) ou clique esquerdo num inimigo. Arco, magia e arremesso vão sempre no alvo (sem alvo, pegam o mais próximo sozinhos) |
+| Trocar arma | 1 a 9 |
 | Recarregar | R |
 | Feitiço rápido | Q / F (configurável) |
 | Câmera | Só 3ª pessoa; botão direito segurado gira; roda dá zoom (até 2x) |
-| Modo construção | B (roda = peça, T = material, R = girar, clique = construir, X = desmontar) |
+| Modo construção | T (roda = peça, G = material, R = girar, clique = construir, X = desmontar) |
 | Personagem (árvore passiva, ascendência, proficiências) | P |
 | Auras | C |
 | Mapa | M |

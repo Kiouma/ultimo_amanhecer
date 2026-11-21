@@ -302,6 +302,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_focused.interact(self)
 	elif event.is_action_pressed("attack") and MouseMode.playing():
 		_pick_target()
+	elif event.is_action_pressed("target") and MouseMode.playing() and not health.is_dead:
+		target_nearest(TARGET_RANGE, true)
 
 
 func _physics_process(delta: float) -> void:
@@ -506,10 +508,10 @@ func _zombie_nearby(radius: float) -> bool:
 ## Animação de ação (golpe, tiro, feitiço) aqui e nas telas dos outros jogadores.
 ## duration > 0: a animação dura isso (acelera com a velocidade de ataque). Ataques
 ## (attack = true) viram o corpo para o alvo/cursor e deixam o personagem mais lento.
-func play_action_synced(anim_name: StringName, duration := 0.0, attack := false) -> void:
+func play_action_synced(anim_name: StringName, duration := 0.0, attack := false, ranged := false) -> void:
 	if attack and is_local():
 		_attack_until = Time.get_ticks_msec() + int(maxf(duration, 0.3) * 1000.0)
-		_face_attack()
+		_face_attack(ranged)
 	model.play_action(anim_name, duration)
 	if Network.is_online():
 		_remote_action.rpc(anim_name, duration)
@@ -542,14 +544,18 @@ func cursor_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
 
 
 ## Para onde os ataques vão (dicionário como o do intersect_ray, sempre com "position"):
+## - à distância (arco, magia, arremesso; ranged = true): sempre no alvo; sem alvo,
+##   seleciona sozinho o inimigo mais próximo ao alcance;
 ## - segurando o botão direito (girando a câmera): para onde a câmera aponta;
 ## - com um alvo selecionado: o peito do alvo;
 ## - senão: reto para a frente do personagem (para onde ele está olhando).
-func aim_ray(max_range: float, mask := 1 | 4 | 8) -> Dictionary:
+func aim_ray(max_range: float, mask := 1 | 4 | 8, ranged := false) -> Dictionary:
+	if ranged and not has_target():
+		target_nearest(minf(max_range, TARGET_RANGE))
+	if has_target() and (ranged or not MouseMode.rotating):
+		return {"position": target.global_position + Vector3.UP * 1.1, "collider": target, "normal": Vector3.UP}
 	if MouseMode.rotating:
 		return cursor_ray(max_range, mask)
-	if has_target():
-		return {"position": target.global_position + Vector3.UP * 1.1, "collider": target, "normal": Vector3.UP}
 	var chest := global_position + Vector3.UP * 1.1
 	var forward := -global_basis.z
 	var query := PhysicsRayQueryParameters3D.create(chest, chest + forward * max_range, mask)
@@ -565,10 +571,15 @@ func aim_point(max_range: float) -> Vector3:
 	return aim_ray(max_range).position
 
 
-## No começo de um ataque: girando a câmera, o corpo vira para onde ela aponta; com
-## alvo, vira para o alvo; senão, ataca para onde já está olhando. A câmera não se mexe.
-func _face_attack() -> void:
-	if MouseMode.rotating:
+## No começo de um ataque: à distância, vira para o alvo; girando a câmera, o corpo vira
+## para onde ela aponta; com alvo, vira para o alvo; senão, ataca para onde já está
+## olhando. A câmera não se mexe.
+func _face_attack(ranged := false) -> void:
+	if ranged and not has_target():
+		target_nearest()
+	if ranged and has_target():
+		face_point(target.global_position)
+	elif MouseMode.rotating:
 		rotation.y = camera_yaw
 		_update_camera_rig()
 	elif has_target():
@@ -593,6 +604,29 @@ func face_point(point: Vector3) -> void:
 func has_target() -> bool:
 	return is_instance_valid(target) and not (target.get(&"health") != null and target.health.is_dead) \
 		and target.global_position.distance_to(global_position) <= TARGET_RANGE
+
+
+## Seleciona o inimigo vivo mais próximo (até max_range). cycle (Tab): se o alvo atual
+## já é o mais próximo, passa para o seguinte. Retorna true se ficou com um alvo.
+func target_nearest(max_range := TARGET_RANGE, cycle := false) -> bool:
+	var found: Array = []
+	for z: Node3D in get_tree().get_nodes_in_group("zombies"):
+		if z.get(&"health") != null and z.health.is_dead:
+			continue
+		var dist := z.global_position.distance_to(global_position)
+		if dist <= max_range:
+			found.append([dist, z])
+	if found.is_empty():
+		return false
+	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var pick: Node3D = found[0][1]
+	if cycle and has_target():
+		for i in found.size():
+			if found[i][1] == target:
+				pick = found[(i + 1) % found.size()][1]
+				break
+	target = pick
+	return true
 
 
 ## Clique: se o cursor está em cima de um inimigo, ele vira o alvo.

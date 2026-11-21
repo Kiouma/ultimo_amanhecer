@@ -1,7 +1,7 @@
 class_name ChestUI
 extends Control
 ## Tela do baú: à esquerda o que está no baú (clique pega), à direita o seu
-## inventário (clique guarda a pilha inteira). Fecha com E, Tab, Esc ou ao se afastar.
+## inventário (clique guarda a pilha inteira). Fecha com E, B, Esc ou ao se afastar.
 
 var player: Player
 var _chest: BaseUtility
@@ -36,7 +36,7 @@ func _ready() -> void:
 	_left = _column(cols, tr("Baú (clique para pegar)"))
 	_right = _column(cols, tr("Seu inventário (clique para guardar)"))
 	var hint := Label.new()
-	hint.text = "E, Tab ou Esc fecha"
+	hint.text = "E, B ou Esc fecha"
 	hint.modulate = Color(0.7, 0.7, 0.7)
 	box.add_child(hint)
 	EventBus.chest_opened.connect(_on_opened)

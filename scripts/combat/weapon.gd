@@ -218,11 +218,11 @@ func make_noise(factor: float) -> void:
 	Network.emit_noise(user.global_position, factor * NOISE_TO_METERS * stealth, user)
 
 
-## Mira (Player.aim_ray): para onde a câmera aponta (segurando o botão direito), o alvo
-## selecionado, ou reto à frente do personagem. Ignora o próprio jogador. Retorna o
+## Mira dos ataques à distância (Player.aim_ray com ranged): sempre o alvo; sem alvo,
+## pega o inimigo mais próximo; sem nenhum, câmera ou frente. Ignora o próprio jogador. Retorna o
 ## dicionário do intersect_ray (sempre com "position").
 func aim_ray(max_range: float, spread_deg := 0.0) -> Dictionary:
-	var hit: Dictionary = user.aim_ray(max_range, HIT_MASK)
+	var hit: Dictionary = user.aim_ray(max_range, HIT_MASK, true)
 	if spread_deg > 0.0 and not hit.has("collider"):
 		var s := deg_to_rad(spread_deg)
 		hit.position = hit.position + Vector3(randf_range(-s, s), 0, randf_range(-s, s)) * max_range * 0.1
@@ -245,9 +245,9 @@ func deal_damage(target: Object, amount: float) -> bool:
 ## Animação de ataque do personagem (vista por todos). duration: quanto o ataque dura
 ## (a animação acelera junto com a velocidade de ataque); o personagem vira para o alvo
 ## e anda mais devagar enquanto isso.
-func play_body_anim(anim_name: StringName, duration := 0.0) -> void:
+func play_body_anim(anim_name: StringName, duration := 0.0, ranged := false) -> void:
 	if user.has_method(&"play_action_synced"):
-		user.play_action_synced(anim_name, duration, true)
+		user.play_action_synced(anim_name, duration, true, ranged)
 
 
 ## Pequeno "coice" visual do viewmodel.

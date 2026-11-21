@@ -55,7 +55,7 @@ func _throw() -> void:
 	make_noise(stat("noise", 0.05))
 	Sfx.play("swing", user.global_position + Vector3.UP * 1.4, -4.0)
 	count_use()
-	play_body_anim(&"Throw", stat("attack_time", 0.6))
+	play_body_anim(&"Throw", stat("attack_time", 0.6), true)
 	hud_changed.emit()
 
 

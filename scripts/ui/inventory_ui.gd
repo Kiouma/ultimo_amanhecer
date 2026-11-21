@@ -1,6 +1,6 @@
 class_name InventoryUI
 extends Control
-## Tela de inventário (Tab): mochila, hotbar, peso e fabricação nas mãos (GDD 8 e 13.2).
+## Tela de inventário (B): mochila, hotbar, peso e fabricação nas mãos (GDD 8 e 13.2).
 ## Equipamento e status ficam na tela própria (V, EquipmentUI).
 ## As estações (fogueira, bancada) têm a própria tela de fabricação (CraftingUI).
 ## Fabricar entra na fila (CraftQueue), que aparece embaixo com progresso e cancelar.
@@ -312,7 +312,7 @@ func _build() -> void:
 		hotbar.add_child(_new_slot(i))
 
 	var help := Label.new()
-	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nclique duplo veste/equipa · solte fora da janela para jogar no chão · Tab fecha"
+	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nclique duplo veste/equipa · solte fora da janela para jogar no chão · B fecha"
 	help.add_theme_font_size_override("font_size", 12)
 	help.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 	vbox.add_child(help)

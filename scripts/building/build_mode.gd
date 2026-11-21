@@ -253,7 +253,7 @@ func status_text() -> String:
 	if _aimed:
 		lines.append(tr("Na mira: %s %d/%d · [X] desmontar (devolve %s)") % [_aimed.display_name(),
 			ceili(_aimed.health.current), int(_aimed.health.max_health), Repair.describe(Structures.demolish_refund(_aimed))])
-	lines.append(tr("[Roda] peça  [T] material  [R] girar  [Clique] construir  [B] sair"))
+	lines.append(tr("[Roda] peça  [G] material  [R] girar  [Clique] construir  [X] desmontar  [T] sair"))
 	return "\n".join(lines)
 
 
@@ -264,7 +264,8 @@ func _update_target() -> void:
 	var hit: Dictionary = user.cursor_ray(REACH + 8.0, 1 | 8 | BuildPiece.DOOR_LAYER)
 	var from: Vector3 = hit.from
 	var dir: Vector3 = hit.dir
-	if hit.has("collider") and (hit.position as Vector3).distance_to(user.global_position) > REACH:
+	# Sem acerto (ou longe demais), cursor_ray ainda devolve um ponto: aí vale o padrão.
+	if not hit.has("collider") or (hit.position as Vector3).distance_to(user.global_position) > REACH:
 		hit = {}
 	var point := user.global_position + Vector3(dir.x, 0.0, dir.z).normalized() * minf(REACH, 4.0)
 	var normal := Vector3.ZERO

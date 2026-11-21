@@ -1,7 +1,7 @@
 class_name EquipmentUI
 extends Control
 ## Tela de equipamentos (tecla V): as peças vestidas, arrumadas como um corpo, e o
-## painel de status (EquipmentPanel). Separada do inventário (Tab) desde a virada para
+## painel de status (EquipmentPanel). Separada do inventário (B) desde a virada para
 ## RPG. Vestir: clique duplo no item do inventário, ou clique no slot daqui.
 
 var player: Player
@@ -40,7 +40,7 @@ func bind(p: Player) -> void:
 	box.add_child(_panel)
 	_panel.setup(player, true)
 	var hint := Label.new()
-	hint.text = "Clique no slot para vestir/tirar · clique duplo no item do inventário (Tab) veste · [V] fecha"
+	hint.text = "Clique no slot para vestir/tirar · clique duplo no item do inventário (B) veste · [V] fecha"
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.modulate = Color(0.65, 0.65, 0.6)
 	box.add_child(hint)
