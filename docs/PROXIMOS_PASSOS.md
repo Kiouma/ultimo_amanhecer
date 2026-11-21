@@ -131,8 +131,66 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 
 **A decidir:**
 
-- Quais são as habilidades de cada classe e em que níveis elas abrem.
+- Quais são as habilidades de cada classe e em que níveis elas abrem. → **proposta abaixo, a confirmar.**
 - As teclas Q e F (habilidade rápida e segunda habilidade hoje) saem ou ganham outra função?
+
+### Proposta de habilidades por classe (a confirmar — comente aqui)
+
+**Ideia geral:**
+
+- **6 habilidades por classe**, abrindo nos níveis **1, 4, 8, 12, 18 e 25** (todas antes da ascendência no 30). A hotbar tem **5 slots**: a partir do 25 o jogador **escolhe quais 5 usar** (uma fica de fora), o que já dá variação de build. Grimórios de chefe entram nesse mesmo leque.
+- **Todas as classes têm 1 habilidade de movimento** (nível 4), para o combate ficar dinâmico.
+- O **clique esquerdo continua sendo o ataque básico da arma**; as habilidades ficam nas teclas 1 a 5.
+- **Custo:** Mago gasta **mana**; Guerreiro, Arqueiro e Pugilista gastam **stamina** (deixa a Inteligência como atributo do mago e a Destreza/Força úteis para os outros). *Alternativa estilo PoE: todas gastam mana.*
+- **Evolução (1 → 20):** cada nível aumenta o efeito principal (ex.: +6% de dano, +duração). Nos **marcos 5, 10, 15 e 20** (os que pedem material de chefe) a habilidade ganha um **efeito extra** (ex.: +1 projétil, área maior, debuff mais forte).
+- **Ouro (sugestão inicial, ajustável):** desbloquear = 100 × nível de desbloqueio; evoluir para o nível N = 40 × N².
+- **Círculo no chão:** as habilidades marcadas com ◎ mostram o círculo na posição do cursor (até o alcance máximo) e soltam ali no clique.
+
+**Guerreiro** — arma pesada, vida e defesa
+
+| Nível | Habilidade | O que faz | Mecânica/debuff |
+| --- | --- | --- | --- |
+| 1 | **Golpe Pesado** (básica) | Golpe forte com a arma, mais lento e com mais dano. | Empurrão curto |
+| 4 | **Investida** | Avança até o alvo (ou à frente) e bate ao chegar. | Movimento · atordoa 1 s |
+| 8 | **Grito de Guerra** | Grito em volta do personagem. | Inimigos ficam **Vulneráveis** (+25% dano recebido) |
+| 12 | **Corrente de Ferro** | Lança uma corrente no alvo e o puxa até você. | **Puxão** · sangramento |
+| 18 | **Salto Esmagador** ◎ | Salta até o círculo e esmaga o chão. | Área · atordoa |
+| 25 | **Redemoinho** | Gira com a arma enquanto segura a tecla (anda devagar). | Área contínua · **roubo de vida** |
+
+**Arqueiro** — arco, arremesso e velocidade
+
+| Nível | Habilidade | O que faz | Mecânica/debuff |
+| --- | --- | --- | --- |
+| 1 | **Tiro Preciso** (básica) | Flecha carregada que atravessa o primeiro inimigo. | Perfura 1 |
+| 4 | **Rolamento** | Rola para a direção do WASD; invulnerável por um instante. | Movimento · esquiva |
+| 8 | **Flecha Envenenada** | Flecha que envenena o alvo. | **Veneno** (acumula) |
+| 12 | **Disparo Repulsor** | Tiro à queima-roupa que joga o alvo para longe e você para trás. | **Empurrão** · movimento |
+| 18 | **Chuva de Flechas** ◎ | Flechas caem no círculo por alguns segundos. | Área · **lentidão** |
+| 25 | **Saraivada** | Leque de 5 flechas à frente. | Vários alvos · sangramento |
+
+**Mago** — magia, mana e auras
+
+| Nível | Habilidade | O que faz | Mecânica/debuff |
+| --- | --- | --- | --- |
+| 1 | **Dardo de Fogo** (básica) | Projétil de fogo no alvo (já existe). | **Queimadura** |
+| 4 | **Piscar** | Teleporte curto para a direção do cursor/WASD. | Movimento |
+| 8 | **Nova de Gelo** | Explosão de gelo em volta do personagem. | Área · **lentidão** |
+| 12 | **Corrente de Raios** | Raio que salta entre até 3 inimigos (já existe como feitiço). | Atordoamento curto |
+| 18 | **Meteoro** ◎ | Meteoro cai no círculo depois de um instante. | Área grande · queimadura · atordoa |
+| 25 | **Elo Arcano** | No aliado alvo: transfere mana como regeneração. No inimigo: drena mana/vida dele. | **Transferência de mana** · **roubo de mana** |
+
+**Pugilista** — mãos vazias, ritmo e regeneração
+
+| Nível | Habilidade | O que faz | Mecânica/debuff |
+| --- | --- | --- | --- |
+| 1 | **Sequência** (básica) | Combo de 3 socos; o 3º é mais forte. | 3º soco atordoa |
+| 4 | **Passo Veloz** | Avanço rápido que atravessa inimigos e acerta quem estiver no caminho. | Movimento |
+| 8 | **Punhos Vampíricos** | Por alguns segundos, os socos curam. | **Roubo de vida** (buff) |
+| 12 | **Agarrão** | Agarra o alvo, puxa e arremessa no chão. | **Puxão** · atordoa |
+| 18 | **Onda de Choque** | Soco no chão que empurra todos em volta. | Área · **empurrão** |
+| 25 | **Fúria** | Buff: ataques mais rápidos e regeneração maior; cada golpe causa sangramento. | Buff · sangramento |
+
+**Sobre Q e F:** proposta — **saem**. A roda de feitiços do Q some (os feitiços viram as habilidades acima e os grimórios). Teclas livres para depois (ex.: F = poção, Q = troca rápida de arma da seção 16).
 
 ---
 
