@@ -1,19 +1,17 @@
 class_name Weather
 extends Node
-## Clima (GDD 10.3): limpo, chuva, neblina, tempestade e frio extremo.
+## Clima (GDD 10.3): limpo, chuva, tempestade e frio extremo. Sem névoa.
 ## O servidor sorteia um novo clima de tempos em tempos e manda para todos.
 ## Efeitos:
 ## - chuva: abafa sons (zumbis ouvem 30% menos); tempestade: 45% menos, relâmpagos e
 ##   Raio em cadeia 30% mais forte;
-## - neblina: zumbis enxergam 45% menos (e a névoa fecha a sua visão);
 ## - frio extremo: neve e visibilidade menor.
 
 const STATES := {
-	"clear": {"name": "Céu limpo", "weight": 50, "hearing": 1.0, "sight": 1.0, "fog": 1.0},
-	"rain": {"name": "Chuva", "weight": 20, "hearing": 0.7, "sight": 0.85, "fog": 2.0},
-	"fog": {"name": "Neblina", "weight": 14, "hearing": 1.0, "sight": 0.55, "fog": 6.0},
-	"storm": {"name": "Tempestade", "weight": 8, "hearing": 0.55, "sight": 0.75, "fog": 3.0},
-	"cold": {"name": "Frio extremo", "weight": 8, "hearing": 1.0, "sight": 0.9, "fog": 1.6},
+	"clear": {"name": "Céu limpo", "weight": 50, "hearing": 1.0, "sight": 1.0},
+	"rain": {"name": "Chuva", "weight": 20, "hearing": 0.7, "sight": 0.85},
+	"storm": {"name": "Tempestade", "weight": 8, "hearing": 0.55, "sight": 0.75},
+	"cold": {"name": "Frio extremo", "weight": 8, "hearing": 1.0, "sight": 0.9},
 }
 ## Duração de cada clima, em segundos reais.
 const MIN_DURATION := 150.0
@@ -22,9 +20,6 @@ const MAX_DURATION := 360.0
 var state := "clear"
 
 var _timer := 60.0
-var _env: Environment
-var _base_fog_density := 0.0
-var _base_fog_enabled := false
 var _particles: GPUParticles3D
 var _flash: DirectionalLight3D
 var _flash_timer := 8.0
@@ -59,11 +54,6 @@ func display_name() -> String:
 
 func _ready() -> void:
 	add_to_group("weather")
-	var world_env := get_parent().get_node_or_null(^"WorldEnvironment") as WorldEnvironment
-	if world_env:
-		_env = world_env.environment
-		_base_fog_enabled = _env.fog_enabled
-		_base_fog_density = _env.fog_density if _env.fog_enabled else 0.003
 	_flash = DirectionalLight3D.new()
 	_flash.light_color = Color(0.8, 0.85, 1.0)
 	_flash.light_energy = 0.0
@@ -118,7 +108,7 @@ func set_state(new_state: String) -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func _sync(new_state: String) -> void:
-	state = new_state
+	state = new_state if STATES.has(new_state) else "clear"
 	_apply()
 
 
@@ -135,14 +125,10 @@ func _roll() -> String:
 
 
 func _apply() -> void:
-	if _env:
-		var factor := float(STATES[state].fog)
-		_env.fog_enabled = _base_fog_enabled or factor > 1.0
-		_env.fog_density = _base_fog_density * factor
 	if _particles:
 		var mat := _particles.process_material as ParticleProcessMaterial
 		var mode := state
-		if _in_tundra and state in ["clear", "fog"]:
+		if _in_tundra and state == "clear":
 			mode = "cold"  # tundra: neve
 		match mode:
 			"rain", "storm":

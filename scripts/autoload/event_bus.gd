@@ -15,7 +15,7 @@ signal creative_changed(on: bool)
 signal day_started(day: int)
 signal night_started(day: int)
 signal horde_incoming(day: int)
-## Clima mudou (GDD 10.3): "clear", "rain", "fog", "storm", "cold".
+## Clima mudou (GDD 10.3): "clear", "rain", "storm", "cold".
 signal weather_changed(state: String)
 ## Horda começou (número da horda) / terminou (sobreviveram = recompensa entregue).
 signal horde_started(number: int)

@@ -579,7 +579,7 @@ func _build_clock() -> void:
 	_bus(EventBus.day_started, func(d: int) -> void:
 		show_banner.call(tr("Dia %d") % d, Color(1.0, 0.9, 0.6)))
 	_bus(EventBus.weather_changed, func(state: String) -> void:
-		var texts := {"rain": tr("Começou a chover\nos sons ficam abafados"), "fog": tr("A neblina baixou\nninguém enxerga longe"),
+		var texts := {"rain": tr("Começou a chover\nos sons ficam abafados"),
 			"storm": tr("Tempestade!\nraios por toda parte"), "cold": tr("Frio extremo\nfique perto de uma fogueira")}
 		if texts.has(state):
 			show_banner.call(texts[state], Color(0.8, 0.88, 1.0)))
