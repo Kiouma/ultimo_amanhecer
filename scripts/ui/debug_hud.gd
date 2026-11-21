@@ -675,7 +675,7 @@ func _update_boss_bar() -> void:
 	box.visible = boss != null
 	if boss:
 		var h := Health.find_in(boss)
-		_boss_label.text = str(boss.stats.get("name", tr("Chefe")))
+		_boss_label.text = tr("Nv %d  %s") % [int(boss.level), str(boss.stats.get("name", tr("Chefe")))]
 		_boss_bar.max_value = h.max_health
 		_boss_bar.value = h.current
 

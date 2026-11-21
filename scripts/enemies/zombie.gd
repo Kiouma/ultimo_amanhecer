@@ -28,6 +28,9 @@ const ACID := preload("res://scripts/enemies/acid_blob.gd")
 const EXPLOSION_RADIUS := 4.0
 
 @export var zombie_id := "walker"
+## Nível (etapa 8): vem da zona onde nasceu (World.level_at). Vida +15% e dano +8% por
+## nível acima do 1; XP e ouro sobem junto (vêm da vida máxima). Replicado ao nascer.
+@export var level := 1
 
 @export_group("Percepção")
 @export var view_angle_deg := 120.0
@@ -100,6 +103,7 @@ func _ready() -> void:
 	_apply_type_look()
 	if stats.get("boss", false):
 		add_to_group("boss")
+	_build_plate()
 	_home = global_position
 	_wander_wait = randf_range(0.5, 3.0)
 	model.play(&"Zombie_Idle")
@@ -381,6 +385,9 @@ func _start_attack() -> void:
 			var h := Health.find_in(victim)
 			if h:
 				h.take_damage(_stat("damage", 10.0), self)
+				# Debuff do golpe (Goblin sangra, Ogro deixa lento, Espectro envenena...).
+				if stats.has("hit_effect") and victim is Player:
+					StatusEffects.give(victim, str(stats.hit_effect))
 				# Congelado: o golpe deixa a vítima lenta.
 				if stats.has("chill") and victim.has_method(&"apply_chill"):
 					victim.apply_chill(_stat("chill", 0.6), _stat("chill_time", 2.0))
@@ -550,7 +557,7 @@ func _far_from_players() -> bool:
 
 func _on_died(source: Node) -> void:
 	if multiplayer.is_server() and source is Player:
-		source.progression.send_kill_xp(maxf(health.max_health / 5.0, 5.0))
+		source.progression.send_kill_xp(maxf(health.max_health / 5.0, 5.0), level)
 	if multiplayer.is_server():
 		_share_gold(source)
 	# Explosivo morto antes de chegar perto também explode (pune quem luta colado).
@@ -574,8 +581,7 @@ const GOLD_SHARE_RADIUS := 40.0
 
 
 func _share_gold(killer: Node) -> void:
-	var prog := Progression.of(killer)
-	var total := roundi(maxf(health.max_health / 8.0, 2.0) * randf_range(0.8, 1.2) * (1.0 + (prog.server_loot_bonus if prog else 0.0)))
+	var total := roundi(maxf(health.max_health / 8.0, 2.0) * randf_range(0.8, 1.2) * (1.0 + _group_loot_bonus(killer)))
 	var near: Array = []
 	for p: Node in get_tree().get_nodes_in_group("player"):
 		var player := p as Player
@@ -590,8 +596,7 @@ func _share_gold(killer: Node) -> void:
 
 func _drop_loot(killer: Node = null) -> void:
 	var drops: Dictionary = stats.get("drops", {})
-	var prog := Progression.of(killer)
-	var bonus := 1.0 + (prog.server_loot_bonus if prog else 0.0)
+	var bonus := 1.0 + _group_loot_bonus(killer)
 	# Valor < 1 = chance de 1; >= 1 = quantidade garantida (+ chance da fração).
 	for id: String in drops:
 		var value := float(drops[id]) * bonus
@@ -808,7 +813,102 @@ func _is_night() -> bool:
 
 
 func _stat(key: String, default: float) -> float:
-	return float(stats.get(key, default))
+	var value := float(stats.get(key, default))
+	match key:
+		"health": value *= 1.0 + 0.15 * (level - 1)
+		"damage", "spit_damage": value *= 1.0 + 0.08 * (level - 1)
+	return value
+
+
+## Nome mostrado (placa em cima da cabeça, barra de chefe).
+func display_name() -> String:
+	return str(stats.get("name", zombie_id))
+
+
+# --- Placa: nome, nível e barra de vida em cima da cabeça (todas as máquinas) -------------
+
+const PLATE_RANGE := 28.0
+const PLATE_WIDTH := 0.9
+
+var _plate: Node3D
+var _plate_label: Label3D
+var _plate_fill: MeshInstance3D
+var _plate_timer := 0.0
+
+
+func _build_plate() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	_plate = Node3D.new()
+	_plate.position.y = (eyes.position.y if eyes else 1.6) + 0.55 * _stat("scale", 1.0)
+	add_child(_plate)
+	_plate_label = Label3D.new()
+	_plate_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_plate_label.pixel_size = 0.0035
+	_plate_label.font_size = 40
+	_plate_label.outline_size = 10
+	_plate_label.position.y = 0.12
+	_plate_label.text = tr("Nv %d  %s") % [level, display_name()]
+	if stats.get("boss", false):
+		_plate_label.modulate = Color(1.0, 0.75, 0.3)
+	_plate.add_child(_plate_label)
+	_plate.add_child(_bar_quad(PLATE_WIDTH + 0.04, 0.09, Color(0, 0, 0, 0.75), 0.0))
+	_plate_fill = _bar_quad(PLATE_WIDTH, 0.06, Color(0.85, 0.15, 0.12), 0.001)
+	_plate.add_child(_plate_fill)
+	health.changed.connect(func(_c: float, _m: float) -> void: _update_plate_bar())
+	_update_plate_bar()
+	_plate.visible = false
+
+
+func _bar_quad(width: float, height: float, color: Color, depth: float) -> MeshInstance3D:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(width, height)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = color
+	mat.render_priority = 1 if depth > 0.0 else 0
+	quad.material = mat
+	var mi := MeshInstance3D.new()
+	mi.mesh = quad
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
+
+
+## A barra encolhe da direita para a esquerda (o quadrado vai junto para a esquerda).
+func _update_plate_bar() -> void:
+	if _plate_fill == null:
+		return
+	var frac := clampf(health.current / maxf(health.max_health, 1.0), 0.0, 1.0)
+	var quad := _plate_fill.mesh as QuadMesh
+	quad.size.x = maxf(PLATE_WIDTH * frac, 0.001)
+	quad.center_offset.x = -PLATE_WIDTH * (1.0 - frac) * 0.5
+
+
+func _process(delta: float) -> void:
+	if _plate == null:
+		return
+	_plate_timer -= delta
+	if _plate_timer > 0.0:
+		return
+	_plate_timer = 0.25
+	var cam := get_viewport().get_camera_3d()
+	var show := state != State.DEAD and cam != null and cam.global_position.distance_to(global_position) < PLATE_RANGE * (2.0 if stats.get("boss", false) else 1.0)
+	_plate.visible = show
+	if show:
+		# Cor pela diferença de nível para o jogador local: vermelho = bem mais forte.
+		var me := _local_player()
+		if me and not stats.get("boss", false):
+			var gap := level - int(me.progression.char_level)
+			_plate_label.modulate = Color(1.0, 0.4, 0.35) if gap >= 5 else (Color(0.65, 0.65, 0.62) if gap <= -6 else Color.WHITE)
+
+
+func _local_player() -> Player:
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		if p is Player and p.is_local():
+			return p
+	return null
 
 
 ## Cliente: anima a partir do que chegou pela rede.
@@ -833,3 +933,17 @@ func _update_animation() -> void:
 	else:
 		# Ajusta a velocidade da animação ao passo real (~1,1 m/s na animação original).
 		model.play(&"Zombie_Walk_Fwd", clampf(flat_speed / 1.1, 0.6, 2.0))
+
+
+## Magic find em grupo (etapa 8): vale o maior "aumento de loot" entre quem matou e os
+## jogadores vivos a até GOLD_SHARE_RADIUS (itens, peixe-dourado...). Servidor.
+func _group_loot_bonus(killer: Node) -> float:
+	var best := 0.0
+	var prog := Progression.of(killer)
+	if prog:
+		best = prog.server_loot_bonus
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		var player := p as Player
+		if player and not player.health.is_dead and player.global_position.distance_to(global_position) <= GOLD_SHARE_RADIUS:
+			best = maxf(best, player.progression.server_loot_bonus)
+	return best

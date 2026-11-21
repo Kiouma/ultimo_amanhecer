@@ -24,6 +24,9 @@ properties/3/replication_mode = 2
 properties/4/path = NodePath(".:zombie_id")
 properties/4/spawn = true
 properties/4/replication_mode = 0
+properties/5/path = NodePath(".:level")
+properties/5/spawn = true
+properties/5/replication_mode = 0
 
 [node name="Zombie" type="CharacterBody3D" groups=["zombies"]]
 collision_layer = 4

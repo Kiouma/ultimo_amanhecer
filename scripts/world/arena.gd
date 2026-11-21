@@ -197,7 +197,13 @@ func _spawn_zombies() -> void:
 func spawn_zombie(zombie_id: String, pos: Vector3) -> Zombie:
 	var z: Zombie = ZOMBIE_SCENE.instantiate()
 	z.zombie_id = zombie_id
+	z.level = level_at(pos) + (3 if GameData.get_entry("zombies", zombie_id).get("boss", false) else 0)
 	z.position = Vector3(pos.x, ground_height(pos.x, pos.z) + 0.1, pos.z)
 	z.rotation.y = randf() * TAU
 	zombies_root.add_child(z, true)
 	return z
+
+
+## Nível dos monstros num ponto (etapa 8). Arena: sempre 1. O mundo aberto usa zonas.
+func level_at(_pos: Vector3) -> int:
+	return 1

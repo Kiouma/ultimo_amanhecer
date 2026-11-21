@@ -386,7 +386,12 @@ Cada passo termina jogável:
    - **Pesca** nos lagos: com a vara no slot e de frente para a água, "[E] Pescar (força de pesca N)". Lança a linha (boia na água), espera alguns segundos (menos com mais força); quando fisga, **E ou clique em até 1,4 s** pega o peixe (barra mostra o tempo). Andar solta a linha. **Força de pesca** = vara (1 a 4) + isca gasta na lançada (ervas +1, brilhante +2).
    - **5 peixes:** Lambari e Tilápia (comuns), Truta, **Salmão** (força 2+) e **Peixe-dourado** (força 3+), com chance maior quanto maior a força. Cada um é um consumível com buff (regeneração de vida, stamina, mana, vida máxima, loot). **Assar na fogueira** (E na fogueira) dá a versão assada, com efeito maior e mais longo.
    - Peixes podem ser comidos com a vida cheia (os bônus além da regeneração valem sempre); frutas continuam só com a vida abaixo do máximo.
-8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops; magic find em grupo; monstros com debuffs (9, 13, 15).
+8. ✅ **Mundo RPG (feito)** (9, 13, 15):
+   - **Nível dos monstros por zona:** +1 a cada 120 m do começo do mundo, mais bônus do bioma (pântano e tundra +2, montanhas +3, zona contaminada +5); chefes +3. Vida +15% e dano +8% por nível; XP e ouro sobem junto. Monstro mais de 5 níveis abaixo do personagem dá 15% menos XP por nível a mais (mínimo 10%).
+   - **Placa em cima da cabeça:** "Nv 12  Cavaleiro caído" e barra de vida, visível a até 28 m (chefes 56 m). Nome vermelho = 5+ níveis acima de você; cinza = bem abaixo. A barra de chefe do topo mostra o nível.
+   - **Mais inimigos:** densidade ~40% maior por bioma (teto 75) e 3 tipos novos: **Arqueiro esqueleto** (à distância, sangramento), **Cavaleiro caído** (deixa Vulnerável) e o chefe **Rei esqueleto** (invoca). Debuffs nos golpes: Goblin sangra, Ogro deixa lento, Espectro envenena.
+   - **Chefes guardiões:** lugares (ruínas, vilarejos, cabanas) a mais de 250 m do começo têm um chefe (Rei esqueleto, Troll ancião ou Necromante) que aparece quando alguém chega perto; volta depois de 20 min. Continuam o Necromante e o Troll das noites.
+   - **Magic find em grupo:** no drop e no ouro vale o maior aumento de loot entre quem matou e os jogadores vivos a até 40 m.
 9. **Grupo:** party lateral, alvo em aliados, trade e follow (8.1, 10, 11).
 10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1); afixos de roubo de vida/mana, magic find e atributos (15).
 

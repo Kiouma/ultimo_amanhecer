@@ -445,18 +445,27 @@ static func mastery_name(weapon_type: String) -> String:
 
 ## Abate (vem do servidor): XP do personagem.
 @rpc("any_peer", "call_remote", "reliable")
-func award_kill(amount: float) -> void:
+func award_kill(amount: float, monster_level := 0) -> void:
 	if multiplayer.get_remote_sender_id() not in [0, 1]:
 		return
-	gain_character(amount)
+	gain_character(amount * level_gap_factor(monster_level))
+
+
+## XP de abate pela diferença de nível: monstro mais de 5 níveis abaixo do personagem
+## dá 15% a menos por nível a mais (mínimo 10%), para não compensar farmar área fácil.
+func level_gap_factor(monster_level: int) -> float:
+	if monster_level <= 0:
+		return 1.0
+	var gap := char_level - monster_level
+	return 1.0 if gap <= 5 else maxf(0.1, 1.0 - 0.15 * (gap - 5))
 
 
 ## Servidor: manda a XP do abate para o dono deste personagem.
-func send_kill_xp(amount: float) -> void:
+func send_kill_xp(amount: float, monster_level := 0) -> void:
 	if is_multiplayer_authority():
-		gain_character(amount)
+		gain_character(amount * level_gap_factor(monster_level))
 	else:
-		award_kill.rpc_id(get_multiplayer_authority(), amount)
+		award_kill.rpc_id(get_multiplayer_authority(), amount, monster_level)
 
 
 ## Morte (DeathPenalty): perde parte da XP acumulada rumo aos próximos níveis.

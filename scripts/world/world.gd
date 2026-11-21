@@ -60,20 +60,20 @@ const CELL_SIZE := 8.0
 ## População de monstros por região (GDD 10.2): quantos manter perto de cada jogador e
 ## de que tipos (peso), conforme o bioma onde ele está.
 const POPULATION := {
-	"plains": {"target": 5, "types": {"walker": 8, "runner": 1}},
-	"forest": {"target": 7, "types": {"walker": 6, "runner": 2}},
-	"lakeside": {"target": 6, "types": {"walker": 7, "runner": 1}},
-	"lake": {"target": 4, "types": {"walker": 1}},
-	"swamp": {"target": 8, "types": {"walker": 5, "spitter": 2, "runner": 1}},
-	"mountain": {"target": 5, "types": {"walker": 4, "brute": 1, "runner": 1}},
-	"tundra": {"target": 6, "types": {"frozen": 4, "walker": 2}},
-	"contaminated": {"target": 11, "types": {"night_infected": 4, "exploder": 2, "spitter": 2, "brute": 1, "walker": 2}},
+	"plains": {"target": 7, "types": {"walker": 8, "runner": 2, "skeleton_archer": 1}},
+	"forest": {"target": 10, "types": {"walker": 6, "runner": 3, "skeleton_archer": 2}},
+	"lakeside": {"target": 8, "types": {"walker": 7, "runner": 2, "skeleton_archer": 1}},
+	"lake": {"target": 5, "types": {"walker": 1}},
+	"swamp": {"target": 11, "types": {"walker": 5, "spitter": 3, "runner": 1, "fallen_knight": 1}},
+	"mountain": {"target": 8, "types": {"walker": 3, "brute": 2, "runner": 1, "fallen_knight": 2}},
+	"tundra": {"target": 9, "types": {"frozen": 4, "walker": 2, "fallen_knight": 1}},
+	"contaminated": {"target": 14, "types": {"night_infected": 4, "exploder": 2, "spitter": 2, "brute": 1, "walker": 2, "fallen_knight": 2}},
 }
 const POP_INTERVAL := 3.0
 const POP_SPAWN_MIN := 35.0
 const POP_SPAWN_MAX := 60.0
 const POP_DESPAWN := 95.0
-const POP_CAP := 50
+const POP_CAP := 75
 const NIGHT_POP_FACTOR := 1.5
 
 ## Semente do mundo (vem do host pela SeedSync antes do _ready).
@@ -1041,6 +1041,7 @@ func _update_population() -> void:
 	var night := DayNight.find(get_tree()) != null and DayNight.find(get_tree()).is_night()
 	_maybe_necromancer(players, night)
 	_maybe_troll(players, night)
+	_maybe_guardian(players)
 	var spawned := 0
 	for p: Node3D in players:
 		if spawned >= 2:
@@ -1141,3 +1142,45 @@ static func _pick_weighted_rng(weights: Dictionary, rng: RandomNumberGenerator) 
 		if roll <= 0.0:
 			return id
 	return weights.keys()[0]
+
+
+# --- Etapa 8: zonas de nível e chefes guardiões -------------------------------------------
+
+## Biomas mais perigosos somam níveis à zona.
+const BIOME_LEVEL_BONUS := {"swamp": 2, "tundra": 2, "mountain": 3, "contaminated": 5}
+## A cada ZONE_STEP metros do começo do mundo, +1 nível.
+const ZONE_STEP := 120.0
+## Lugares (ruínas, vilarejos, cabanas) a mais de GUARDIAN_MIN_DIST do começo têm um chefe
+## guardião que aparece quando alguém chega perto; volta depois de GUARDIAN_COOLDOWN s.
+const GUARDIAN_MIN_DIST := 250.0
+const GUARDIAN_COOLDOWN := 1200.0
+const GUARDIANS := ["skeleton_king", "colossus", "necromancer"]
+
+var _guardians := {}  # posição do lugar → hora (ms) do último chefe
+
+
+## Nível dos monstros num ponto: distância do começo + bônus do bioma (máximo 80).
+func level_at(pos: Vector3) -> int:
+	var lvl := 1 + int(Vector2(pos.x, pos.z).length() / ZONE_STEP)
+	lvl += int(BIOME_LEVEL_BONUS.get(biome_at(pos.x, pos.z), 0))
+	return clampi(lvl, 1, 80)
+
+
+func _maybe_guardian(players: Array) -> void:
+	var now := Time.get_ticks_msec()
+	for p: Node3D in players:
+		var at := Vector2(p.global_position.x, p.global_position.z)
+		for poi: Dictionary in _pois_near(at.x, at.y):
+			var where: Vector2 = poi.pos
+			if where.length() < GUARDIAN_MIN_DIST:
+				continue
+			var d := at.distance_to(where)
+			if d > 70.0 or d < 20.0 or not is_chunk_ready(where.x, where.y):
+				continue
+			var key := "%d,%d" % [int(where.x), int(where.y)]
+			if now - int(_guardians.get(key, -10000000)) < int(GUARDIAN_COOLDOWN * 1000.0):
+				continue
+			_guardians[key] = now
+			var boss: String = GUARDIANS[absi(hash(key)) % GUARDIANS.size()]
+			spawn_zombie(boss, Vector3(where.x + 3.0, 0.0, where.y + 3.0))
+			return
