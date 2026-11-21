@@ -171,9 +171,9 @@ func aimed_piece(max_distance := 5.0) -> BuildPiece:
 
 
 ## Clique com o martelo: conserta um pedaço da peça na mira. Retorna true se usou.
-func hammer_repair(slot_index: int) -> bool:
+func hammer_repair(hammer: Dictionary) -> bool:
 	var piece := aimed_piece()
-	if not _hammer_ok(slot_index, piece):
+	if not _hammer_ok(hammer, piece):
 		return false
 	var price := Structures.repair_cost(piece)
 	if price.is_empty():
@@ -185,15 +185,15 @@ func hammer_repair(slot_index: int) -> bool:
 	_pay(price)
 	Structures.repair(piece, user, price)
 	user.progression.gain("crafting", 1.0)
-	user.inventory.wear(user.inventory.get_slot(slot_index), 1.0)
+	user.inventory.wear(hammer, 1.0)
 	Network.emit_noise(piece.global_position, BUILD_NOISE * 0.6, user)
 	return true
 
 
 ## R com o martelo: melhora a peça na mira para o próximo material.
-func hammer_upgrade(slot_index: int) -> bool:
+func hammer_upgrade(hammer: Dictionary) -> bool:
 	var piece := aimed_piece()
-	if not _hammer_ok(slot_index, piece):
+	if not _hammer_ok(hammer, piece):
 		return false
 	var next := Structures.next_tier(piece)
 	if next == "":
@@ -206,13 +206,13 @@ func hammer_upgrade(slot_index: int) -> bool:
 	_pay(price)
 	Structures.upgrade(piece, user, price)
 	user.progression.gain("crafting", 4.0)
-	user.inventory.wear(user.inventory.get_slot(slot_index), 2.0)
+	user.inventory.wear(hammer, 2.0)
 	Network.emit_noise(piece.global_position, BUILD_NOISE, user)
 	return true
 
 
-func _hammer_ok(slot_index: int, piece: BuildPiece) -> bool:
-	if Inventory.is_broken(user.inventory.get_slot(slot_index)):
+func _hammer_ok(hammer: Dictionary, piece: BuildPiece) -> bool:
+	if Inventory.is_broken(hammer):
 		user.notify(tr("Martelo quebrado: repare na bancada"))
 		return false
 	if piece == null:

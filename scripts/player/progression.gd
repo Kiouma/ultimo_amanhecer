@@ -69,10 +69,6 @@ var skill_points: int:
 		return maxi(char_level - 1 - passives.size(), 0)
 ## Usos por tipo de arma ("bow", "melee", "spell", "thrown").
 var mastery_uses := {}
-## Habilidades mágicas aprendidas (grimórios): id → nível (1 a MAX_SPELL_LEVEL).
-var spells := {}
-## Última habilidade conjurada (Q rápido conjura ela).
-var last_spell := ""
 
 var _mods := {}
 ## Bônus de auras recebidos agora (o nó Auras calcula pela distância dos aliados).
@@ -416,13 +412,10 @@ func unlock_asc_node(node_id: String) -> bool:
 
 # --- Classe ---------------------------------------------------------------------------
 
-## Classe escolhida no menu: define só o início da árvore passiva. O Mago já conhece a
-## habilidade inicial (sem ela não teria o que conjurar). Os itens o Player entrega.
+## Classe escolhida no menu: define o início da árvore passiva e as habilidades da classe
+## (Skills). Os itens o Player entrega.
 func apply_background(background_id: String) -> void:
 	char_class = background_id
-	for spell: String in GameData.get_entry("backgrounds", background_id).get("spells", []):
-		learn_spell(spell)
-		last_spell = spell
 	_rebuild()
 	changed.emit()
 
@@ -444,26 +437,6 @@ func set_aura_mods(mods: Dictionary) -> void:
 	_rebuild()
 	changed.emit()
 
-
-# --- Habilidades mágicas (grimórios) --------------------------------------------------
-
-const MAX_SPELL_LEVEL := 5
-
-
-## Ler um grimório: aprende (nível 1) ou sobe um nível. Retorna o novo nível (0 = já no máximo).
-func learn_spell(spell_id: String) -> int:
-	var level := int(spells.get(spell_id, 0))
-	if level >= MAX_SPELL_LEVEL:
-		return 0
-	spells[spell_id] = level + 1
-	if last_spell == "":
-		last_spell = spell_id
-	changed.emit()
-	return level + 1
-
-
-func spell_level(spell_id: String) -> int:
-	return int(spells.get(spell_id, 0))
 
 
 static func mastery_name(weapon_type: String) -> String:
@@ -526,6 +499,14 @@ static func on_hit(attacker: Node, target: Node, amount: float, weapon_type: Str
 			prog.gain("stealth", 3.0)
 		prog.gain(prof, 2.0)
 		prog.hit_confirmed.emit(surprise)
+		# Roubo de vida (Punhos Vampíricos, Redemoinho, itens) e sangramento nos golpes (Fúria).
+		var leech := prog.add("life_leech")
+		var health := Health.find_in(attacker)
+		if leech > 0.0 and health and not health.is_dead:
+			health.heal(amount * leech)
+		var bleed := prog.add("bleed_on_hit")
+		if bleed > 0.0 and attacker is Node3D:
+			target.request_status("bleed", 3.0 * bleed, 4.0, attacker)
 	return amount
 
 

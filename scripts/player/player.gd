@@ -102,12 +102,13 @@ var net_class := "":
 		if is_node_ready():
 			model.set_body(str(GameData.get_entry("backgrounds", value).get("model", "knight")))
 
-## Item na mão (id), replicado: os outros veem a arma/ferramenta no modelo.
+## Itens nas mãos ("principal|secundária", ids), replicados: os outros veem a arma,
+## a ferramenta e a arma secundária (escudo, aljava, grimório) no modelo.
 var net_held := "":
 	set(value):
 		net_held = value
 		if is_node_ready():
-			model.set_held_item(value)
+			_show_held(value)
 
 ## Peças de traje vestidas (nomes separados por vírgula), replicadas: todos veem a roupa.
 var net_outfit := "":
@@ -143,7 +144,8 @@ var effects: StatusEffects
 ## Capacete, armadura, calça, botas, luvas, anéis e colar.
 var equipment: Equipment
 ## Roda de habilidades do HUD (Q segurado); o HUD preenche.
-var skill_wheel: SkillWheel
+## Habilidades (teclas 1 a 5, tela K). Etapa 6.
+var skills: Skills
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
@@ -209,9 +211,12 @@ func _ready() -> void:
 	effects = StatusEffects.new()
 	effects.name = "Effects"
 	add_child(effects)
+	skills = Skills.new()
+	skills.name = "Skills"
+	add_child(skills)
 	equipment.changed.connect(_update_outfit)
 	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
-	model.set_held_item(net_held)
+	_show_held(net_held)
 	model.set_outfit(PackedStringArray(net_outfit.split(",", false)))
 	weapons.setup(self, camera, head, inventory)
 	weapons.changed.connect(_update_held)
@@ -235,6 +240,8 @@ func _ready() -> void:
 		if not SaveGame.apply_character(self):
 			_give_starter_kit()
 			_apply_background(SaveGame.character_background())
+		equipment.auto_equip_weapon()  # personagem antigo (arma na hotbar) ou novo
+		skills.ensure_basic()
 		MouseMode.refresh()
 		net_class = progression.char_class  # corpo da classe (salva ou escolhida no menu)
 		camera_yaw = rotation.y
@@ -273,12 +280,19 @@ func _update_outfit() -> void:
 	net_outfit = ",".join(parts)
 
 
-## Arma ou ferramenta selecionada na hotbar (para o modelo em 3ª pessoa e os outros).
+## Arma (slot fixo) e arma secundária vestidas (para o modelo e os outros jogadores).
 func _update_held() -> void:
 	if not is_local():
 		return
-	var item := weapons.selected_item()
-	net_held = str(item.get("id", "")) if not item.is_empty() else ""
+	var main := weapons.selected_item()
+	var off := equipment.get_item("offhand")
+	net_held = "%s|%s" % [str(main.get("id", "")), str(off.get("id", ""))]
+
+
+func _show_held(value: String) -> void:
+	var parts := value.split("|")
+	model.set_held_item(parts[0])
+	model.set_offhand_item(parts[1] if parts.size() > 1 else "")
 
 
 ## Verdadeiro se este é o personagem controlado nesta máquina.
@@ -375,6 +389,10 @@ func _physics_process(delta: float) -> void:
 	var weight := minf(acceleration * delta, 1.0)
 	velocity.x = lerpf(velocity.x, target.x, weight)
 	velocity.z = lerpf(velocity.z, target.z, weight)
+	if Time.get_ticks_msec() < _dash_until:
+		# Investida, rolamento, salto: velocidade fixa, ignora o WASD.
+		velocity.x = _dash_vel.x
+		velocity.z = _dash_vel.z
 
 	move_and_slide()
 
@@ -677,7 +695,7 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 			Weapon.spawn_tracer(self, from, to)
 			Sfx.play("spell", from, -3.0)
 		&"ring":
-			SpellCaster._ring_fx(self, from, from.distance_to(to), color)
+			SkillCaster.ring_fx(self, from, from.distance_to(to), color)
 		&"arrow":
 			Sfx.play("bow", from)
 			var arrow: Node3D = Bow.ARROW.new()
@@ -688,7 +706,7 @@ func _remote_fx(kind: StringName, from: Vector3, to: Vector3, color: Color) -> v
 			arrow.global_position = from
 		&"bolt":
 			Sfx.play("spell", from, -3.0)
-			var bolt: Area3D = SpellCaster.PROJECTILE.new()
+			var bolt: Area3D = SkillCaster.PROJECTILE.new()
 			bolt.visual_only = true
 			bolt.color = color
 			bolt.caster = self
@@ -764,6 +782,58 @@ func _receive_gold(amount: int) -> void:
 		return
 	inventory.add_gold(amount)
 	notify(tr("+%d de ouro") % amount)
+
+
+## Mana vinda de um aliado (Elo Arcano). Chega ao dono do personagem.
+func give_mana(amount: float) -> void:
+	if is_local():
+		mana.restore(amount)
+	elif Network.is_online():
+		_remote_mana.rpc_id(get_multiplayer_authority(), amount)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _remote_mana(amount: float) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		if p.get_multiplayer_authority() == sender and (p as Node3D).global_position.distance_to(global_position) < 60.0:
+			mana.restore(clampf(amount, 0.0, 500.0))
+			notify(tr("+%d de mana (Elo Arcano)") % roundi(amount))
+			return
+
+
+# --- Movimento das habilidades ------------------------------------------------------------
+
+var _dash_vel := Vector3.ZERO
+var _dash_until := 0
+
+
+## Avança com velocidade fixa por `time` segundos (investida, rolamento, salto).
+## invuln: segundos sem levar dano (rolamento). jump: pula junto (Salto Esmagador).
+func start_dash(vel: Vector3, time: float, invuln := 0.0, jump := false) -> void:
+	_dash_vel = Vector3(vel.x, 0.0, vel.z)
+	_dash_until = Time.get_ticks_msec() + int(time * 1000.0)
+	_attack_until = maxi(_attack_until, _dash_until)
+	if jump and is_on_floor():
+		velocity.y = jump_velocity * 1.2
+	if invuln > 0.0 and not creative:
+		health.set_invulnerable(true)
+		get_tree().create_timer(invuln).timeout.connect(func() -> void:
+			if is_instance_valid(self) and not creative:
+				health.set_invulnerable(false))
+
+
+## Teleporte curto (Piscar): para antes de paredes e cai no chão.
+func teleport_toward(dir: Vector3, distance: float) -> void:
+	var chest := global_position + Vector3.UP * 1.0
+	var query := PhysicsRayQueryParameters3D.create(chest, chest + dir * distance, 1 | 8 | 64)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var reach := distance if hit.is_empty() else maxf(chest.distance_to(hit.position) - 0.6, 0.0)
+	var point := global_position + dir * reach
+	var down := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 3.0, point + Vector3.DOWN * 10.0, 1 | 8)
+	var ground := get_world_3d().direct_space_state.intersect_ray(down)
+	global_position = ground.position + Vector3.UP * 0.05 if not ground.is_empty() else point
 
 
 ## Mostra um aviso curto no HUD (só faz sentido no jogador local).

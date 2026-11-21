@@ -10,6 +10,9 @@ const DEFAULT_COMBO := [&"Sword_Regular_A", &"Sword_Regular_B", &"Sword_Regular_
 ## Quantos inimigos um golpe pode acertar de uma vez.
 @export var max_targets := 3
 
+## Empunhadura dupla (duas adagas).
+const DUAL_COMBO := ["Melee_Dualwield_Attack_Slice", "Melee_Dualwield_Attack_Stab", "Melee_Dualwield_Attack_Chop"]
+
 var _combo_index := 0
 var _combo_timer := 0.0
 ## Golpe carregado: segurando o botão.
@@ -85,6 +88,8 @@ func _attack() -> void:
 	cooldown = stat("attack_time", 0.65)
 	_combo_timer = cooldown + 0.6
 	var combo: Array = data.get("combo", DEFAULT_COMBO)
+	if user.equipment and user.equipment.dual_wielding():
+		combo = DUAL_COMBO  # duas armas: golpes com as duas mãos
 	var anim := StringName(combo[_combo_index % combo.size()])
 	var direction := 1.0 if _combo_index % 2 == 0 else -1.0
 	_combo_index = (_combo_index + 1) % combo.size()

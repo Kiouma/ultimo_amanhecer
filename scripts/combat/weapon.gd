@@ -137,6 +137,12 @@ func stat(key: String, default: float) -> float:
 	var value := float(data.get(key, default))
 	if key == "damage":
 		value *= power_multiplier()
+		# Empunhadura dupla: a segunda arma soma parte do dano dela (a velocidade de
+		# ataque a mais vem do Equipment.mods).
+		if weapon_type() == "melee" and user and user.equipment and user.equipment.dual_wielding():
+			var off: Dictionary = user.equipment.get_item("offhand")
+			value += float(GameData.get_item(off.id).get("damage", 0.0)) * Equipment.DUAL_WIELD_DAMAGE \
+				* Inventory.quality_multiplier(off) * Inventory.refine_multiplier(off)
 	elif key == "stamina_cost":
 		value /= quality_multiplier()
 	# Proficiências e habilidades: "melee.damage", "ranged.draw_time", "magic.mana"...

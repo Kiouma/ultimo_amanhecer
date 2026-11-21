@@ -32,10 +32,10 @@ Recursos e saques são raros (madeira caída e pedras são a exceção). Mouse e
 - **Câmera em 3ª pessoa** (estilo RPG de ação): o mouse fica sempre livre; **segure o botão direito** para girar a câmera; **roda do mouse** aproxima/afasta (até 2x a distância padrão).
 - **WASD** anda em relação à câmera e o personagem vira para onde anda. **Shift** corre (gasta stamina), **Ctrl** agacha, **Espaço** pula, **Esc** abre o menu de pausa.
 - **Clique esquerdo** ataca. **Tab** seleciona o inimigo mais próximo como **alvo** (anel vermelho; apertar de novo passa para o próximo); clicar num inimigo também o seleciona. **Arco, magia e arremesso vão sempre no alvo**, segurando ou não o botão direito; sem alvo, pegam sozinhos o inimigo mais próximo. Os tiros voam reto (sem queda), mas batem em paredes e no terreno. Golpes corpo a corpo vão **para onde o personagem está olhando**; segurando o **botão direito**, para onde a **câmera** aponta (o corpo vira para ela). A câmera nunca gira sozinha ao atacar. Atacando, o personagem anda mais devagar; a animação acelera com a velocidade de ataque.
-- **Hotbar:** teclas **1–9** escolhem o slot; o item na mão define o botão esquerdo (arco: segure para puxar e solte; machado; feitiço; comida/poção: usa). Botão direito mira.
-- **Q** tocado conjura a última habilidade; **Q segurado** abre a roda de habilidades (mova o mouse e solte para escolher, sem conjurar).
+- **Arma:** fica no **slot fixo de arma** (Equipamentos, V) e define o botão esquerdo (arco: segure para puxar e solte; machado; cajado: projétil arcano). Sem arma, soco.
+- **Teclas 1 a 5:** as **habilidades** da barra (clicáveis com o mouse). Habilidades de área mostram um **círculo no chão** no cursor: o clique esquerdo (ou a mesma tecla) solta, **Esc** cancela. Redemoinho: segure a tecla. **K** abre a tela de **Habilidades**.
 - **E** interage com o que está sob o cursor (ou o mais perto) (portas, baús, estações); passar por cima de itens pega sozinho.
-- **B** inventário (mochila e fabricação), **V** equipamentos e status, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **T** modo construção.
+- **B** inventário (mochila e fabricação), **V** equipamentos e status, **K** habilidades, **P** personagem (árvore passiva, ascendência, proficiências), **C** auras, **M** mapa, **T** modo construção.
 - **F8** (host) adianta 1 hora; **F10** (host) troca o clima.
 
 O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Projeto > Mapa de Entrada*.
@@ -44,8 +44,8 @@ O mapa completo de teclas (GDD 13.3) está em *Projeto > Configurações do Proj
 
 - **Vida** numa esfera à esquerda e **mana** à direita, enchendo de baixo para cima, com os números. A parte **reservada** por auras aparece escura em cima; o **escudo de energia** é um anel azul claro em volta da esfera de vida.
 - **Stamina** num arco "(" perto da mira (some quando está cheia).
-- **Buffs** (por enquanto as auras que você recebe) como ícones acima da hotbar.
-- **Engrenagem** ao lado da hotbar (com o mouse livre, Alt): arraste as esferas e os buffs, roda do mouse numa esfera muda o tamanho, escolha **esferas** ou **arcos "( )" perto da mira** para vida e mana. Fica salvo.
+- **Buffs** (por enquanto as auras que você recebe) como ícones acima da barra de habilidades.
+- **Engrenagem** ao lado da barra de habilidades: arraste as esferas e os buffs, roda do mouse numa esfera muda o tamanho, escolha **esferas** ou **arcos "( )" perto da mira** para vida e mana. Fica salvo.
 
 ## Configurações
 
@@ -61,19 +61,25 @@ Em **Esc → Configurações** (ou no menu inicial):
 
 Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da árvore passiva, da ascendência, de itens, de auras e da **comida** (frutas silvestres regeneram vida por alguns segundos). **Poções de cura** curam na hora. A madeira se junta no chão (não existe mais graveto).
 
-**Inventário (B):** fabricação nas mãos (ex.: flecha = pena + madeira). **Clique duplo** num item: equipamento vai para o corpo (troca com a peça vestida); arma ou ferramenta vai para a mão.
+**Inventário (B):** fabricação nas mãos (ex.: flecha = pena + madeira). **Clique duplo** num item: arma, ferramenta e equipamento vão para o corpo (trocam com o que estava lá); comida e poção são usadas; livro de habilidade é lido; estação e armadilha são colocadas à frente.
 
-**Estações:** fabrique **Fogueira** e **Bancada** nas mãos, selecione na hotbar e clique para colocar. **E** numa estação abre a tela dela, só com as receitas daquela estação (na bancada, também reparar/refinar/desmontar). Cada receita mostra os recursos como "Madeira 12/5" (o que você tem / o que pede; verde se tem, vermelho se falta) e o botão Fabricar fica verde ou vermelho. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela).
+**Estações:** fabrique **Fogueira** e **Bancada** nas mãos e dê clique duplo nelas no inventário para colocar à frente. **E** numa estação abre a tela dela, só com as receitas daquela estação (na bancada, também reparar/refinar/desmontar). Cada receita mostra os recursos como "Madeira 12/5" (o que você tem / o que pede; verde se tem, vermelho se falta) e o botão Fabricar fica verde ou vermelho. Fabricar entra numa **fila com tempo** (receitas de estação só andam perto dela).
 
 **Base:** **Baú** (guarda 30 pilhas para o grupo) e **Cama** (E: renasce nela).
 
-**Equipamento** (B, à esquerda do inventário, arrumado como um corpo): capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. Embaixo, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
+**Equipamento** (V, arrumado como um corpo): **arma**, **arma secundária**, capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. A **arma secundária** depende da arma principal: **aljava** (só com arco ou besta: mais dano à distância), **escudo** (proteção e menos dano recebido) e **grimório** (dano mágico e mana), estes com armas de uma mão ou cajado; **duas adagas** = **empunhadura dupla** (+25% de velocidade de ataque e metade do dano da segunda adaga somado ao golpe, com animações de duas armas). A **tocha** também vai na secundária. Fora dessas combinações, a secundária fica inativa (aparece em vermelho e a dica diz o motivo). Aljava, escudos e grimório saem na bancada. Ao lado, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
 
 ## Combate e progressão
 
-**Carga** (segurar o botão esquerdo): **melee** carrega o golpe gastando stamina (até 2,5× de dano); o **cajado** canaliza a habilidade queimando toda a mana da barra (efeito até 3×); a **faca de arremesso** ganha força e a **adaga** dá muito mais dano em ataque surpresa. A barra de carga aparece acima da hotbar (inclusive puxando o arco). Armas de longe são só arco e besta.
+**Carga** (segurar o botão esquerdo): **melee** carrega o golpe gastando stamina (até 2,5× de dano); a **faca de arremesso** ganha força e a **adaga** dá muito mais dano em ataque surpresa. A barra de carga aparece acima da barra de habilidades (inclusive puxando o arco). O **cajado** dispara um projétil arcano (sem mana). Armas de longe são só arco e besta.
 
-**Magia:** **grimórios** são lidos (clique) e somem: ensinam uma habilidade, ou sobem o nível dela se você já sabe (até 5). Habilidades: Dardo de fogo, Nova de gelo, Remendar (cura o grupo), Muro de terra e Raio em cadeia. O ícone à esquerda da hotbar mostra a última. A mana regenera 4× mais rápido depois de 3 s sem conjurar nem atacar. A bancada copia grimórios com cristal arcano.
+**Habilidades (K, teclas 1 a 5):** cada classe tem 6, que abrem nos níveis 1, 4, 8, 12, 18 e 25. A básica (nível 1) já vem aprendida; as outras se **desbloqueiam com ouro** (100 × o nível em que abrem). **Evoluir** do nível 1 ao 20 custa ouro (40 × nível²); os níveis **5, 10, 15 e 20** pedem também **Essência de chefe** e dão um **efeito extra**. Cada nível dá +6% de dano/efeito. A barra tem 5 slots: na tela de Habilidades, os botões 1 a 5 de cada habilidade escolhem o slot. Guerreiro, Arqueiro e Pugilista gastam **stamina**; o Mago, **mana**. As habilidades do Arqueiro com flecha pedem arco na mão e gastam 1 flecha.
+- **Guerreiro:** Golpe Pesado (empurra), Investida (até o alvo, atordoa), Grito de Guerra (inimigos Vulneráveis), Corrente de Ferro (puxa, sangramento), Salto Esmagador (círculo, atordoa), Redemoinho (segure: gira, rouba vida).
+- **Arqueiro:** Tiro Preciso (atravessa), Rolamento (esquiva, invulnerável), Flecha Envenenada (veneno acumula), Disparo Repulsor (empurra o alvo e você), Chuva de Flechas (círculo, lentidão), Saraivada (leque, sangramento).
+- **Mago:** Dardo de Fogo (queimadura), Piscar (teleporte), Nova de Gelo (lentidão), Corrente de Raios (salta, atordoa), Meteoro (círculo, cai depois de 1 s), Elo Arcano (drena o inimigo alvo ou passa mana ao aliado mais perto).
+- **Pugilista:** Sequência (3 socos, o último atordoa), Passo Veloz (atravessa e acerta), Punhos Vampíricos (roubo de vida), Agarrão (puxa e atordoa), Onda de Choque (empurra em volta), Fúria (velocidade de ataque, regeneração, golpes que sangram).
+
+**Livros de habilidade** ("Livro de habilidade: X") caem de **chefes** e ensinam **habilidades únicas**, de qualquer classe: **Remendar** (cura o grupo) e **Muro de terra**. Ler de novo sobe 1 nível. Os chefes também soltam **Essência de chefe**. A mana regenera 4× mais rápido depois de 3 s sem conjurar nem atacar.
 
 **Progressão (P):** as proficiências sobem pelo uso (golpear, atirar, conjurar, lutar desarmado, correr, levar dano, agachar perto de monstros, coletar, fabricar) e cada tipo de arma ganha maestria.
 
@@ -86,7 +92,7 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 
 **Ouro:** cai de cada monstro e é dividido entre os jogadores vivos por perto (40 m). Aparece no inventário.
 
-**Buffs e debuffs:** ícones acima da hotbar com o tempo restante (debuffs com borda vermelha). Frutas regeneram vida por 10 s; ficar 10 s perto de uma **fogueira** dá **Descansado** (3 min de regeneração maior e +10% de velocidade). Monstros aplicam **veneno** (ácido), **queimadura** (explosão) e **lentidão** (golpe gelado).
+**Buffs e debuffs:** ícones acima da barra de habilidades com o tempo restante (debuffs com borda vermelha). Frutas regeneram vida por 10 s; ficar 10 s perto de uma **fogueira** dá **Descansado** (3 min de regeneração maior e +10% de velocidade). Monstros aplicam **veneno** (ácido), **queimadura** (explosão) e **lentidão** (golpe gelado).
 
 ## Construção
 

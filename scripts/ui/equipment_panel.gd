@@ -8,7 +8,7 @@ extends VBoxContainer
 ## - Secundários: bônus de conjuntos e efeitos como aumento de loot e capacidade de carga.
 ## Arraste um item do inventário para um slot para vestir; clique num slot cheio para tirar.
 
-const BODY_SIZE := Vector2(260, 300)
+const BODY_SIZE := Vector2(260, 372)
 ## slot → [posição, tamanho] dentro do corpo.
 const LAYOUT := {
 	"head": [Vector2(98, 0), Vector2(64, 64)],
@@ -19,6 +19,8 @@ const LAYOUT := {
 	"hands": [Vector2(8, 186), Vector2(64, 64)],
 	"legs": [Vector2(98, 184), Vector2(64, 108)],
 	"feet": [Vector2(188, 186), Vector2(64, 64)],
+	"weapon": [Vector2(14, 300), Vector2(72, 72)],
+	"offhand": [Vector2(174, 300), Vector2(72, 72)],
 }
 
 var player: Player
@@ -328,7 +330,8 @@ class EquipSlot extends PanelContainer:
 		var data := GameData.get_item(item.id)
 		_label.text = Inventory.display_name_of(item)
 		var broken := Inventory.is_broken(item)
-		_label.add_theme_color_override("font_color", Color(1, 0.55, 0.5) if broken else Color(0.95, 0.95, 0.9))
+		var inactive := slot == "offhand" and panel.player.equipment.offhand_block_reason() != ""
+		_label.add_theme_color_override("font_color", Color(1, 0.55, 0.5) if broken or inactive else Color(0.95, 0.95, 0.9))
 		var tier: Color = Inventory.TIER_COLORS[clampi(int(item.get("q", 1)) - 1, 0, Inventory.TIER_COLORS.size() - 1)]
 		_style.border_color = tier
 		_style.bg_color = Color(tier.r * 0.25, tier.g * 0.25, tier.b * 0.25, 0.9)
@@ -360,6 +363,9 @@ class EquipSlot extends PanelContainer:
 		var box := ItemTooltip.build(item)
 		var hint := Label.new()
 		hint.text = tr("Clique para tirar.")
+		var reason: String = panel.player.equipment.offhand_block_reason() if slot == "offhand" else ""
+		if reason != "":
+			hint.text = tr("Inativa: %s.") % reason + "\n" + hint.text
 		hint.add_theme_font_size_override("font_size", 11)
 		hint.modulate = Color(0.7, 0.7, 0.66)
 		box.get_child(0).add_child(hint)

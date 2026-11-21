@@ -5,7 +5,7 @@ extends Control
 ## Catálogo: clique esquerdo dá 1, direito dá uma pilha cheia. Qualidade e refino
 ## escolhidos valem para armas, ferramentas e equipamentos.
 
-const TYPE_ORDER := ["melee", "thrown", "bow", "tool", "focus", "armor", "ammo", "consumable", "grimoire", "resource", "station", "trap"]
+const TYPE_ORDER := ["melee", "thrown", "bow", "tool", "focus", "offhand", "armor", "ammo", "consumable", "skill_book", "resource", "station", "trap"]
 
 var player: Player
 var _grid: GridContainer
@@ -164,7 +164,7 @@ func _button(parent: Control, text: String, action: Callable) -> void:
 
 static func _type_name(t: String) -> String:
 	return {"melee": TranslationServer.translate("Corpo a corpo"), "thrown": TranslationServer.translate("Arremesso"), "bow": TranslationServer.translate("Arcos e bestas"), "tool": TranslationServer.translate("Ferramentas"), "focus": TranslationServer.translate("Cajados"), "armor": TranslationServer.translate("Equipamentos"),
-		"ammo": TranslationServer.translate("Munição"), "consumable": TranslationServer.translate("Consumíveis"), "grimoire": TranslationServer.translate("Grimórios"), "resource": TranslationServer.translate("Recursos"),
+		"ammo": TranslationServer.translate("Munição"), "consumable": TranslationServer.translate("Consumíveis"), "offhand": TranslationServer.translate("Armas secundárias"), "skill_book": TranslationServer.translate("Livros de habilidade"), "resource": TranslationServer.translate("Recursos"),
 		"station": TranslationServer.translate("Estações e base"), "trap": TranslationServer.translate("Armadilhas")}.get(t, t)
 
 
@@ -274,18 +274,15 @@ func _boost_proficiencies() -> void:
 	player.notify(tr("Proficiências +10"))
 
 
+## Criativo: todas as habilidades da classe e dos livros aprendidas, no nível máximo.
 func _learn_all_spells() -> void:
-	var prog := player.progression
-	for id: String in GameData.get_all("items"):
-		var data := GameData.get_item(id)
-		if str(data.get("type", "")) != "grimoire":
-			continue
-		for spell_id: String in data.get("teaches", []):
-			prog.spells[spell_id] = Progression.MAX_SPELL_LEVEL
-	for spell_id: String in prog.spells:
-		prog.spells[spell_id] = Progression.MAX_SPELL_LEVEL
-	prog.changed.emit()
-	player.notify(tr("Todas as habilidades no nível %d (roda do Q)") % Progression.MAX_SPELL_LEVEL)
+	var skills := player.skills
+	for id: String in skills.class_skills() + GameData.get_all("skills").keys().filter(func(k: String) -> bool: return bool(Skills.data(k).get("book", false))):
+		if skills.level_of(id) <= 0:
+			skills._learn(id)
+		skills.learned[id] = Skills.MAX_LEVEL
+	skills.changed.emit()
+	player.notify(tr("Todas as habilidades no nível %d (tela Habilidades, K)") % Skills.MAX_LEVEL)
 
 
 func _refill() -> void:

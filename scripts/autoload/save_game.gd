@@ -282,8 +282,8 @@ func _capture_character(p: Player, level: Node, old: Dictionary) -> Dictionary:
 		"weakness": {"level": p.death_penalty.level, "time_left": p.death_penalty.time_left},
 		"progression": {"levels": prog.levels, "xp": prog.xp, "char_level": prog.char_level, "char_xp": prog.char_xp,
 			"class": prog.char_class, "passives": prog.passives.keys(), "ascendancy": prog.ascendancy,
-			"asc_nodes": prog.asc_nodes.keys(), "attributes": prog.attributes, "mastery_uses": prog.mastery_uses,
-			"spells": prog.spells, "last_spell": prog.last_spell},
+			"asc_nodes": prog.asc_nodes.keys(), "attributes": prog.attributes, "mastery_uses": prog.mastery_uses},
+		"skills": p.skills.to_save() if p.skills else {},
 		"auras": p.auras.to_save() if p.auras else {},
 	}
 
@@ -301,9 +301,6 @@ func apply_character(p: Player) -> bool:
 		var s: Dictionary = slots[i] if slots[i] is Dictionary else {}
 		if not s.is_empty() and GameData.get_item(str(s.get("id", ""))).is_empty():
 			s = {}  # item que não existe mais (ex.: armas de fogo)
-		elif not s.is_empty() and GameData.get_item(str(s.id)).get("type", "") == "spell":
-			p.progression.spells[str(s.id)] = maxi(int(p.progression.spells.get(str(s.id), 0)), 1)
-			s = {}  # feitiço como item (versão antiga): vira habilidade aprendida
 		if s.has("count"):
 			s.count = int(s.count)
 		p.inventory.slots[i] = s
@@ -334,9 +331,6 @@ func apply_character(p: Player) -> bool:
 	for id: Variant in pd.get("asc_nodes", []):
 		if not prog.ascendancy_node(str(id)).is_empty():
 			prog.asc_nodes[str(id)] = true
-	for key: String in pd.get("spells", {}):
-		prog.spells[key] = int(pd.spells[key])
-	prog.last_spell = str(pd.get("last_spell", prog.last_spell))
 	for key: String in pd.get("mastery_uses", {}):
 		prog.mastery_uses[key] = int(pd.mastery_uses[key])
 	prog._rebuild()
@@ -346,6 +340,8 @@ func apply_character(p: Player) -> bool:
 	if p.has_node(^"Exploration") and data.has("exploration"):
 		(p.get_node(^"Exploration") as Exploration).from_save(data.exploration)
 	p.equipment.from_save(data.get("equipment", {}))
+	if p.skills:
+		p.skills.from_save(data.get("skills", {}))
 	p.creative = bool(data.get("creative", false))
 	var weak: Dictionary = data.get("weakness", {})
 	p.death_penalty.level = int(weak.get("level", 0))

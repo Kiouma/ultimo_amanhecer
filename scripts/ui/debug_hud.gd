@@ -1,5 +1,5 @@
 extends CanvasLayer
-## HUD provisório: vida, stamina, mana, item na mão, hotbar, aviso de interação,
+## HUD provisório: vida, stamina, mana, arma na mão, barra de habilidades, aviso de interação,
 ## tela de inventário (B) e aviso de morte. Visual final do HUD (GDD 13.1) fica para o polimento.
 
 @onready var health_bar: ProgressBar = %HealthBar
@@ -10,11 +10,11 @@ extends CanvasLayer
 @onready var weapon_label: Label = %WeaponLabel
 
 var _weapons: WeaponHolder
-var _hotbar_slots: Array[InventorySlotUI] = []
 var _prompt: Label
 var _inventory_ui: InventoryUI
 var _progression_ui: ProgressionUI
 var _aura_ui: AuraUI
+var _skills_ui: SkillsUI
 var _equipment_ui: EquipmentUI
 ## Telas cheias (inventário, bancada, personagem, auras, mapa, criativo, baú, pausa):
 ## com alguma aberta, o minimapa some.
@@ -113,7 +113,6 @@ func _on_player_spawned(player: Node) -> void:
 	_bind_fps()
 	# Idioma trocado (Esc > Configurações): textos montados no código se refazem.
 	_bus(Settings.changed, func() -> void:
-		_update_hotbar()
 		_update_weapon()
 		if _inventory_ui and _inventory_ui.visible:
 			_inventory_ui._refresh()
@@ -128,10 +127,6 @@ func _on_player_spawned(player: Node) -> void:
 	var channel := ChannelBar.new()
 	channel.player = player
 	add_child(channel)
-	var wheel := SkillWheel.new()
-	wheel.player = player
-	add_child(wheel)
-	player.skill_wheel = wheel
 	var compass := CompassBar.new()
 	compass.player = player
 	add_child(compass)
@@ -156,24 +151,10 @@ func _bind_inventory(player: Player) -> void:
 	strip.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(strip)
-	# Ícone da última habilidade (Q), à esquerda das teclas.
-	var spell_icon := SpellIcon.new()
-	spell_icon.player = player
-	strip.add_child(spell_icon)
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(10, 0)
-	strip.add_child(gap)
-	for i in Inventory.HOTBAR_SIZE:
-		var slot := InventorySlotUI.new()
-		# Clicável com o mouse livre (Alt): escolhe o slot.
-		slot.mouse_filter = Control.MOUSE_FILTER_STOP
-		slot.gui_input.connect(func(e: InputEvent) -> void:
-			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
-				_weapons.select(i)
-				slot.accept_event())
-		slot.setup(player.inventory, i, false, true)
-		strip.add_child(slot)
-		_hotbar_slots.append(slot)
+	# Barra de habilidades (teclas 1 a 5, clicável).
+	var skill_bar := SkillBar.new()
+	strip.add_child(skill_bar)
+	skill_bar.setup(player)
 	# Engrenagem: editor da HUD (clicável com o mouse livre).
 	var gear_gap := Control.new()
 	gear_gap.custom_minimum_size = Vector2(6, 0)
@@ -184,9 +165,6 @@ func _bind_inventory(player: Player) -> void:
 	strip.add_child(gear)
 	# Âncora depois dos slots, para usar o tamanho real da faixa.
 	strip.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 16)
-	player.inventory.changed.connect(_update_hotbar)
-	_weapons.changed.connect(_update_hotbar)
-	_update_hotbar()
 
 	# Aviso de interação, logo abaixo da mira.
 	_prompt = Label.new()
@@ -219,6 +197,10 @@ func _bind_inventory(player: Player) -> void:
 	add_child(_aura_ui)
 	_aura_ui.bind(player)
 
+	_skills_ui = SkillsUI.new()
+	add_child(_skills_ui)
+	_skills_ui.bind(player)
+
 	_map_ui = MapUI.new()
 	add_child(_map_ui)
 	_map_ui.bind(player)
@@ -234,7 +216,7 @@ func _bind_inventory(player: Player) -> void:
 	var pause_menu := PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.bind(player)
-	_screens = [_inventory_ui, _equipment_ui, crafting_ui, _progression_ui, _aura_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
+	_screens = [_inventory_ui, _equipment_ui, crafting_ui, _progression_ui, _aura_ui, _skills_ui, _map_ui, _creative_ui, chest_ui, pause_menu]
 
 
 func _labeled_bar(parent: Control, text: String, color: Color) -> ProgressBar:
@@ -606,7 +588,7 @@ func _build_clock() -> void:
 
 ## Troca de tela pelas abas (Inventário / Personagem / Mapa).
 func open_panel(which: String) -> void:
-	var panels := {"inventory": _inventory_ui, "equipment": _equipment_ui, "character": _progression_ui, "auras": _aura_ui, "map": _map_ui, "creative": _creative_ui}
+	var panels := {"inventory": _inventory_ui, "equipment": _equipment_ui, "character": _progression_ui, "skills": _skills_ui, "auras": _aura_ui, "map": _map_ui, "creative": _creative_ui}
 	var target: Control = panels.get(which)
 	if target == null:
 		return
@@ -615,12 +597,6 @@ func open_panel(which: String) -> void:
 			p.visible = false
 	if not target.visible:
 		target.toggle()
-
-
-func _update_hotbar() -> void:
-	for i in _hotbar_slots.size():
-		_hotbar_slots[i].refresh()
-		_hotbar_slots[i].selected = i == _weapons.selected
 
 
 func _bind_pool(pool: StatPool, bar: ProgressBar) -> void:
@@ -635,9 +611,6 @@ func _bind_pool(pool: StatPool, bar: ProgressBar) -> void:
 
 func _process(delta: float) -> void:
 	_update_resource_hud()
-	# Recarga de feitiço muda a cada frame; o resto atualiza por sinal.
-	if _weapons and _weapons.current() is SpellCaster:
-		_update_weapon()
 	_boss_timer -= delta
 	if _boss_timer <= 0.0:
 		_boss_timer = 0.25
@@ -712,7 +685,7 @@ func _update_weapon() -> void:
 		weapon_label.text = ""
 		return
 	var extra := _weapons.hud_text()
-	weapon_label.text = "[%d] %s" % [_weapons.selected + 1, _weapons.display_name()]
+	weapon_label.text = _weapons.display_name()
 	if extra != "":
 		weapon_label.text += "\n" + extra
 

@@ -67,6 +67,9 @@ var _outfit := PackedStringArray()
 var _hand: Node3D  # onde a arma fica (encaixe da mão direita)
 var _held_id := ""
 var _held_node: Node3D
+var _off_hand: Node3D  # encaixe da mão esquerda (arma secundária)
+var _off_id := ""
+var _off_node: Node3D
 # Rígidos (esqueletos 1.0): peças e estado da animação por código.
 var _parts := {}  # "body", "armLeft", "armRight", "head", "jaw" → MeshInstance3D
 var _rest := {}  # peça → Transform3D de repouso
@@ -98,6 +101,8 @@ func set_body(kind: String) -> void:
 		anim = null
 	_hand = null
 	_held_node = null
+	_off_hand = null
+	_off_node = null
 	_parts.clear()
 	_rest.clear()
 	_current = &""
@@ -122,6 +127,9 @@ func set_body(kind: String) -> void:
 	var held := _held_id
 	_held_id = ""
 	set_held_model(held)
+	var off := _off_id
+	_off_id = ""
+	set_offhand_model(off)
 	play(&"Idle")
 
 
@@ -160,6 +168,12 @@ func _setup_rigged() -> void:
 		attach.bone_name = "handslot.r"
 		skeleton.add_child(attach)
 		_hand = attach
+	var left := skeleton.find_bone("handslot.l")
+	if left >= 0:
+		var attach_l := BoneAttachment3D.new()
+		attach_l.bone_name = "handslot.l"
+		skeleton.add_child(attach_l)
+		_off_hand = attach_l
 
 
 ## Carrega (uma vez) as bibliotecas de animação dos .glb e marca as que repetem.
@@ -188,6 +202,7 @@ func _setup_rigid() -> void:
 				_parts[key] = m
 				_rest[key] = m.transform
 	_hand = _parts.get("armRight")
+	_off_hand = _parts.get("armLeft")
 	_dead_pose = false
 
 
@@ -258,6 +273,39 @@ func set_held_model(model_path: String) -> void:
 		node.rotation = Vector3(deg_to_rad(-25), 0, 0)  # em pé, um pouco para a frente
 	_hand.add_child(node)
 	_held_node = node
+	for mesh: GeometryInstance3D in node.find_children("*", "GeometryInstance3D", true, false):
+		mesh.cast_shadow = _shadow_mode
+
+
+## Arma secundária (escudo, aljava, grimório, segunda adaga) pelo id do item; "" = nada.
+func set_offhand_item(item_id: String) -> void:
+	set_offhand_model(str(GameData.get_item(item_id).get("model", "")) if item_id != "" else "")
+
+
+## Arma secundária na mão esquerda pelo caminho do modelo. A aljava vai nas costas.
+func set_offhand_model(model_path: String) -> void:
+	if model_path == _off_id and (_off_node != null or model_path == ""):
+		return
+	_off_id = model_path
+	if _off_node:
+		_off_node.queue_free()
+		_off_node = null
+	if model_path == "" or _off_hand == null:
+		return
+	var node := WeaponModels.instance(model_path)
+	if node == null:
+		return
+	var parent: Node3D = _off_hand
+	if model_path.ends_with("quiver"):
+		# Aljava: presa no peito, virada para as costas.
+		parent = self
+		node.position = Vector3(0.12, 1.15, 0.18)
+		node.rotation = Vector3(deg_to_rad(15), PI, deg_to_rad(-20))
+	elif not rigged:
+		node.position = Vector3(0, -0.42, 0.08)
+		node.rotation = Vector3(deg_to_rad(-25), 0, 0)
+	parent.add_child(node)
+	_off_node = node
 	for mesh: GeometryInstance3D in node.find_children("*", "GeometryInstance3D", true, false):
 		mesh.cast_shadow = _shadow_mode
 

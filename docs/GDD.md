@@ -365,9 +365,8 @@ Inventário com peso, tela de crafting com filtros, árvore de habilidades, mapa
 | Inventário | B |
 | Equipamentos e status | V |
 | Alvo | Tab (inimigo mais próximo; de novo, o próximo) ou clique esquerdo num inimigo. Arco, magia e arremesso vão sempre no alvo (sem alvo, pegam o mais próximo sozinhos) |
-| Trocar arma | 1 a 9 |
+| Habilidades | 1 a 5 (área: círculo no cursor, clique solta, Esc cancela); K abre a tela de Habilidades |
 | Recarregar | R |
-| Feitiço rápido | Q / F (configurável) |
 | Câmera | Só 3ª pessoa; botão direito segurado gira; roda dá zoom (até 2x) |
 | Modo construção | T (roda = peça, G = material, R = girar, clique = construir, X = desmontar) |
 | Personagem (árvore passiva, ascendência, proficiências) | P |

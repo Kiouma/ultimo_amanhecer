@@ -1,6 +1,6 @@
 [
   {"id":"warrior","model":"knight","name":"Guerreiro","tree_start":"start_warrior","desc":"Começa à esquerda da árvore passiva (corpo a corpo, vida, defesa) · conjunto inicial: Armadura de pedra (pedra, madeira e presas de ogro)"},
   {"id":"archer","model":"ranger","name":"Arqueiro","tree_start":"start_archer","desc":"Começa embaixo da árvore passiva (arco, arremesso, velocidade) · conjunto inicial: Traje de patrulheiro (couro de goblins)"},
-  {"id":"mage","model":"mage","name":"Mago","tree_start":"start_mage","desc":"Começa à direita da árvore passiva (magia, mana, auras) e conhece Dardo de fogo · conjunto inicial: Manto do aprendiz (tecido e pó arcano)","spells":["firebolt"]},
+  {"id":"mage","model":"mage","name":"Mago","tree_start":"start_mage","desc":"Começa à direita da árvore passiva (magia, mana, auras) · conjunto inicial: Manto do aprendiz (tecido e pó arcano)"},
   {"id":"brawler","model":"barbarian","name":"Pugilista","tree_start":"start_brawler","desc":"Começa no topo da árvore passiva (mãos vazias, ritmo, regeneração) · conjunto inicial: Trajes de pugilista (tendões de carniçais)"}
 ]

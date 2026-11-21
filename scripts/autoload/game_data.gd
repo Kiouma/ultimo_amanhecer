@@ -8,7 +8,7 @@ extends Node
 
 const DATA_ROOT := "res://data"
 const CATEGORIES: Array[String] = [
-	"items", "recipes", "zombies", "spells", "proficiencies", "backgrounds", "nodes", "buildings", "passives", "ascendancies", "auras", "effects", "loot", "sets",
+	"items", "recipes", "zombies", "skills", "proficiencies", "backgrounds", "nodes", "buildings", "passives", "ascendancies", "auras", "effects", "loot", "sets",
 ]
 
 var _db: Dictionary = {}
@@ -60,20 +60,10 @@ func get_all(category: String) -> Dictionary:
 	return _db.get(category, {})
 
 
-## Qualquer coisa que pode ocupar um slot de inventário: itens de items/*.json ou
-## feitiços de spells/*.json (feitiço vira um "item" sem peso, do tipo "spell").
-## Retorna {} se o id não existir.
+## Qualquer coisa que pode ocupar um slot de inventário (items/*.json). Retorna {} se o
+## id não existir.
 func get_item(id: String) -> Dictionary:
-	var item := get_entry("items", id)
-	if not item.is_empty():
-		return item
-	var spell := get_entry("spells", id)
-	if not spell.is_empty():
-		var as_item := spell.duplicate()
-		as_item["type"] = "spell"
-		as_item["weight"] = 0.0
-		return as_item
-	return {}
+	return get_entry("items", id)
 
 
 ## Quantos cabem num slot (campo "stack"; armas e ferramentas = 1).

@@ -8,7 +8,8 @@ const TYPE_COLORS := {
 	"consumable": Color(0.85, 0.85, 0.85),
 	"melee": Color(0.5, 0.52, 0.55),
 	"tool": Color(0.6, 0.35, 0.15),
-	"grimoire": Color(0.45, 0.2, 0.6),
+	"skill_book": Color(0.45, 0.2, 0.6),
+	"offhand": Color(0.55, 0.45, 0.3),
 }
 
 var item_id := ""

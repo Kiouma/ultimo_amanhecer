@@ -72,6 +72,14 @@ var _far_check := 0.0
 var _is_far := false
 var _groan_timer := randf_range(3.0, 10.0)
 var _slow_time := 0.0
+## Efeitos das habilidades dos jogadores (só no servidor): atordoado, empurrado/puxado,
+## danos por segundo (veneno, queimadura, sangramento) e Vulnerável.
+var _stun_time := 0.0
+var _knock_vel := Vector3.ZERO
+var _knock_time := 0.0
+var _dots: Array = []  # [tipo, dano por segundo, segundos restantes, fonte]
+var _dot_tick := 0.0
+var _vuln_time := 0.0
 
 @onready var model: CharacterModel = $Model
 @onready var health: Health = $Health
@@ -115,6 +123,9 @@ func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		move_and_slide()
+		return
+	if _update_status(delta):
 		move_and_slide()
 		return
 
@@ -661,7 +672,7 @@ func _update_summon(delta: float) -> void:
 
 @rpc("authority", "call_remote", "unreliable")
 func _fx_summon() -> void:
-	SpellCaster._ring_fx(self, global_position, 5.0, Color(0.6, 0.3, 0.9))
+	SkillCaster.ring_fx(self, global_position, 5.0, Color(0.6, 0.3, 0.9))
 	Sfx.play("spell", global_position + Vector3.UP, 2.0, 0.0)
 
 
@@ -682,6 +693,107 @@ func _request_slow(factor: float, duration: float) -> void:
 				and p.global_position.distance_to(global_position) < 40.0:
 			apply_slow(clampf(factor, 0.0, 1.0), clampf(duration, 0.0, 8.0))
 			return
+
+
+## Efeito de habilidade de um jogador (atordoar, empurrar, puxar, veneno...). Num
+## cliente, pede ao servidor. kind:
+## - "slow": power = fração mais lento (0,4 = 40%); "stun": para tudo por duration s;
+## - "push"/"pull": power = metros (para longe de / até a frente de quem usou);
+## - "poison" (acumula), "burn", "bleed" (o dobro andando): power = dano por segundo;
+## - "vulnerable": power = dano recebido a mais (0,25 = +25%).
+## Chefes sofrem metade do atordoamento e 30% do empurrão.
+func request_status(kind: String, power: float, duration: float, source: Node3D) -> void:
+	if state == State.DEAD or source == null:
+		return
+	if multiplayer.is_server():
+		_apply_status(kind, power, duration, source)
+	elif Network.is_online():
+		_request_status.rpc_id(1, kind, power, duration, source.get_path())
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_status(kind: String, power: float, duration: float, source_path: NodePath) -> void:
+	var source := get_node_or_null(source_path) as Node3D
+	if not multiplayer.is_server() or source == null \
+			or source.get_multiplayer_authority() != multiplayer.get_remote_sender_id() \
+			or source.global_position.distance_to(global_position) > 60.0:
+		return
+	_apply_status(kind, clampf(power, 0.0, 200.0), clampf(duration, 0.0, 20.0), source)
+
+
+func _apply_status(kind: String, power: float, duration: float, source: Node3D) -> void:
+	if state == State.DEAD:
+		return
+	var boss := bool(stats.get("boss", false))
+	var away := Vector3(global_position.x - source.global_position.x, 0.0, global_position.z - source.global_position.z)
+	away = away.normalized() if away.length() > 0.05 else -global_basis.z
+	match kind:
+		"slow":
+			apply_slow(1.0 - clampf(power, 0.0, 0.9), duration)
+		"stun":
+			_stun_time = maxf(_stun_time, duration * (0.5 if boss else 1.0))
+		"push":
+			_knock(away * power * (0.3 if boss else 1.0), 0.25)
+		"pull":
+			var stop := source.global_position + away * 1.4
+			var to := Vector3(stop.x - global_position.x, 0.0, stop.z - global_position.z)
+			_knock(to * (0.3 if boss else 1.0), 0.25)
+		"poison", "burn", "bleed":
+			if kind != "poison":
+				_dots = _dots.filter(func(d: Array) -> bool: return d[0] != kind)
+			elif _dots.filter(func(d: Array) -> bool: return d[0] == "poison").size() >= 10:
+				return
+			_dots.append([kind, power, duration, source])
+		"vulnerable":
+			_vuln_time = maxf(_vuln_time, duration)
+			health.damage_taken_multiplier = 1.0 + clampf(power, 0.0, 1.0)
+	# Quem usou a habilidade vira o alvo.
+	if source is Player and state in [State.WANDER, State.INVESTIGATE]:
+		target = source
+		_last_known_position = source.global_position
+		_time_since_seen = 0.0
+		_set_state(State.CHASE)
+
+
+## Desloca `offset` metros em `time` segundos (empurrão/puxão).
+func _knock(offset: Vector3, time: float) -> void:
+	_knock_vel = offset / time
+	_knock_time = time
+
+
+## Servidor: tempo dos efeitos. Retorna true se a IA fica parada neste quadro
+## (atordoado ou sendo empurrado).
+func _update_status(delta: float) -> bool:
+	if _vuln_time > 0.0:
+		_vuln_time -= delta
+		if _vuln_time <= 0.0:
+			health.damage_taken_multiplier = 1.0
+	if not _dots.is_empty():
+		_dot_tick += delta
+		if _dot_tick >= 0.5:
+			var moving := Vector2(velocity.x, velocity.z).length() > 0.5
+			for d: Array in _dots:
+				d[2] = float(d[2]) - _dot_tick
+				var dmg := float(d[1]) * _dot_tick * (2.0 if d[0] == "bleed" and moving else 1.0)
+				if not health.is_dead:
+					health.take_damage(dmg, d[3] if is_instance_valid(d[3]) else null)
+			_dots = _dots.filter(func(d: Array) -> bool: return float(d[2]) > 0.0)
+			_dot_tick = 0.0
+	if state == State.DEAD:
+		return true
+	if _knock_time > 0.0:
+		_knock_time -= delta
+		velocity.x = _knock_vel.x
+		velocity.z = _knock_vel.z
+		return true
+	if _stun_time > 0.0:
+		_stun_time -= delta
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_attack_timer = maxf(_attack_timer, 0.3)
+		model.play(&"Zombie_Idle")
+		return true
+	return false
 
 
 ## Armadilha: deixa mais lento (factor < 1) ou prende (0) por `duration` segundos.

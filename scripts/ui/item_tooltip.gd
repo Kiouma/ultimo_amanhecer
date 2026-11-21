@@ -6,7 +6,7 @@ class_name ItemTooltip
 const TYPE_NAMES := {
 	"melee": "Arma corpo a corpo", "unarmed": "Desarmado", "bow": "Arma à distância", "thrown": "Arma de arremesso",
 	"focus": "Cajado", "tool": "Ferramenta", "armor": "Equipamento", "consumable": "Consumível", "resource": "Recurso",
-	"ammo": "Munição", "grimoire": "Grimório", "station": "Estação", "trap": "Armadilha", "spell": "Habilidade",
+	"ammo": "Munição", "offhand": "Arma secundária", "skill_book": "Livro de habilidade", "station": "Estação", "trap": "Armadilha",
 }
 
 static var _materials := {}
@@ -58,26 +58,28 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 			lines.append(t("Puxada: %.1f s") % float(data.get("draw_time", 0.8)))
 			lines.append(t("Munição: %s") % GameData.get_item(str(data.get("ammo", "arrow"))).get("name", ""))
 		"focus":
-			lines.append(t("Conjura a habilidade escolhida no Q; segure para canalizar"))
-		"armor":
+			lines.append(t("Dano: %d") % roundi(float(data.get("damage", 0.0)) * power))
+			lines.append(t("Ataque básico: projétil arcano no alvo"))
+		"armor", "offhand":
 			var armor := float(data.get("armor", 0.0)) * power
 			if armor > 0.0:
 				lines.append(t("Proteção: %d") % roundi(armor))
 			var bonus := ProgressionUI.bonus_text(data.get("bonus", {}))
 			if bonus != "":
 				lines.append(bonus)
+			if type == "offhand":
+				lines.append(t(str({"quiver": "Arma secundária: só com arco ou besta", "shield": "Arma secundária: com armas de uma mão",
+					"grimoire": "Arma secundária: com armas de uma mão ou cajado"}.get(str(data.get("offhand", "")), "Arma secundária"))))
 			if str(data.get("set", "")) != "":
 				var set_data := GameData.get_entry("sets", str(data.set))
 				lines.append(t("Conjunto: %s") % "%s (%s)" % [set_data.get("name", data.set), set_data.get("style", "")])
-		"grimoire":
-			var names := PackedStringArray()
-			for spell: String in data.get("teaches", []):
-				names.append(str(GameData.get_item(spell).get("name", spell)))
-			lines.append(t("Ensina: %s") % ", ".join(names))
-			for prof: String in data.get("requires", {}):
-				lines.append(t("Requer: %s %d") % [GameData.get_entry("proficiencies", prof).get("name", prof), int(data.requires[prof])])
+		"skill_book":
+			var skill := Skills.data(str(data.get("teaches", "")))
+			lines.append(t("Ensina a habilidade única %s (ler de novo: +1 nível)") % skill.get("name", data.get("teaches", "")))
+			if str(skill.get("desc", "")) != "":
+				lines.append(str(skill.desc))
 		"station", "trap":
-			lines.append(t("Selecione na hotbar e clique para colocar à frente"))
+			lines.append(t("Clique duplo no inventário para colocar à frente"))
 		"ammo":
 			var users := PackedStringArray()
 			for wid: String in GameData.get_all("items"):

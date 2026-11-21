@@ -32,9 +32,11 @@ signal received(id: String, count: int)
 ## Ouro mudou (valor novo e quanto mudou).
 signal gold_changed(amount: int, delta: int)
 
-const HOTBAR_SIZE := 9
+## A barra de itens (1 a 9) saiu: as teclas 1 a 5 são das habilidades e a arma fica no
+## slot fixo do equipamento. Todos os slots são mochila (0 mantém o código antigo).
+const HOTBAR_SIZE := 0
 
-@export var backpack_size := 24
+@export var backpack_size := 40
 ## Peso máximo em kg. Acima disso o personagem fica lento (ver Player).
 @export var max_weight := 60.0
 

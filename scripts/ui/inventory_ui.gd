@@ -1,6 +1,6 @@
 class_name InventoryUI
 extends Control
-## Tela de inventário (B): mochila, hotbar, peso e fabricação nas mãos (GDD 8 e 13.2).
+## Tela de inventário (B): mochila, peso e fabricação nas mãos (GDD 8 e 13.2).
 ## Equipamento e status ficam na tela própria (V, EquipmentUI).
 ## As estações (fogueira, bancada) têm a própria tela de fabricação (CraftingUI).
 ## Fabricar entra na fila (CraftQueue), que aparece embaixo com progresso e cancelar.
@@ -20,7 +20,7 @@ var _built := false
 var _craft_list: VBoxContainer
 var _craft_title: Label
 var _queue_box: VBoxContainer
-## Slot sob o mouse (-1 = nenhum): apertar 1-9 troca com aquele slot da hotbar.
+## Slot sob o mouse (-1 = nenhum).
 var _hovered := -1
 
 
@@ -41,17 +41,6 @@ func bind(p: Player) -> void:
 			_refresh())
 	player.craft_queue.changed.connect(_refresh_queue)
 	_refresh()
-
-
-func _input(event: InputEvent) -> void:
-	if not visible or player == null or _hovered < 0 or not event is InputEventKey:
-		return
-	for i in Inventory.HOTBAR_SIZE:
-		if event.is_action_pressed("hotbar_%d" % (i + 1)):
-			if _hovered != i:
-				player.inventory.move_slot(_hovered, i)
-			get_viewport().set_input_as_handled()
-			return
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -302,17 +291,8 @@ func _build() -> void:
 	for i in range(Inventory.HOTBAR_SIZE, inv.slots.size()):
 		grid.add_child(_new_slot(i))
 
-	var hotbar_title := Label.new()
-	hotbar_title.text = "Hotbar (teclas 1 a 9)"
-	hotbar_title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.65))
-	vbox.add_child(hotbar_title)
-	var hotbar := HBoxContainer.new()
-	vbox.add_child(hotbar)
-	for i in Inventory.HOTBAR_SIZE:
-		hotbar.add_child(_new_slot(i))
-
 	var help := Label.new()
-	help.text = "Arraste para mover · botão direito divide · mouse em cima + 1-9 troca com a hotbar\nclique duplo veste/equipa · solte fora da janela para jogar no chão · B fecha"
+	help.text = "Arraste para mover · botão direito divide · solte fora da janela para jogar no chão\nclique duplo: equipa, usa, lê ou coloca · B fecha"
 	help.add_theme_font_size_override("font_size", 12)
 	help.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 	vbox.add_child(help)

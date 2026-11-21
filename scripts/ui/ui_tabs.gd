@@ -4,7 +4,7 @@ extends HBoxContainer
 ## clicar troca de tela sem fechar e reabrir. Ficam logo acima do painel da tela
 ## (frame), não no topo da janela. Cada tela adiciona a sua (UITabs.attach) e o HUD troca.
 
-const TABS := [["inventory", "Inventário (B)"], ["equipment", "Equipamentos (V)"], ["character", "Personagem (P)"], ["auras", "Auras (C)"], ["map", "Mapa (M)"], ["creative", "Criativo"]]
+const TABS := [["inventory", "Inventário (B)"], ["equipment", "Equipamentos (V)"], ["character", "Personagem (P)"], ["skills", "Habilidades (K)"], ["auras", "Auras (C)"], ["map", "Mapa (M)"], ["creative", "Criativo"]]
 const GAP := 6.0
 
 var _screen: Control

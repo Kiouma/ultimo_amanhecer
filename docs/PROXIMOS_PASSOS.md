@@ -132,9 +132,9 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 **A decidir:**
 
 - Quais são as habilidades de cada classe e em que níveis elas abrem. → **proposta abaixo, a confirmar.**
-- As teclas Q e F (habilidade rápida e segunda habilidade hoje) saem ou ganham outra função?
+- As teclas Q e F (habilidade rápida e segunda habilidade hoje) saem ou ganham outra função? → **saíram** (etapa 6).
 
-### Proposta de habilidades por classe (a confirmar — comente aqui)
+### Habilidades por classe (implementado na etapa 6; números em `data/skills/skills.json`)
 
 **Ideia geral:**
 
@@ -371,7 +371,14 @@ Cada passo termina jogável:
    - **Buffs e debuffs temporários** (`data/effects`, nó `Effects` do jogador): duração, acúmulos, modificadores e dano por segundo. Debuffs prontos: **veneno** (acumula; o ácido do xamã aplica), **queimadura** (renova; a explosão do diabrete aplica), **sangramento** (dobra andando), **lentidão** (o golpe gelado do draugr agora é esse debuff) e **vulnerável** (+25% de dano recebido). Ícones na barra de buffs com os segundos restantes e os acúmulos; debuffs com borda vermelha.
    - **Comida como buff:** frutas silvestres dão "Frutas silvestres" (3 de vida/s por 10 s, até 3 acúmulos).
    - **Fogueira:** 10 s perto dá **Descansado** por 3 min (+1 de vida/s, +50% de regeneração de mana e stamina, +10% de velocidade), renovando enquanto ficar perto.
-6. **Habilidades:** hotbar de 5, habilidades por classe por nível, evolução com ouro até 20, slot fixo de arma (5); debuffs e mecânicas (puxão, empurrão, stun, roubo de vida/mana, transferência de mana) nas habilidades (15).
+6. ✅ **Habilidades (feito)** (5, 15):
+   - **Arma secundária** (pedido extra): slot fixo de **arma** e de **arma secundária** em Equipamentos (V). **Aljava** (com arco/besta), **escudos** de madeira e ferro e **grimório** equipável (com armas de uma mão ou cajado), **empunhadura dupla** com duas adagas (+25% de velocidade de ataque, metade do dano da segunda somado, animações de duas armas) e tocha. Fora da combinação certa, a secundária fica inativa e mostra o motivo. Aparecem no modelo (aljava nas costas). Receitas na bancada.
+   - **Livros de habilidade** no lugar dos grimórios antigos: "Livro de habilidade: X", só caem de **chefes** (Necromante e Colosso) e ensinam **habilidades únicas** de qualquer classe (Remendar e Muro de terra por enquanto). Os chefes também soltam **Essência de chefe**.
+   - A barra de itens 1–9 saiu: a arma fica no slot fixo; consumíveis, livros e estações se usam com **clique duplo** no inventário (a mochila ficou com 40 slots).
+   - **24 habilidades** (6 por classe, níveis 1/4/8/12/18/25) em `data/skills`, tela **Habilidades (K)**, barra de **5 slots** (teclas 1–5, clicável, com recarga). Desbloquear e evoluir com ouro até o nível 20; marcos 5/10/15/20 pedem Essência de chefe e dão efeito extra. Guerreiro, Arqueiro e Pugilista gastam stamina; o Mago, mana.
+   - **Círculo no chão** para habilidades de área (Salto Esmagador, Chuva de Flechas, Meteoro). Canalização (Redemoinho).
+   - **Mecânicas nos monstros** (servidor): atordoamento, empurrão, puxão, veneno, queimadura, sangramento, lentidão e Vulnerável; **roubo de vida** (buff e Redemoinho) e **transferência de mana** (Elo Arcano). Chefes sofrem metade do atordoamento e 30% do empurrão.
+   - **Q e F saíram** (roda de feitiços e ícone do Q). O cajado agora dispara um projétil arcano básico; a canalização do cajado saiu.
 7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).
 8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops; magic find em grupo; monstros com debuffs (9, 13, 15).
 9. **Grupo:** party lateral, alvo em aliados, trade e follow (8.1, 10, 11).

@@ -203,25 +203,14 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 
-## Clique duplo: equipamento vai para o corpo (substitui a peça vestida, que volta para
-## o inventário); arma/ferramenta vai para a mão (troca com o slot selecionado da hotbar).
+## Clique duplo: usa o item. Equipamento e armas vão para o corpo/mão (o que estava lá
+## volta para o inventário); consumível é usado; livro de habilidade é lido; estação e
+## armadilha são colocadas à frente (WeaponHolder.use_item).
 func equip_from_slot() -> void:
-	var s := inventory.get_slot(index)
 	var player := inventory.get_parent() as Player
-	if s.is_empty() or player == null:
+	if inventory.get_slot(index).is_empty() or player == null:
 		return
-	var type := str(GameData.get_item(s.id).get("type", ""))
-	if type == "armor":
-		if player.equipment.equip_from_inventory(index):
-			player.notify(tr("Vestiu: %s") % GameData.get_item(s.id).get("name", s.id))
-		return
-	if type in ["melee", "bow", "thrown", "focus", "tool", "station", "trap"]:
-		if index < Inventory.HOTBAR_SIZE:
-			player.weapons.select(index)
-			return
-		var target: int = player.weapons.selected
-		inventory.move_slot(index, target)
-		player.weapons.select(target)
+	player.weapons.use_item(index)
 
 
 func _make_label(size: int, color: Color) -> Label:

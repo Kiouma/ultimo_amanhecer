@@ -10,6 +10,10 @@ var direction := Vector3.FORWARD
 var caster: Node
 var color := Color(1.0, 0.45, 0.1)
 var visual_only := false
+## Tipo para o Progression.on_hit ("spell" usa a resistência a magia do monstro).
+var weapon_type := "spell"
+## Chamado (na máquina de quem disparou) com o alvo atingido: efeitos das habilidades.
+var on_hit: Callable
 
 var _age := 0.0
 ## Evita acertar duas vezes no mesmo frame (raio + sinal de colisão).
@@ -63,7 +67,9 @@ func _explode(target: Object, at: Vector3) -> void:
 	if target is Node and not visual_only:
 		var health := Health.find_in(target)
 		if health and not health.is_dead:
-			health.take_damage(Progression.on_hit(caster, target, damage, "spell"), caster)
+			health.take_damage(Progression.on_hit(caster, target, damage, weapon_type), caster)
+			if on_hit.is_valid():
+				on_hit.call(target)
 	var burst := Weapon.sphere(0.2, color, Vector3.ZERO, true)
 	get_tree().current_scene.add_child(burst)
 	burst.global_position = at

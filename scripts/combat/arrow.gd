@@ -18,6 +18,11 @@ var weapon_type := "bow"
 var sneak_mult := 1.0
 var visual_only := false
 var max_lifetime := 6.0
+## Atravessa esse número de inimigos (Tiro Preciso).
+var pierce := 0
+## Chamado (na máquina de quem disparou) com o alvo atingido: efeitos das habilidades.
+var on_hit: Callable
+var _passed: Array[RID] = []
 
 var _age := 0.0
 var _stuck := false
@@ -43,7 +48,9 @@ func _physics_process(delta: float) -> void:
 	var step := velocity * delta
 	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + step, 1 | 4 | 8 | 64)
 	if caster is CollisionObject3D:
-		query.exclude = [caster.get_rid()]
+		var skip: Array[RID] = [caster.get_rid()]
+		skip.append_array(_passed)
+		query.exclude = skip
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		global_position += step
@@ -62,6 +69,14 @@ func _on_hit(target: Object, at: Vector3) -> void:
 				amount *= HEADSHOT_MULTIPLIER * (caster.progression.mult("headshot_damage") if caster is Player else 1.0)
 			amount = Progression.on_hit(caster, target, amount, weapon_type, sneak_mult)
 			health.take_damage(amount, caster)
+			if on_hit.is_valid():
+				on_hit.call(target)
+		if pierce > 0 and target is CollisionObject3D:
+			# Atravessa: segue voando e ignora quem já acertou.
+			pierce -= 1
+			_passed.append((target as CollisionObject3D).get_rid())
+			global_position += velocity.normalized() * 0.3
+			return
 		queue_free()
 		return
 	# Cravou no cenário: fica um tempo e talvez dê para recuperar.

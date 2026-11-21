@@ -22,8 +22,8 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 	["crossbow", 1], ["bolt", 10],
 	["cloth", 5], ["herbs", 6], ["scrap_metal", 4],
 	["spear_wood", 1], ["torch", 1],
-	# Grimórios (GDD 12: descoberta). Outros saem na bancada com cristal arcano.
-	["grimoire_life", 1], ["grimoire_frost", 1],
+	# Livros de habilidade (só caem de chefes; aqui para testar) e armas secundárias.
+	["book_mend", 1], ["book_earth_wall", 1], ["shield_wood", 1], ["quiver_leather", 1], ["dagger", 2], ["boss_essence", 3],
 ]
 @export var loot_radius := 14.0
 ## Recursos coletáveis (id em data/nodes/nodes.json) → quantidade.

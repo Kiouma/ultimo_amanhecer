@@ -76,7 +76,7 @@ func _ready() -> void:
 	_status.modulate = Color(0.7, 1.0, 0.7)
 	_main_box.add_child(_status)
 	var help := Label.new()
-	help.text = "B inventário · Tab alvo · P personagem · M mapa · T construir\nE usar · R girar/melhorar · Q habilidade (segure: escolher) · V equipamentos"
+	help.text = "B inventário · V equipamentos · K habilidades · P personagem · C auras · M mapa · T construir\n1 a 5 habilidades · Tab alvo · E usar · R girar/melhorar"
 	help.add_theme_font_size_override("font_size", 11)
 	help.modulate = Color(0.75, 0.75, 0.72)
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
