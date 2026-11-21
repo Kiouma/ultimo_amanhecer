@@ -67,9 +67,11 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 
 **Base:** **Baú** (guarda 30 pilhas para o grupo) e **Cama** (E: renasce nela).
 
-**Coleta:** árvores pedem um **machado** e rochas/cristais uma **picareta** nos slots de ferramenta (Equipamentos, V). Perto do recurso, **E** começa a coleta (o tempo aparece no aviso e numa barra); andar, pular ou atacar cancela. No fim sai tudo de uma vez. Ferramentas têm 4 níveis (pedra → ferro → aço → arcano), cada um mais rápido e rendendo mais; o upgrade é na bancada (ferramenta anterior + recursos; aço e arcano pedem Essência de chefe). Arbustos, ervas, ninhos, galhos e pedras soltas continuam sendo colhidos com E na hora.
+**Coleta:** árvores pedem um **machado** e rochas/cristais uma **picareta** nos slots de ferramenta (Equipamentos, V). Perto do recurso, **E** começa a coleta (o tempo aparece no aviso e numa barra); andar, pular ou atacar cancela. No fim sai tudo de uma vez. Ferramentas têm 4 níveis (pedra → ferro → aço → arcano), cada um mais rápido e rendendo mais; o upgrade é na **Upgrading Machine** (ferramenta anterior + recursos; aço e arcano pedem Essência de chefe). Arbustos, ervas, ninhos, galhos e pedras soltas continuam sendo colhidos com E na hora.
 
 **Pesca:** com a **vara de pesca** no slot, de frente para um lago, **E** lança a linha. Quando o peixe fisga, aperte **E** (ou clique) rápido. A **força de pesca** (vara + isca gasta na lançada) traz peixes mais raros: Lambari, Tilápia, Truta, Salmão e Peixe-dourado. Peixes são comida com buff; **asse na fogueira** para um efeito maior.
+
+**Afixos e Upgrading Machine:** todo equipamento fabricado (armas, armas secundárias, armaduras, joias e ferramentas) tem **6 slots de afixo** (3 prefixos e 3 sufixos) e já sai da fabricação com **1 a 6 abertos**, cada um com um bônus sorteado (vida, dano, velocidade de ataque, regeneração, atributos, magic find, velocidade de coleta...). A **Upgrading Machine** (feita na bancada) abre slots fechados, re-sorteia os afixos, **refina** (o refino saiu da bancada), sobe a **qualidade** até Q5 e **melhora ferramentas** (pedra → ferro → aço → arcano).
 
 **Equipamento** (V, arrumado como um corpo): **arma**, **arma secundária**, capacete, armadura, calça, botas, luvas, 2 anéis e colar; arraste uma peça para o slot, clique no slot ou dê clique duplo no item. A **arma secundária** depende da arma principal: **aljava** (só com arco ou besta: mais dano à distância), **escudo** (proteção e menos dano recebido) e **grimório** (dano mágico e mana), estes com armas de uma mão ou cajado; **duas adagas** = **empunhadura dupla** (+25% de velocidade de ataque e metade do dano da segunda adaga somado ao golpe, com animações de duas armas). A **tocha** também vai na secundária. Fora dessas combinações, a secundária fica inativa (aparece em vermelho e a dica diz o motivo). Aljava, escudos e grimório saem na bancada. Ao lado, o painel de status: **Primários** (vida, stamina, mana e regenerações, redução de recarga, velocidade, velocidade de ataque, resistência a dano e a magia, dano por tipo) e **Secundários** (bônus de conjuntos, aumento de loot, capacidade de carga e outros). Quatro conjuntos, um por estilo: **Caçador** (arqueiro), **Guerreiro** (corpo a corpo e tanque), **Arcano** (magia) e **Sombra** (furtividade); vestir 2, 4 e 6 peças do mesmo conjunto dá bônus extras.
 
@@ -112,7 +114,7 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 
 **Clima:** chuva (abafa sons), neblina (ninguém enxerga longe), tempestade (raios) e frio extremo (neve).
 
-**Monstros:** carniçais, goblins, ogros, xamãs goblins, espectros noturnos, diabretes flamejantes e draugrs gélidos, conforme a região. Chefes: o **Necromante** surge nas ruínas à noite e o **Troll ancião** desce das montanhas à noite.
+**Monstros:** carniçais, goblins, ogros, xamãs goblins, arqueiros esqueletos, cavaleiros caídos, espectros noturnos, diabretes flamejantes e draugrs gélidos, conforme a região. Cada um tem **nome, nível e barra de vida** em cima da cabeça (nome vermelho = bem mais forte que você). O **nível** sobe com a distância do começo do mundo (+1 a cada 120 m) e nos biomas perigosos; vida, dano, XP e ouro sobem junto. Matar monstros muito abaixo do seu nível dá menos XP. Alguns golpes deixam debuffs (goblin sangra, ogro deixa lento, espectro envenena, cavaleiro deixa Vulnerável). **Chefes:** o **Necromante** surge nas ruínas à noite, o **Troll ancião** desce das montanhas à noite, e os lugares longe do começo têm um **chefe guardião** (Rei esqueleto, Troll ou Necromante) que aparece quando você chega perto. Chefes soltam Essência de chefe e livros de habilidade. **Magic find em grupo:** no drop vale o maior aumento de loot entre os jogadores perto.
 
 **Desempenho:** o terreno, a posição das árvores e pedras, as imagens do mapa e os caminhos dos monstros são calculados em segundo plano (threads); recursos e construções entram e saem aos poucos, com limite de tempo por quadro. Correndo pelo mundo, o pior quadro medido fica em ~24 ms (antes chegava a 690 ms).
 
@@ -121,6 +123,8 @@ Não há fome nem sede. A vida **não regenera sozinha**: a regeneração vem da
 O jogo salva sozinho a cada 2 minutos, ao fechar a janela e pelo menu de pausa (**Esc**). O host salva o mundo (construções, itens no chão, regiões já geradas, dia, clima); cada jogador salva o próprio personagem (inventário, progressão), que pode ser levado para o mundo de um amigo. Saves ficam em `user://worlds/` e `user://characters/` (o save antigo vira "Mundo 1" e "Personagem 1").
 
 ## Multiplayer
+
+**Em grupo:** com 2 ou mais jogadores aparece a **barra da party** à esquerda (nome, nível, vida, stamina e mana de cada um). Clique no quadro de um aliado (ou no aliado no mundo) para **selecioná-lo** (anel verde: Remendar e Elo Arcano vão nele), **trocar itens** (janela com as duas ofertas, itens e ouro; os dois confirmam; até 10 m) ou **segui-lo** (anda sozinho atrás dele desviando de obstáculos; ande para parar).
 
 ### No mesmo PC
 
@@ -187,6 +191,6 @@ Concluídas: **1. Núcleo** (monstros que perseguem, arco/machado/dardo de fogo,
 
 Feito depois: **árvore passiva, ascendência e auras** (substituem as trilhas de habilidades). Próximo em crafting: **afixos** (6 slots, 3 prefixos e 3 sufixos, de 1 a 6 abertos ao fabricar) e a estação **Upgrading Machine** (slots, refino e qualidade), GDD 8.4.
 
-Próxima virada: **RPG de exploração** (sem fome/sede, hotbar de habilidades, HUD nova, inimigos com nível). Plano em [docs/PROXIMOS_PASSOS.md](docs/PROXIMOS_PASSOS.md).
+Virada para **RPG de exploração**: as 10 etapas do plano estão feitas (auras, telas e HUD, ouro e morte, habilidades por classe, coleta e pesca, mundo com níveis e chefes, grupo e troca, afixos e Upgrading Machine). Detalhes e próximas ideias em [docs/PROXIMOS_PASSOS.md](docs/PROXIMOS_PASSOS.md).
 
 Mudança de rumo: o jogo deixou o tema de zumbis e virou **fantasia com monstros**; as hordas e as armas de fogo saíram. Próxima: **9. Expansão** (mais conteúdo de fantasia). Detalhes no GDD, seção 17.

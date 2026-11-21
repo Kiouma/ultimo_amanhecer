@@ -6,6 +6,7 @@
   { "id": "craft_campfire", "result": "campfire", "amount": 1, "station": "hands", "time": 4, "ingredients": { "stone": 5, "wood": 5 } },
   { "id": "craft_workbench", "result": "workbench", "amount": 1, "station": "hands", "time": 8, "ingredients": { "wood": 8, "stone": 4 } },
   { "id": "craft_chest", "result": "chest", "amount": 1, "station": "hands", "time": 6, "ingredients": { "wood": 10 } },
+  { "id": "craft_upgrading_machine", "result": "upgrading_machine", "amount": 1, "station": "workbench", "time": 15, "ingredients": { "scrap_metal": 12, "stone": 10, "wood": 6, "arcane_crystal": 2 } },
   { "id": "craft_bed", "result": "bed", "amount": 1, "station": "workbench", "time": 10, "ingredients": { "wood": 6, "cloth": 4 } },
   { "id": "craft_spike_trap", "result": "spike_trap", "amount": 1, "station": "workbench", "time": 6, "ingredients": { "wood": 6 } },
   { "id": "craft_jaw_trap", "result": "jaw_trap", "amount": 1, "station": "workbench", "time": 8, "ingredients": { "scrap_metal": 3, "wood": 2 } },

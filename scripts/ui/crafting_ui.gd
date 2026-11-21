@@ -84,8 +84,8 @@ func _exit_tree() -> void:
 
 
 func _on_station_opened(s: Node, who: Node) -> void:
-	if who != player or not s is CraftingStation:
-		return
+	if who != player or not s is CraftingStation or s.station == "upgrading_machine":
+		return  # a Upgrading Machine tem tela própria (UpgradeUI)
 	station = s
 	if inventory_ui.visible:
 		inventory_ui.toggle()

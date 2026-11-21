@@ -397,7 +397,10 @@ Cada passo termina jogável:
    - **Alvo aliado:** clique no aliado no mundo ou no quadro (anel verde). **Remendar** vai inteiro nele (+30%) se estiver a até 25 m; sem aliado selecionado, cura em volta como antes. **Elo Arcano** passa mana ao aliado selecionado (senão, drena o inimigo alvo ou passa ao aliado mais perto).
    - **Seguir:** anda sozinho atrás do aliado pelo mapa de navegação (desvia de obstáculos), parando a 3 m; qualquer tecla de movimento cancela.
    - **Troca:** convite (o outro aceita ou recusa), janela com as duas ofertas (itens do inventário e ouro), os dois confirmam e cada lado entrega o que ofereceu; mudar a oferta tira as confirmações. Só a até 10 m; se afastar ou morrer cancela. Testado com host e cliente na mesma máquina.
-10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1); afixos de roubo de vida/mana, magic find e atributos (15).
+10. ✅ **Afixos e Upgrading Machine (feito)** (12, 6.1, 15):
+   - **Afixos** (`data/affixes`): todo equipamento fabricado (arma, arma secundária, armadura, joia, ferramenta) tem **6 slots: 3 prefixos** (vida, mana, escudo, stamina, dano por tipo, roubo de vida, menos dano recebido, rendimento de coleta) e **3 sufixos** (velocidade de ataque/movimento, regenerações, redução de recarga, resistência a magia, magic find, atributos, velocidade de coleta, força de pesca). Ao fabricar, abrem **1 a 6** (qualidade e Crafting puxam para cima); cada um com valor sorteado numa faixa e sem repetir a mesma chave. Somam nos bônus do personagem (inclusive a arma e as ferramentas vestidas). Aparecem na dica do item.
+   - **Upgrading Machine** (estação nova, feita na bancada): **abrir slot** (ouro + Pó arcano, sobe a cada slot), **re-sortear afixos** (250 de ouro + 1 Cristal arcano), **refinar** (o refino saiu da bancada e veio para cá), **qualidade** Q→Q+1 até Q5 (ouro + 3 pedras de refino da raridade da qualidade atual) e **melhorar ferramenta** (as receitas de upgrade de machado, picareta e vara passaram para cá). Funciona com itens vestidos e do inventário (o upgrade de ferramenta pede a ferramenta no inventário).
+   - Sem chance de falha, exceto o refino (como antes).
 
 ---
 

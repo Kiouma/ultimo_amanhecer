@@ -108,14 +108,14 @@ func _enqueue(recipe: Dictionary, times: int) -> void:
 ## Bancada: reparar (durabilidade cheia) e desmontar (recupera materiais) itens do inventário.
 func add_repair_section(target: Control) -> void:
 	var header := Label.new()
-	header.text = "Reparar, refinar e desmontar"
+	header.text = "Reparar e desmontar (refino: Upgrading Machine)"
 	header.add_theme_color_override("font_color", Color(0.95, 0.8, 0.45))
 	target.add_child(header)
 	var inv := player.inventory
 	var any := false
 	for i in inv.slots.size():
 		var s := inv.get_slot(i)
-		if not (Repair.is_repairable(s) or Repair.is_salvageable(s) or Refine.can_be_refined(s)):
+		if not (Repair.is_repairable(s) or Repair.is_salvageable(s)):
 			continue
 		any = true
 		var row := VBoxContainer.new()
@@ -132,8 +132,7 @@ func add_repair_section(target: Control) -> void:
 		info.add_child(title)
 		var cost := Repair.repair_cost(s)
 		var details := Label.new()
-		var refine_text := tr("máximo") if Refine.is_maxed(s) else tr("+%d: %d× %s, %d%% de chance") % [Inventory.refine_of(s) + 1, Refine.cost(s), str(GameData.get_item(Refine.stone_for(s)).get("name", "")).to_lower(), roundi(Refine.chance(s) * 100.0)]
-		details.text = "reparo: %s · refino: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", refine_text if Refine.can_be_refined(s) else "—", Repair.describe(Repair.salvage_result(s))]
+		details.text = "reparo: %s · desmontar dá: %s" % [Repair.describe(cost) if not cost.is_empty() else "—", Repair.describe(Repair.salvage_result(s))]
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color(0.6, 0.6, 0.55))
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -144,17 +143,6 @@ func add_repair_section(target: Control) -> void:
 		repair_button.disabled = not Repair.can_repair(inv, s)
 		repair_button.pressed.connect(func() -> void: Repair.repair(player.inventory, s))
 		actions.add_child(repair_button)
-		var refine_button := Button.new()
-		refine_button.text = "Refinar"
-		refine_button.tooltip_text = "+5% de dano/eficiência por nível (até +21). Pode falhar (as pedras se perdem, o nível fica).\nPedras: +1~5 comum, +6~10 incomum, +11~15 rara, +16~20 épica, +21 lendária.\nCinco pedras viram uma de nível acima, aqui na bancada."
-		refine_button.disabled = not Refine.can_refine(inv, s)
-		refine_button.pressed.connect(func() -> void:
-			var result := Refine.refine(player.inventory, s)
-			if result == Refine.Result.SUCCESS:
-				player.notify(tr("Refino deu certo: %s") % Inventory.display_name_of(s))
-			elif result == Refine.Result.FAILED:
-				player.notify(tr("O refino falhou (as pedras se perderam)")))
-		actions.add_child(refine_button)
 		var salvage_button := Button.new()
 		salvage_button.text = "Desmontar"
 		salvage_button.disabled = Repair.salvage_result(s).is_empty()

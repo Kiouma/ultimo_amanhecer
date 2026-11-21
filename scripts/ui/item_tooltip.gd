@@ -96,6 +96,7 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 					users.append(str(GameData.get_entry("items", wid).get("name", wid)))
 			if not users.is_empty():
 				lines.append(t("Usada por: %s") % ", ".join(users))
+	lines.append_array(Affixes.lines(s))  # afixos (etapa 10)
 	if str(data.get("desc", "")) != "":
 		lines.append(str(data.desc))
 	return lines

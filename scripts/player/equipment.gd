@@ -236,6 +236,15 @@ func mods() -> Dictionary:
 			out[key] = float(out.get(key, 0.0)) + float(bonus[key])
 	if dual_wielding():
 		out["attack_speed"] = float(out.get("attack_speed", 0.0)) + DUAL_WIELD_SPEED
+	# Afixos (etapa 10) de tudo o que está vestido e inteiro, inclusive arma e ferramentas
+	# (a arma secundária só se estiver valendo).
+	for slot: String in items:
+		var item: Dictionary = items[slot]
+		if Inventory.is_broken(item) or (slot == "offhand" and not offhand_active()):
+			continue
+		var aff := Affixes.mods_of(item)
+		for key: String in aff:
+			out[key] = float(out.get(key, 0.0)) + float(aff[key])
 	var counts := set_counts()
 	for set_id: String in counts:
 		var tiers: Dictionary = GameData.get_entry("sets", set_id).get("bonus", {})

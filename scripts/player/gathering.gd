@@ -54,7 +54,7 @@ func gather_speed(tool: Dictionary) -> float:
 		return 1.0
 	var survival := _player.progression.get_level("survival") if _player else 1
 	return float(GameData.get_item(tool.id).get("gather_speed", 1.0)) * Inventory.quality_multiplier(tool) \
-		* (1.0 + 0.01 * (survival - 1))
+		* (1.0 + 0.01 * (survival - 1)) * _player.progression.mult("gather_speed")
 
 
 ## Rendimento (quanto sai): tipo × refino × "gather_yield" (árvore, itens).
@@ -73,7 +73,7 @@ func fishing_power() -> int:
 	if rod.is_empty():
 		return 0
 	var bait := _cast_power if mode in [Mode.FISH_WAIT, Mode.FISH_BITE] else int(_best_bait()[1])
-	return int(GameData.get_item(rod.id).get("fishing_power", 1)) + bait
+	return int(GameData.get_item(rod.id).get("fishing_power", 1)) + bait + int(_player.progression.add("fishing_power_add"))
 
 
 ## [id, força] da melhor isca no inventário (["", 0] se não tem).

@@ -8,7 +8,7 @@ extends Node
 ## Os extras acompanham o item ao soltar, ir para a bag e ser pego de novo.
 
 ## Chaves de estado do item que viajam com ele.
-const EXTRA_KEYS := ["dur", "mag", "q", "r"]
+const EXTRA_KEYS := ["dur", "mag", "q", "r", "aff"]
 
 ## Qualidade (GDD 8.3): cada nível acima de 1 dá +12% em dano, durabilidade e eficiência.
 const QUALITY_STEP := 0.12

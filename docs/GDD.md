@@ -252,9 +252,9 @@ Implementado na Fase 3 (valores provisórios): fogueira e bancada como estaçõe
 
 **Durabilidade zero não destrói o item:** ele fica 0/máx no inventário, sem poder ser usado, até ser reparado (vale também para a tocha).
 
-### 8.4 Próximo: afixos e Upgrading Machine (planejado)
+### 8.4 Afixos e Upgrading Machine (implementado na etapa 10; ver docs/PROXIMOS_PASSOS.md)
 
-Ainda não implementado; custos e valores serão definidos depois.
+Implementado: afixos em `data/affixes`, custos em `scripts/crafting/affixes.gd`, tela em `scripts/ui/upgrade_ui.gd`. O texto abaixo é o plano original.
 
 - **Slots de atributos adicionais:** todo equipamento fabricável terá **6 slots de afixo**: **3 prefixos** e **3 sufixos** (no estilo dos ARPGs: prefixos tendem a dano e vida/mana; sufixos a velocidades, resistências e utilidade). Os slots nascem **bloqueados**.
 - **Ao fabricar**, o item já vem com **1 a 6 slots desbloqueados** (sorteio; a proficiência de Crafting e a qualidade podem puxar para cima). Cada slot desbloqueado recebe um afixo sorteado do grupo dele (prefixo ou sufixo), com valor dentro de uma faixa.

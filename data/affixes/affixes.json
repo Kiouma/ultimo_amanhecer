@@ -1,0 +1,28 @@
+[
+  {"id":"life","group":"prefix","key":"max_health_add","min":10,"max":40,"step":1,"for":["armor","offhand","jewelry"],"name":"+%s de vida máxima"},
+  {"id":"mana","group":"prefix","key":"max_mana_add","min":10,"max":35,"step":1,"for":["armor","offhand","jewelry","weapon"],"name":"+%s de mana máxima"},
+  {"id":"shield","group":"prefix","key":"energy_shield_add","min":5,"max":30,"step":1,"for":["armor","offhand"],"name":"+%s de escudo de energia"},
+  {"id":"stamina","group":"prefix","key":"max_stamina_add","min":5,"max":25,"step":1,"for":["armor","jewelry"],"name":"+%s de stamina máxima"},
+  {"id":"melee_dmg","group":"prefix","key":"melee.damage","min":0.04,"max":0.14,"step":0.01,"pct":true,"for":["weapon","jewelry","hands"],"name":"+%s de dano corpo a corpo"},
+  {"id":"ranged_dmg","group":"prefix","key":"ranged.damage","min":0.04,"max":0.14,"step":0.01,"pct":true,"for":["weapon","jewelry","hands","offhand"],"name":"+%s de dano à distância"},
+  {"id":"magic_dmg","group":"prefix","key":"magic.damage","min":0.04,"max":0.14,"step":0.01,"pct":true,"for":["weapon","jewelry","offhand"],"name":"+%s de dano mágico"},
+  {"id":"unarmed_dmg","group":"prefix","key":"unarmed.damage","min":0.05,"max":0.16,"step":0.01,"pct":true,"for":["hands","jewelry"],"name":"+%s de dano desarmado"},
+  {"id":"life_leech","group":"prefix","key":"life_leech","min":0.01,"max":0.04,"step":0.005,"pct":true,"for":["weapon","jewelry"],"name":"%s do dano volta como vida"},
+  {"id":"armor","group":"prefix","key":"damage_taken","min":-0.04,"max":-0.01,"step":0.005,"pct":true,"for":["armor","offhand"],"name":"%s de dano recebido"},
+  {"id":"gather_yield","group":"prefix","key":"gather_yield","min":0.05,"max":0.2,"step":0.01,"pct":true,"for":["tool"],"name":"+%s de rendimento de coleta"},
+
+  {"id":"attack_speed","group":"suffix","key":"attack_speed","min":0.03,"max":0.09,"step":0.01,"pct":true,"for":["weapon","hands","jewelry"],"name":"+%s de velocidade de ataque"},
+  {"id":"move_speed","group":"suffix","key":"move_speed","min":0.02,"max":0.07,"step":0.01,"pct":true,"for":["feet","jewelry"],"name":"+%s de velocidade de movimento"},
+  {"id":"life_regen","group":"suffix","key":"life_regen_add","min":0.5,"max":2.5,"step":0.1,"for":["armor","jewelry","offhand"],"name":"+%s de vida por segundo"},
+  {"id":"mana_regen","group":"suffix","key":"mana_regen","min":0.05,"max":0.25,"step":0.01,"pct":true,"for":["armor","jewelry","weapon","offhand"],"name":"+%s de regeneração de mana"},
+  {"id":"stamina_regen","group":"suffix","key":"stamina_regen","min":0.05,"max":0.25,"step":0.01,"pct":true,"for":["armor","jewelry","tool"],"name":"+%s de regeneração de stamina"},
+  {"id":"cooldown","group":"suffix","key":"cooldown_reduction","min":0.02,"max":0.06,"step":0.01,"pct":true,"for":["head","jewelry","weapon"],"name":"+%s de redução de recarga"},
+  {"id":"spell_resist","group":"suffix","key":"spell_resist","min":0.02,"max":0.07,"step":0.01,"pct":true,"for":["armor","offhand","jewelry"],"name":"+%s de resistência a magia"},
+  {"id":"loot","group":"suffix","key":"loot_bonus","min":0.03,"max":0.1,"step":0.01,"pct":true,"for":["jewelry","head"],"name":"+%s de aumento de loot (magic find)"},
+  {"id":"str","group":"suffix","key":"str_add","min":1,"max":6,"step":1,"for":["weapon","armor","jewelry","offhand"],"name":"+%s de Força"},
+  {"id":"dex","group":"suffix","key":"dex_add","min":1,"max":6,"step":1,"for":["weapon","armor","jewelry","offhand"],"name":"+%s de Destreza"},
+  {"id":"int","group":"suffix","key":"int_add","min":1,"max":6,"step":1,"for":["weapon","armor","jewelry","offhand"],"name":"+%s de Inteligência"},
+  {"id":"luck","group":"suffix","key":"luck_add","min":1,"max":5,"step":1,"for":["jewelry"],"name":"+%s de Sorte"},
+  {"id":"gather_speed","group":"suffix","key":"gather_speed","min":0.05,"max":0.25,"step":0.01,"pct":true,"for":["tool"],"name":"+%s de velocidade de coleta"},
+  {"id":"fishing","group":"suffix","key":"fishing_power_add","min":1,"max":2,"step":1,"for":["rod"],"name":"+%s de força de pesca"}
+]

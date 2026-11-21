@@ -64,6 +64,23 @@ func _build() -> void:
 			add_child(_flame)
 			box.size = Vector3(1.1, 0.4, 1.1)
 			shape.position.y = 0.2
+		"upgrading_machine":
+			# Bigorna com um cristal arcano brilhando em cima (Fantasy Props + forma simples).
+			var anvil := ModelKit.fit_width(ModelKit.PROPS + "Anvil.gltf", 1.2)
+			if anvil:
+				add_child(anvil)
+			else:
+				add_child(Weapon.box(Vector3(1.1, 0.7, 0.5), Color(0.3, 0.3, 0.33), Vector3(0, 0.35, 0)))
+			var crystal := Weapon.box(Vector3(0.16, 0.32, 0.16), Color(0.6, 0.4, 1.0), Vector3(0, 1.0, 0), true)
+			crystal.rotation = Vector3(0.4, 0.6, 0.2)
+			add_child(crystal)
+			_flame = OmniLight3D.new()
+			_flame.light_color = Color(0.65, 0.45, 1.0)
+			_flame.omni_range = 5.0
+			_flame.position.y = 1.1
+			add_child(_flame)
+			box.size = Vector3(1.2, 0.9, 0.6)
+			shape.position.y = 0.45
 		_:  # bancada (Fantasy Props)
 			var bench := ModelKit.fit_width(ModelKit.PROPS + "Workbench.gltf", 1.7)
 			if bench:

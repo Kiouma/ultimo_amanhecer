@@ -58,12 +58,18 @@ static func give_ingredients(inventory: Inventory, recipe: Dictionary, times: in
 static func give_result(inventory: Inventory, recipe: Dictionary, times: int) -> void:
 	var id := str(recipe.get("result", ""))
 	var count := int(recipe.get("amount", 1)) * times
-	if Inventory.max_durability(id) <= 0.0 or not recipe.has("ingredients"):
+	var with_affixes := Affixes.can_have(id) and recipe.has("ingredients")
+	if (Inventory.max_durability(id) <= 0.0 and not with_affixes) or not recipe.has("ingredients"):
 		_give(inventory, id, count)
 		return
 	for i in count:
-		var quality := roll_quality(crafting_skill(inventory))
-		_give(inventory, id, 1, {"q": quality})
+		var skill := crafting_skill(inventory)
+		var quality := roll_quality(skill)
+		var extra := {"q": quality} if Inventory.max_durability(id) > 0.0 else {}
+		# Equipamento fabricado: 6 slots de afixo, de 1 a 6 abertos (etapa 10).
+		if with_affixes:
+			extra["aff"] = Affixes.roll_new(id, quality, skill)
+		_give(inventory, id, 1, extra)
 		if quality >= 4:
 			var player := inventory.get_parent()
 			if player.has_method(&"notify"):
