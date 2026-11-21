@@ -5,7 +5,7 @@ extends Control
 ## Catálogo: clique esquerdo dá 1, direito dá uma pilha cheia. Qualidade e refino
 ## escolhidos valem para armas, ferramentas e equipamentos.
 
-const TYPE_ORDER := ["melee", "thrown", "bow", "tool", "focus", "offhand", "armor", "ammo", "consumable", "skill_book", "resource", "station", "trap"]
+const TYPE_ORDER := ["melee", "thrown", "bow", "tool", "focus", "offhand", "armor", "ammo", "bait", "consumable", "skill_book", "resource", "station", "trap"]
 
 var player: Player
 var _grid: GridContainer
@@ -164,7 +164,7 @@ func _button(parent: Control, text: String, action: Callable) -> void:
 
 static func _type_name(t: String) -> String:
 	return {"melee": TranslationServer.translate("Corpo a corpo"), "thrown": TranslationServer.translate("Arremesso"), "bow": TranslationServer.translate("Arcos e bestas"), "tool": TranslationServer.translate("Ferramentas"), "focus": TranslationServer.translate("Cajados"), "armor": TranslationServer.translate("Equipamentos"),
-		"ammo": TranslationServer.translate("Munição"), "consumable": TranslationServer.translate("Consumíveis"), "offhand": TranslationServer.translate("Armas secundárias"), "skill_book": TranslationServer.translate("Livros de habilidade"), "resource": TranslationServer.translate("Recursos"),
+		"ammo": TranslationServer.translate("Munição"), "consumable": TranslationServer.translate("Consumíveis"), "offhand": TranslationServer.translate("Armas secundárias"), "skill_book": TranslationServer.translate("Livros de habilidade"), "bait": TranslationServer.translate("Iscas"), "resource": TranslationServer.translate("Recursos"),
 		"station": TranslationServer.translate("Estações e base"), "trap": TranslationServer.translate("Armadilhas")}.get(t, t)
 
 

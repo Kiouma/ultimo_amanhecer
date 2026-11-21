@@ -189,7 +189,11 @@ func use_item(index: int) -> bool:
 	# Comida: buff temporário (data/effects), ex.: frutas regeneram vida por 10 s. Não
 	# gasta com a vida cheia. A cura de comida também cresce com "heal".
 	var effect_id := str(data.get("effect", ""))
-	var regenerates := effect_id != "" and user.health.current < user.health.cap()
+	# Só regeneração de vida: não gasta com a vida cheia. Outros bônus (peixes: mana,
+	# stamina, vida máxima, loot) valem sempre.
+	var mods: Dictionary = StatusEffects.data(effect_id).get("mods", {}) if effect_id != "" else {}
+	var only_life := mods.keys().all(func(k: String) -> bool: return k == "life_regen_add")
+	var regenerates := effect_id != "" and (user.health.current < user.health.cap() or not only_life)
 	if regenerates:
 		user.effects.apply(effect_id, -1.0, prog.mult("heal"))
 	if not can_heal and not regenerates:

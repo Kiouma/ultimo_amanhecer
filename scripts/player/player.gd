@@ -146,6 +146,8 @@ var equipment: Equipment
 ## Roda de habilidades do HUD (Q segurado); o HUD preenche.
 ## Habilidades (teclas 1 a 5, tela K). Etapa 6.
 var skills: Skills
+## Coleta com tempo e pesca (etapa 7).
+var gathering: Gathering
 
 ## Modo construção (tecla B). Só existe no jogador local.
 var build: BuildMode
@@ -173,6 +175,7 @@ const DOUBLE_TAP_MS := 300
 var _last_jump_ms := -10000
 
 var _focused: Node = null
+var _last_prompt := ""
 var _has_focus := false
 var _pickup_timer := 0.0
 ## Itens já pedidos ao servidor (nome -> hora), para não repetir o pedido enquanto ele responde.
@@ -214,6 +217,9 @@ func _ready() -> void:
 	skills = Skills.new()
 	skills.name = "Skills"
 	add_child(skills)
+	gathering = Gathering.new()
+	gathering.name = "Gathering"
+	add_child(gathering)
 	equipment.changed.connect(_update_outfit)
 	model.fill_lit = true  # luz de preenchimento da câmera ilumina os jogadores
 	model.set_body(str(GameData.get_entry("backgrounds", net_class).get("model", "knight")))
@@ -463,10 +469,19 @@ func _update_focus() -> void:
 				if d < best:
 					best = d
 					found = node
-	if found != _focused:
+	# Pesca: pescando, o foco fica no ponto de pesca; de frente para a água (vara no
+	# slot), ele vira o interagível se não houver outro.
+	if gathering and gathering.mode == Gathering.Mode.GATHER:
+		found = null  # coletando: a barra de progresso já diz o que está acontecendo
+	elif gathering and (gathering.mode in [Gathering.Mode.FISH_WAIT, Gathering.Mode.FISH_BITE] \
+			or (found == null and gathering.can_fish())):
+		found = gathering
+	var text: String = found.get_prompt() if found else ""
+	if found != _focused or text != _last_prompt:
 		_focused = found
 		_has_focus = found != null
-		interaction_prompt_changed.emit(_focused.get_prompt() if _focused else "")
+		_last_prompt = text
+		interaction_prompt_changed.emit(text)
 
 
 ## O nó pode ser usado com E agora (tem interact, tem aviso e está ao alcance)?
@@ -542,6 +557,18 @@ func play_action_synced(anim_name: StringName, duration := 0.0, attack := false,
 @rpc("authority", "call_remote", "unreliable")
 func _remote_action(anim_name: StringName, duration: float) -> void:
 	model.play_action(anim_name, duration)
+
+
+## Para a ação em andamento (coleta, pesca: animações que repetem) aqui e nos outros.
+func stop_action_synced() -> void:
+	model.stop_action()
+	if Network.is_online():
+		_remote_stop_action.rpc()
+
+
+@rpc("authority", "call_remote", "reliable")
+func _remote_stop_action() -> void:
+	model.stop_action()
 
 
 # --- Mira: cursor, alvo e origem dos tiros ------------------------------------------

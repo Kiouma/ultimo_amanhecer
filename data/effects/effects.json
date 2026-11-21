@@ -7,5 +7,15 @@
   {"id":"slow","name":"Lentidão","kind":"debuff","color":"#7fb6e8","duration":3,"max_stacks":1,"power":0.4,"desc":"Anda e ataca mais devagar.","mods":{"move_speed":-1.0,"attack_speed":-0.5}},
   {"id":"vulnerable","name":"Vulnerável","kind":"debuff","color":"#a05ad6","duration":5,"max_stacks":1,"power":0.25,"desc":"Recebe mais dano.","mods":{"damage_taken":1.0}},
   {"id":"vampiric","name":"Punhos vampíricos","kind":"buff","color":"#c03050","duration":8,"max_stacks":1,"power":0.15,"desc":"Parte do dano causado volta como vida.","mods":{"life_leech":1.0}},
-  {"id":"fury","name":"Fúria","kind":"buff","color":"#e04a2a","duration":10,"max_stacks":1,"power":1.0,"desc":"Ataques mais rápidos, regeneração maior e golpes que causam sangramento.","mods":{"attack_speed":0.3,"life_regen_add":4.0,"bleed_on_hit":1.0}}
+  {"id":"fury","name":"Fúria","kind":"buff","color":"#e04a2a","duration":10,"max_stacks":1,"power":1.0,"desc":"Ataques mais rápidos, regeneração maior e golpes que causam sangramento.","mods":{"attack_speed":0.3,"life_regen_add":4.0,"bleed_on_hit":1.0}},
+  {"id":"fish_small","name":"Lambari","kind":"buff","color":"#8fb6c9","duration":20,"max_stacks":1,"desc":"Regenera vida.","mods":{"life_regen_add":2.0}},
+  {"id":"fish_small_cooked","name":"Lambari assado","kind":"buff","color":"#c99a5f","duration":40,"max_stacks":1,"desc":"Regenera vida.","mods":{"life_regen_add":3.5}},
+  {"id":"fish_tilapia","name":"Tilápia","kind":"buff","color":"#9fc0a8","duration":30,"max_stacks":1,"desc":"Regenera vida e stamina.","mods":{"life_regen_add":1.5,"stamina_regen":0.3}},
+  {"id":"fish_tilapia_cooked","name":"Tilápia assada","kind":"buff","color":"#c9a76a","duration":60,"max_stacks":1,"desc":"Regenera vida e stamina.","mods":{"life_regen_add":2.5,"stamina_regen":0.5}},
+  {"id":"fish_trout","name":"Truta","kind":"buff","color":"#7fa8e0","duration":45,"max_stacks":1,"desc":"Regenera vida e mana.","mods":{"life_regen_add":2.0,"mana_regen":0.4}},
+  {"id":"fish_trout_cooked","name":"Truta assada","kind":"buff","color":"#d0a070","duration":90,"max_stacks":1,"desc":"Regenera vida e mana.","mods":{"life_regen_add":3.0,"mana_regen":0.7}},
+  {"id":"fish_salmon","name":"Salmão","kind":"buff","color":"#e8866a","duration":60,"max_stacks":1,"desc":"Regenera vida e dá vida máxima.","mods":{"life_regen_add":3.0,"max_health_add":20}},
+  {"id":"fish_salmon_cooked","name":"Salmão assado","kind":"buff","color":"#e0904a","duration":120,"max_stacks":1,"desc":"Regenera vida e dá vida máxima.","mods":{"life_regen_add":5.0,"max_health_add":40}},
+  {"id":"fish_golden","name":"Peixe-dourado","kind":"buff","color":"#f2cc3a","duration":90,"max_stacks":1,"desc":"Regenera tudo e aumenta o loot.","mods":{"life_regen_add":3.0,"mana_regen":0.5,"stamina_regen":0.5,"loot_bonus":0.15}},
+  {"id":"fish_golden_cooked","name":"Peixe-dourado assado","kind":"buff","color":"#f5b52a","duration":180,"max_stacks":1,"desc":"Regenera tudo e aumenta o loot.","mods":{"life_regen_add":5.0,"mana_regen":0.8,"stamina_regen":0.8,"loot_bonus":0.25}}
 ]

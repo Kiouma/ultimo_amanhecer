@@ -1,0 +1,14 @@
+[
+  {"id":"craft_rod_wood","result":"rod_wood","amount":1,"station":"hands","time":5,"ingredients":{"wood":3,"sinew":1}},
+  {"id":"craft_bait_herb","result":"bait_herb","amount":3,"station":"hands","time":2,"ingredients":{"herbs":1,"berries":1}},
+  {"id":"craft_bait_glow","result":"bait_glow","amount":2,"station":"workbench","time":3,"ingredients":{"arcane_dust":1,"herbs":1}},
+  {"id":"upgrade_axe_iron","result":"axe_iron","amount":1,"station":"workbench","time":10,"ingredients":{"axe_stone":1,"scrap_metal":5,"wood":3}},
+  {"id":"upgrade_axe_steel","result":"axe_steel","amount":1,"station":"workbench","time":14,"ingredients":{"axe_iron":1,"scrap_metal":10,"refine_stone":2,"boss_essence":1}},
+  {"id":"upgrade_axe_arcane","result":"axe_arcane","amount":1,"station":"workbench","time":20,"ingredients":{"axe_steel":1,"arcane_crystal":3,"boss_essence":3}},
+  {"id":"upgrade_pickaxe_iron","result":"pickaxe_iron","amount":1,"station":"workbench","time":10,"ingredients":{"pickaxe_stone":1,"scrap_metal":5,"stone":5}},
+  {"id":"upgrade_pickaxe_steel","result":"pickaxe_steel","amount":1,"station":"workbench","time":14,"ingredients":{"pickaxe_iron":1,"scrap_metal":10,"refine_stone":2,"boss_essence":1}},
+  {"id":"upgrade_pickaxe_arcane","result":"pickaxe_arcane","amount":1,"station":"workbench","time":20,"ingredients":{"pickaxe_steel":1,"arcane_crystal":3,"boss_essence":3}},
+  {"id":"upgrade_rod_iron","result":"rod_iron","amount":1,"station":"workbench","time":10,"ingredients":{"rod_wood":1,"scrap_metal":3,"sinew":2}},
+  {"id":"upgrade_rod_steel","result":"rod_steel","amount":1,"station":"workbench","time":14,"ingredients":{"rod_iron":1,"scrap_metal":6,"refine_stone":2,"boss_essence":1}},
+  {"id":"upgrade_rod_arcane","result":"rod_arcane","amount":1,"station":"workbench","time":20,"ingredients":{"rod_steel":1,"arcane_crystal":3,"boss_essence":3}}
+]

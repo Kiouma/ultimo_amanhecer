@@ -24,6 +24,7 @@ const ZOMBIE_SCENE := preload("res://scenes/enemies/zombie.tscn")
 	["spear_wood", 1], ["torch", 1],
 	# Livros de habilidade (só caem de chefes; aqui para testar) e armas secundárias.
 	["book_mend", 1], ["book_earth_wall", 1], ["shield_wood", 1], ["quiver_leather", 1], ["dagger", 2], ["boss_essence", 3],
+	["axe_stone", 1], ["pickaxe_stone", 1], ["rod_wood", 1], ["bait_herb", 5],
 ]
 @export var loot_radius := 14.0
 ## Recursos coletáveis (id em data/nodes/nodes.json) → quantidade.

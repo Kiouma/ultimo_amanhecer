@@ -1,3 +1,13 @@
 [
-  {"id":"berries","name":"Frutas silvestres","type":"consumable","weight":0.05,"stack":30,"effect":"meal_berries"}
+  {"id":"berries","name":"Frutas silvestres","type":"consumable","weight":0.05,"stack":30,"effect":"meal_berries"},
+  {"id":"fish_small","name":"Lambari","type":"consumable","fish":true,"rarity":1,"weight":0.2,"stack":20,"effect":"fish_small","desc":"Peixe pequeno e comum. Asse na fogueira para um efeito maior."},
+  {"id":"fish_tilapia","name":"Tilápia","type":"consumable","fish":true,"rarity":1,"weight":0.4,"stack":20,"effect":"fish_tilapia","desc":"Peixe comum dos lagos. Asse na fogueira para um efeito maior."},
+  {"id":"fish_trout","name":"Truta","type":"consumable","fish":true,"rarity":2,"weight":0.5,"stack":20,"effect":"fish_trout","desc":"Peixe de águas frias. Asse na fogueira para um efeito maior."},
+  {"id":"fish_salmon","name":"Salmão","type":"consumable","fish":true,"rarity":3,"weight":0.8,"stack":20,"effect":"fish_salmon","desc":"Raro: precisa de força de pesca 2 ou mais. Asse na fogueira para um efeito maior."},
+  {"id":"fish_golden","name":"Peixe-dourado","type":"consumable","fish":true,"rarity":4,"weight":0.6,"stack":20,"effect":"fish_golden","desc":"Muito raro: precisa de força de pesca 3 ou mais. Asse na fogueira para um efeito maior."},
+  {"id":"fish_small_cooked","name":"Lambari assado","type":"consumable","weight":0.2,"stack":20,"effect":"fish_small_cooked"},
+  {"id":"fish_tilapia_cooked","name":"Tilápia assada","type":"consumable","weight":0.4,"stack":20,"effect":"fish_tilapia_cooked"},
+  {"id":"fish_trout_cooked","name":"Truta assada","type":"consumable","weight":0.5,"stack":20,"effect":"fish_trout_cooked"},
+  {"id":"fish_salmon_cooked","name":"Salmão assado","type":"consumable","weight":0.8,"stack":20,"effect":"fish_salmon_cooked"},
+  {"id":"fish_golden_cooked","name":"Peixe-dourado assado","type":"consumable","weight":0.6,"stack":20,"effect":"fish_golden_cooked"}
 ]

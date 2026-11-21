@@ -8,7 +8,7 @@ extends VBoxContainer
 ## - Secundários: bônus de conjuntos e efeitos como aumento de loot e capacidade de carga.
 ## Arraste um item do inventário para um slot para vestir; clique num slot cheio para tirar.
 
-const BODY_SIZE := Vector2(260, 372)
+const BODY_SIZE := Vector2(260, 448)
 ## slot → [posição, tamanho] dentro do corpo.
 const LAYOUT := {
 	"head": [Vector2(98, 0), Vector2(64, 64)],
@@ -21,6 +21,9 @@ const LAYOUT := {
 	"feet": [Vector2(188, 186), Vector2(64, 64)],
 	"weapon": [Vector2(14, 300), Vector2(72, 72)],
 	"offhand": [Vector2(174, 300), Vector2(72, 72)],
+	"axe": [Vector2(14, 384), Vector2(64, 64)],
+	"pickaxe": [Vector2(98, 384), Vector2(64, 64)],
+	"rod": [Vector2(182, 384), Vector2(64, 64)],
 }
 
 var player: Player

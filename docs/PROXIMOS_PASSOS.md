@@ -212,9 +212,9 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 
 **A decidir:**
 
-- Se mover ou levar dano **cancela** a coleta?
-- **Onde** se faz o upgrade de ferramenta. Sugestão: uma quarta categoria na Upgrading Machine (seção 12).
-- Quantos níveis de ferramenta existem (ex.: pedra → ferro → aço → arcano) e quais drops de chefe cada um pede.
+- Se mover ou levar dano **cancela** a coleta? → andar, pular ou atacar cancela; dano não (etapa 7).
+- **Onde** se faz o upgrade de ferramenta. Sugestão: uma quarta categoria na Upgrading Machine (seção 12). → por enquanto na **bancada** (etapa 7).
+- Quantos níveis de ferramenta existem (ex.: pedra → ferro → aço → arcano) e quais drops de chefe cada um pede. → 4 níveis; aço pede 1 Essência de chefe, arcano 3 (etapa 7).
 
 ### 6.2 Pesca (decidido)
 
@@ -223,7 +223,7 @@ Cada seção traz: **o que fazer**, **regras** (incluindo o que já foi **decidi
 - **Peixes são consumíveis** que dão **buffs** (incluindo regeneração de vida, seção 4). **Cozinhar** na fogueira aumenta a efetividade.
 - Peixes poderão ser **vendidos** a NPCs no futuro (seção 13).
 
-**A decidir:** a mecânica da pesca em si (minijogo ou só tempo de espera), a lista de peixes e os buffs de cada um, as iscas (de onde vêm).
+**A decidir:** a mecânica da pesca em si (minijogo ou só tempo de espera), a lista de peixes e os buffs de cada um, as iscas (de onde vêm). → espera + fisgada com tempo para reagir; 5 peixes; iscas fabricadas (ervas + frutas; pó arcano + ervas) (etapa 7).
 
 ---
 
@@ -379,7 +379,13 @@ Cada passo termina jogável:
    - **Círculo no chão** para habilidades de área (Salto Esmagador, Chuva de Flechas, Meteoro). Canalização (Redemoinho).
    - **Mecânicas nos monstros** (servidor): atordoamento, empurrão, puxão, veneno, queimadura, sangramento, lentidão e Vulnerável; **roubo de vida** (buff e Redemoinho) e **transferência de mana** (Elo Arcano). Chefes sofrem metade do atordoamento e 30% do empurrão.
    - **Q e F saíram** (roda de feitiços e ícone do Q). O cajado agora dispara um projétil arcano básico; a canalização do cajado saiu.
-7. **Coleta e pesca:** slots de ferramentas, coleta com tempo, vara, iscas, peixes e culinária (6).
+7. ✅ **Coleta e pesca (feito)** (6):
+   - **3 slots de ferramenta** em Equipamentos (V): **Machado**, **Picareta** e **Vara de pesca**. Machado e picareta deixaram de ser armas (só fabricáveis, não caem de inimigos).
+   - **Coleta com tempo:** perto de uma árvore/rocha aparece "[E] Cortar árvore (4.0 s)" / "[E] Minerar rocha (3.0 s)" (ou o que falta equipar). E começa; barra de progresso como a de canalização; o personagem segura a ferramenta e faz a animação. **Andar, pular ou atacar cancela; levar dano não cancela.** No fim, o recurso dá tudo de uma vez (madeira/pedra/sucata/cristal × rendimento) e some. Tempo = base ÷ (velocidade da ferramenta × qualidade × Sobrevivência); rendimento = ferramenta × refino × `gather_yield`.
+   - **4 níveis de ferramenta** (pedra → ferro → aço → arcano), para machado, picareta e vara: velocidade ×1 / 1,4 / 1,8 / 2,4 e rendimento ×1 / 1,25 / 1,5 / 2. **Upgrade na bancada** (até existir a Upgrading Machine): a ferramenta anterior + recursos; aço pede 1 **Essência de chefe** e arcano pede 3 (+ cristal arcano).
+   - **Pesca** nos lagos: com a vara no slot e de frente para a água, "[E] Pescar (força de pesca N)". Lança a linha (boia na água), espera alguns segundos (menos com mais força); quando fisga, **E ou clique em até 1,4 s** pega o peixe (barra mostra o tempo). Andar solta a linha. **Força de pesca** = vara (1 a 4) + isca gasta na lançada (ervas +1, brilhante +2).
+   - **5 peixes:** Lambari e Tilápia (comuns), Truta, **Salmão** (força 2+) e **Peixe-dourado** (força 3+), com chance maior quanto maior a força. Cada um é um consumível com buff (regeneração de vida, stamina, mana, vida máxima, loot). **Assar na fogueira** (E na fogueira) dá a versão assada, com efeito maior e mais longo.
+   - Peixes podem ser comidos com a vida cheia (os bônus além da regeneração valem sempre); frutas continuam só com a vida abaixo do máximo.
 8. **Mundo RPG:** inimigos com nível, nome, barra e zonas; chefes com drops; magic find em grupo; monstros com debuffs (9, 13, 15).
 9. **Grupo:** party lateral, alvo em aliados, trade e follow (8.1, 10, 11).
 10. **Afixos, Upgrading Machine e upgrade de ferramenta** (12, 6.1); afixos de roubo de vida/mana, magic find e atributos (15).

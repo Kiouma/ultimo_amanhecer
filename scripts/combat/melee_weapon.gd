@@ -2,8 +2,7 @@ class_name MeleeWeapon
 extends Weapon
 ## Arma corpo a corpo: golpe em arco na frente do jogador, acerta vários zumbis.
 ## Gasta stamina por golpe e faz pouco barulho (GDD 5.3). Segurar o botão encadeia o combo.
-## Também coleta: o golpe atinge o recurso na mira (árvore, rocha), conforme o
-## fator "gather" do item (ver ResourceNode).
+## (Coleta de árvores e rochas é com E e ferramenta no slot: ver Gathering.)
 
 const DEFAULT_COMBO := [&"Sword_Regular_A", &"Sword_Regular_B", &"Sword_Regular_C"]
 
@@ -122,27 +121,9 @@ func _hit() -> void:
 			break
 		if deal_damage(r.collider, stat("damage", 35.0) * _power):
 			hits += 1
-	if _hit_resource(reach):
-		hits += 1
 	if hits > 0:
 		wear(1.0)  # só desgasta quando acerta algo
 		kick(Vector3(0, 0, 0.03), Vector3(0, 0, 0), 0.08)  # tranco do impacto
-
-
-## Recurso na mira (árvore, rocha): pede a coleta. Retorna true se acertou um.
-func _hit_resource(reach: float) -> bool:
-	# Do peito para a frente do corpo (e um pouco para baixo: pedras baixas).
-	var from := user.global_position + Vector3.UP * 1.2
-	var forward := -user.global_basis.z
-	var query := PhysicsRayQueryParameters3D.create(from, from + (forward + Vector3.DOWN * 0.35).normalized() * (reach + 0.6), 1)
-	query.exclude = [user.get_rid()]
-	var hit := user.get_world_3d().direct_space_state.intersect_ray(query)
-	var target: Object = hit.get("collider")
-	if target is ResourceNode and not target.data.get("by_hand", false):
-		if target.global_position.distance_to(user.global_position) <= reach + 1.5:
-			target.request_gather(user, data, power_multiplier() * user.progression.mult("gather_yield"))
-			return true
-	return false
 
 
 func hud_text() -> String:

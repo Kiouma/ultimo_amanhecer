@@ -377,6 +377,14 @@ func cancel_action() -> void:
 		body.position = Vector3.ZERO
 
 
+## Encerra a ação atual (animações que repetem, como pescar): volta à locomoção.
+func stop_action() -> void:
+	_in_action = false
+	_current = &""
+	if anim:
+		anim.speed_scale = 1.0
+
+
 func play(anim_name: StringName, speed_scale := 1.0) -> void:
 	if not rigged:
 		return  # rígido: a locomoção vem de update_locomotion/_process

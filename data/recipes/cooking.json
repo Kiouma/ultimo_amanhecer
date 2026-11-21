@@ -1,0 +1,7 @@
+[
+  {"id":"cook_fish_small","result":"fish_small_cooked","amount":1,"station":"campfire","time":4,"ingredients":{"fish_small":1}},
+  {"id":"cook_fish_tilapia","result":"fish_tilapia_cooked","amount":1,"station":"campfire","time":5,"ingredients":{"fish_tilapia":1}},
+  {"id":"cook_fish_trout","result":"fish_trout_cooked","amount":1,"station":"campfire","time":6,"ingredients":{"fish_trout":1}},
+  {"id":"cook_fish_salmon","result":"fish_salmon_cooked","amount":1,"station":"campfire","time":8,"ingredients":{"fish_salmon":1,"herbs":1}},
+  {"id":"cook_fish_golden","result":"fish_golden_cooked","amount":1,"station":"campfire","time":10,"ingredients":{"fish_golden":1,"herbs":2}}
+]

@@ -19,9 +19,12 @@ extends Node
 
 signal changed
 
-const SLOTS := ["weapon", "offhand", "head", "chest", "legs", "feet", "hands", "ring1", "ring2", "neck"]
+const SLOTS := ["weapon", "offhand", "head", "chest", "legs", "feet", "hands", "ring1", "ring2", "neck", "axe", "pickaxe", "rod"]
+## Ferramentas de coleta (etapa 7): slots próprios, não são armas.
+const TOOL_SLOTS := ["axe", "pickaxe", "rod"]
 const SLOT_NAMES := {"weapon": "Arma", "offhand": "Arma secundária", "head": "Capacete", "chest": "Armadura",
-	"legs": "Calça", "feet": "Botas", "hands": "Luvas", "ring1": "Anel", "ring2": "Anel", "neck": "Colar"}
+	"legs": "Calça", "feet": "Botas", "hands": "Luvas", "ring1": "Anel", "ring2": "Anel", "neck": "Colar",
+	"axe": "Machado", "pickaxe": "Picareta", "rod": "Vara de pesca"}
 ## Tipos de item que vão no slot de arma.
 const WEAPON_TYPES := ["melee", "bow", "thrown", "focus", "tool"]
 ## Empunhadura dupla: velocidade de ataque a mais e quanto do dano da segunda arma entra.
@@ -42,6 +45,8 @@ static func item_slot(item_id: String) -> String:
 	var type := str(data.get("type", ""))
 	if type == "armor":
 		return str(data.get("slot", ""))
+	if str(data.get("tool", "")) in TOOL_SLOTS:
+		return str(data.tool)  # machado, picareta, vara de pesca
 	if type == "offhand":
 		return "offhand"
 	if type in WEAPON_TYPES:
@@ -106,7 +111,7 @@ func _counted() -> Array:
 	var out: Array = []
 	for slot: String in items:
 		var item: Dictionary = items[slot]
-		if Inventory.is_broken(item) or slot == "weapon":
+		if Inventory.is_broken(item) or slot == "weapon" or slot in TOOL_SLOTS:
 			continue
 		if slot == "offhand" and not offhand_active():
 			continue
@@ -151,17 +156,25 @@ func equip_from_inventory(index: int, slot := "") -> bool:
 	return true
 
 
-## Personagem sem arma na mão (novo ou de uma versão antiga, quando a arma ficava na
-## hotbar): veste a primeira arma do inventário.
+## Personagem sem arma na mão ou sem ferramentas nos slots (novo ou de uma versão
+## antiga): veste a primeira arma e as ferramentas de coleta que estão no inventário.
 func auto_equip_weapon() -> void:
-	if not get_item("weapon").is_empty():
-		return
 	var inv := inventory()
 	for i in inv.slots.size():
 		var s := inv.get_slot(i)
-		if not s.is_empty() and str(GameData.get_item(s.id).get("type", "")) in ["melee", "bow", "focus"]:
+		if s.is_empty():
+			continue
+		var kind := item_slot(s.id)
+		if kind in TOOL_SLOTS and get_item(kind).is_empty():
+			equip_from_inventory(i, kind)
+		elif get_item("weapon").is_empty() and str(GameData.get_item(s.id).get("type", "")) in ["melee", "bow", "focus"]:
 			equip_from_inventory(i, "weapon")
-			return
+
+
+## Ferramenta de coleta vestida ({} se o slot está vazio ou ela está quebrada).
+func tool_item(slot: String) -> Dictionary:
+	var item := get_item(slot)
+	return {} if item.is_empty() or Inventory.is_broken(item) else item
 
 func unequip(slot: String) -> bool:
 	var item := get_item(slot)

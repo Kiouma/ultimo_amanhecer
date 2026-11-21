@@ -2,23 +2,26 @@ class_name ResourceNode
 extends StaticBody3D
 ## Recurso coletável do mundo (GDD 8.1): árvore, rocha, arbusto, ninho, galhos.
 ## Dados em data/nodes/nodes.json (lidos pelo node_id).
-## - Árvore/rocha: golpes de arma melee (ou soco). Cada golpe dá itens conforme o
-##   fator de coleta da ferramenta ("gather" do item: machado bom em árvore,
-##   picareta em rocha). Ao esgotar, dá um bônus e some.
+## - Árvore/rocha (etapa 7): precisa da ferramenta certa no slot (machado para árvores,
+##   picareta para rochas e cristais). E começa a coleta, que leva "gather_time"
+##   segundos ÷ velocidade da ferramenta (ver Gathering); no fim, dá tudo de uma vez
+##   (madeira/pedra × rendimento da ferramenta) e o recurso some.
 ## - Arbusto/ninho/galhos ("by_hand"): E colhe tudo de uma vez e some.
 ## Visual: modelos do Nature MegaKit (NatureKit) quando os dados têm "models".
 ## Some e volta depois de "respawn" segundos (ver Arena).
 ##
-## Rede: só o servidor muda o recurso. Quem coleta pede (request_gather); o
-## servidor confere a distância, entrega com Inventory.grant e remove o nó (o
-## MultiplayerSpawner da arena replica sumir/voltar para todos).
+## Rede: só o servidor muda o recurso. Quem coleta pede (request_gather/request_harvest);
+## o servidor confere a distância (e a ferramenta), entrega com Inventory.grant e remove
+## o nó (o MultiplayerSpawner da arena replica sumir/voltar para todos).
 
 ## Emitido no servidor quando esgota: (tipo, posição, rotação y) para a arena agendar a volta.
 signal depleted(node_id: String, position: Vector3, rotation_y: float)
 
-## Dano de coleta por golpe com fator 1.0 (vida da árvore = 100 → 4 golpes de machado).
+## Quanto da "vida" do recurso equivale a uma porção de "per_hit" (árvore 100 → 4 porções).
 const HIT_POWER := 25.0
 const MAX_REACH := 4.5
+## Tempo base de coleta (s) com ferramenta de velocidade 1.
+const GATHER_TIME := {"tree": 4.0, "rock": 3.0}
 
 var node_id := "tree"
 var data: Dictionary = {}
@@ -39,89 +42,137 @@ func _ready() -> void:
 	_build()
 
 
-## Nome mostrado e aviso de interação (só recursos colhidos à mão).
+## "tree" ou "rock" (o que se coleta com ferramenta); "" = colhe à mão.
+func gather_kind() -> String:
+	if data.get("by_hand", false):
+		return ""
+	return str(data.get("gather_as", data.get("kind", "")))
+
+
+## Slot da ferramenta que coleta este recurso ("axe", "pickaxe").
+func tool_slot() -> String:
+	return "axe" if gather_kind() == "tree" else "pickaxe"
+
+
+## Segundos de coleta com ferramenta de velocidade 1.
+func base_gather_time() -> float:
+	return float(data.get("gather_time", GATHER_TIME.get(gather_kind(), 3.0)))
+
+
+## Aviso de interação: colher, ou cortar/minerar com o tempo (ou o que falta).
 func get_prompt() -> String:
 	if data.get("by_hand", false):
 		return "[E] %s %s" % [data.get("verb", tr("Coletar")), str(data.get("name", node_id)).to_lower()]
-	return ""
+	var player := _local_player()
+	var verb := tr("Cortar") if gather_kind() == "tree" else tr("Minerar")
+	if player == null or player.gathering == null:
+		return ""
+	if player.equipment.tool_item(tool_slot()).is_empty():
+		return tr("%s: precisa de %s no slot de ferramenta (V)") % [str(data.get("name", node_id)), tr("um machado") if tool_slot() == "axe" else tr("uma picareta")]
+	return tr("[E] %s %s (%.1f s)") % [verb, str(data.get("name", node_id)).to_lower(), player.gathering.gather_time(self)]
 
 
 func interact(player: Node3D) -> void:
 	if data.get("by_hand", false):
 		request_gather(player, {})
+	elif player is Player and player.gathering:
+		player.gathering.start_gather(self)
 
 
-## Usado pelo Player para só mostrar aviso em recursos colhidos à mão.
+## Usado pelo Player: todos os recursos têm aviso (com ferramenta, árvores e rochas).
 func has_prompt() -> bool:
-	return data.get("by_hand", false)
+	return true
 
 
-## Golpe ou colheita. tool_data = dados do item usado ({} = mãos/colheita).
-## quality: multiplicador da ferramenta (qualidade × refino, 1,0 a ~2,37).
-func request_gather(player: Node3D, tool_data: Dictionary, quality := 1.0) -> void:
+func _local_player() -> Player:
+	for p: Node in get_tree().get_nodes_in_group("player"):
+		if p is Player and p.is_local():
+			return p
+	return null
+
+
+## Colheita à mão (arbusto, ninho, galhos). tool_data é ignorado (compatibilidade).
+func request_gather(player: Node3D, _tool_data: Dictionary, quality := 1.0) -> void:
 	_shake()
 	var prog := Progression.of(player)
 	if prog:
 		prog.gain("survival", 1.0)
-		if data.get("by_hand", false):
-			quality *= prog.mult("gather_yield")
-	var tool_id := str(tool_data.get("id", ""))
+		quality *= prog.mult("gather_yield")
 	if multiplayer.is_server():
-		_gather(player, tool_id, quality)
+		_gather(player, quality)
 	elif Network.is_online():
-		_request_gather.rpc_id(1, tool_id, quality)
+		_request_gather.rpc_id(1, quality)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_gather(tool_id: String, quality: float) -> void:
+func _request_gather(quality: float) -> void:
+	var p := _sender_player()
+	if p:
+		_gather(p, clampf(quality, 1.0, 3.0))
+
+
+## Fim da coleta com ferramenta: pede ao servidor tudo o que o recurso dá.
+## yield_mult: rendimento da ferramenta × qualidade/refino × proficiência.
+func request_harvest(player: Node3D, tool_id: String, yield_mult: float) -> void:
+	_shake()
+	if multiplayer.is_server():
+		_harvest(player, tool_id, yield_mult)
+	elif Network.is_online():
+		_request_harvest.rpc_id(1, tool_id, yield_mult)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_harvest(tool_id: String, yield_mult: float) -> void:
+	var p := _sender_player()
+	if p:
+		_harvest(p, tool_id, clampf(yield_mult, 0.5, 12.0))
+
+
+func _sender_player() -> Node3D:
 	var sender := multiplayer.get_remote_sender_id()
-	# Qualidade × refino máximos × rendimento máximo da Sobrevivência e habilidades.
-	var max_quality := (1.0 + Inventory.QUALITY_STEP * (Inventory.MAX_QUALITY - 1)) \
-		* (1.0 + Inventory.REFINE_STEP * Inventory.MAX_REFINE) * 2.0
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.get_multiplayer_authority() == sender:
-			_gather(p, tool_id, clampf(quality, 1.0, max_quality))
-			return
+			return p
+	return null
 
 
 # --- Servidor ---------------------------------------------------------------------
 
-func _gather(player: Node3D, tool_id: String, quality := 1.0) -> void:
-	if is_queued_for_deletion() or player.global_position.distance_to(global_position) > MAX_REACH:
+func _gather(player: Node3D, quality := 1.0) -> void:
+	if is_queued_for_deletion() or player.global_position.distance_to(global_position) > MAX_REACH \
+			or not data.get("by_hand", false):
 		return
 	var inventory := player.get_node_or_null(^"Inventory") as Inventory
 	if inventory == null:
 		return
-	if data.get("by_hand", false):
-		for id: String in data.get("yield", {}):
-			var span: Array = data.yield[id]
-			var amount := roundi(randi_range(int(span[0]), int(span[1])) * quality)
-			if amount > 0:
-				inventory.grant(id, amount)
-		_deplete()
-		return
+	for id: String in data.get("yield", {}):
+		var span: Array = data.yield[id]
+		var amount := roundi(randi_range(int(span[0]), int(span[1])) * quality)
+		if amount > 0:
+			inventory.grant(id, amount)
+	_deplete()
 
-	var factor := _tool_factor(tool_id)
-	if factor <= 0.0:
+
+## Coleta completa com ferramenta: porções de "per_hit" (vida ÷ HIT_POWER), chances de
+## "per_hit_chance" a cada porção e o bônus "on_depleted", tudo × rendimento.
+func _harvest(player: Node3D, tool_id: String, yield_mult: float) -> void:
+	if is_queued_for_deletion() or player.global_position.distance_to(global_position) > MAX_REACH:
 		return
-	factor *= quality
+	if str(GameData.get_item(tool_id).get("tool", "")) != tool_slot():
+		return
+	var inventory := player.get_node_or_null(^"Inventory") as Inventory
+	if inventory == null:
+		return
+	var portions := maxf(hp / HIT_POWER, 1.0)
 	for id: String in data.get("per_hit", {}):
-		_grant_fraction(inventory, id, float(data.per_hit[id]) * factor)
+		_grant_fraction(inventory, id, float(data.per_hit[id]) * portions * yield_mult)
 	for id: String in data.get("per_hit_chance", {}):
-		if randf() < float(data.per_hit_chance[id]) * factor:
-			inventory.grant(id, 1)
-	hp -= HIT_POWER * factor
-	if hp <= 0.0:
-		for id: String in data.get("on_depleted", {}):
-			inventory.grant(id, int(data.on_depleted[id]))
-		_deplete()
-
-
-## Fator de coleta da ferramenta para este tipo de recurso. Sem ferramenta = soco.
-func _tool_factor(tool_id: String) -> float:
-	var gather: Dictionary = GameData.get_item(tool_id).get("gather", {}) if tool_id != "" \
-		else WeaponHolder.FISTS.get("gather", {})
-	return float(gather.get(str(data.get("gather_as", data.get("kind", ""))), 0.0))
+		for i in ceili(portions):
+			if randf() < float(data.per_hit_chance[id]) * yield_mult:
+				inventory.grant(id, 1)
+	for id: String in data.get("on_depleted", {}):
+		_grant_fraction(inventory, id, float(data.on_depleted[id]) * yield_mult)
+	_deplete()
 
 
 ## 0,35 madeira = 0 ou 1 (35% de chance); 1,4 = 1 ou 2.

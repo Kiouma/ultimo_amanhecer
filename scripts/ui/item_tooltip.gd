@@ -6,7 +6,7 @@ class_name ItemTooltip
 const TYPE_NAMES := {
 	"melee": "Arma corpo a corpo", "unarmed": "Desarmado", "bow": "Arma à distância", "thrown": "Arma de arremesso",
 	"focus": "Cajado", "tool": "Ferramenta", "armor": "Equipamento", "consumable": "Consumível", "resource": "Recurso",
-	"ammo": "Munição", "offhand": "Arma secundária", "skill_book": "Livro de habilidade", "station": "Estação", "trap": "Armadilha",
+	"ammo": "Munição", "offhand": "Arma secundária", "skill_book": "Livro de habilidade", "bait": "Isca", "station": "Estação", "trap": "Armadilha",
 }
 
 static var _materials := {}
@@ -73,6 +73,15 @@ static func effect_lines(s: Dictionary) -> PackedStringArray:
 			if str(data.get("set", "")) != "":
 				var set_data := GameData.get_entry("sets", str(data.set))
 				lines.append(t("Conjunto: %s") % "%s (%s)" % [set_data.get("name", data.set), set_data.get("style", "")])
+		"tool":
+			match str(data.get("tool", "")):
+				"axe", "pickaxe":
+					lines.append(t("Ferramenta de coleta (%s) · nível %d") % [t("árvores") if data.tool == "axe" else t("rochas e cristais"), int(data.get("tier", 1))])
+					lines.append(t("Velocidade de coleta: ×%.1f · rendimento: ×%.2f") % [float(data.get("gather_speed", 1.0)) * Inventory.quality_multiplier(s), float(data.get("gather_yield", 1.0)) * Inventory.refine_multiplier(s)])
+				"rod":
+					lines.append(t("Vara de pesca · força de pesca %d (iscas somam)") % int(data.get("fishing_power", 1)))
+		"bait":
+			lines.append(t("Força de pesca +%d") % int(data.get("bait_power", 1)))
 		"skill_book":
 			var skill := Skills.data(str(data.get("teaches", "")))
 			lines.append(t("Ensina a habilidade única %s (ler de novo: +1 nível)") % skill.get("name", data.get("teaches", "")))
